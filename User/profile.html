@@ -1,0 +1,2393 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>설정 - GrowFit Employee</title>
+
+    <!-- 공통 CSS -->
+    <link rel="stylesheet" href="../common/variables.css">
+    <link rel="stylesheet" href="../common/layout.css">
+    <link rel="stylesheet" href="../common/components.css">
+
+    <style>
+        /* ========== Profile Settings 전용 스타일 ========== */
+        :root {
+            --employee-primary: #10b981;
+            --employee-primary-light: #34d399;
+            --employee-primary-dark: #059669;
+            --employee-secondary: #06b6d4;
+            --employee-accent: #f59e0b;
+        }
+
+        /* 페이지 헤더 */
+        .page-header {
+            margin-bottom: var(--space-6);
+        }
+
+        .page-header__title {
+            font-size: var(--text-3xl);
+            font-weight: var(--font-bold);
+            background: linear-gradient(135deg, var(--employee-primary), var(--employee-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: var(--space-2);
+        }
+
+        .page-header__subtitle {
+            font-size: var(--text-base);
+            color: var(--text-secondary);
+        }
+
+        /* 설정 레이아웃 */
+        .settings-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: var(--space-6);
+        }
+
+        /* 설정 사이드바 */
+        .settings-sidebar {
+            background: var(--background);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: var(--space-4);
+            height: fit-content;
+            position: sticky;
+            top: var(--space-6);
+        }
+
+        .settings-nav {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-1);
+        }
+
+        .settings-nav__item {
+            padding: var(--space-3);
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+            font-weight: var(--font-medium);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .settings-nav__item:hover {
+            background: var(--surface);
+            color: var(--text-primary);
+        }
+
+        .settings-nav__item--active {
+            background: linear-gradient(135deg, var(--employee-primary), var(--employee-secondary));
+            color: white;
+        }
+
+        .settings-nav__icon {
+            font-size: 18px;
+        }
+
+        /* 설정 컨텐츠 */
+        .settings-content {
+            background: var(--background);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
+        }
+
+        .settings-section {
+            display: none;
+        }
+
+        .settings-section--active {
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .settings-section__title {
+            font-size: var(--text-2xl);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-2);
+        }
+
+        .settings-section__desc {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-6);
+        }
+
+        /* 설정 그룹 */
+        .setting-group {
+            margin-bottom: var(--space-6);
+            padding-bottom: var(--space-6);
+            border-bottom: 2px solid var(--border);
+        }
+
+        .setting-group:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .setting-group__title {
+            font-size: var(--text-lg);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-1);
+        }
+
+        .setting-group__desc {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-4);
+        }
+
+        /* 폼 요소 */
+        .form-group {
+            margin-bottom: var(--space-4);
+        }
+
+        .form-label {
+            display: block;
+            font-size: var(--text-sm);
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-2);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: var(--space-3);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+            transition: all 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--employee-primary);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .form-input:disabled {
+            background: var(--surface);
+            color: var(--text-tertiary);
+            cursor: not-allowed;
+        }
+
+        .form-select {
+            width: 100%;
+            padding: var(--space-3);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: var(--employee-primary);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .form-textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: var(--space-3);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+            font-family: inherit;
+            resize: vertical;
+            transition: all 0.2s;
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--employee-primary);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .form-hint {
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+            margin-top: var(--space-1);
+        }
+
+        /* 프로필 아바타 */
+        .profile-avatar {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+            margin-bottom: var(--space-4);
+        }
+
+        .profile-avatar__image {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--employee-primary), var(--employee-secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .profile-avatar__actions {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+        }
+
+        /* 토글 스위치 */
+        .toggle-switch {
+            position: relative;
+            width: 48px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--gray-300);
+            transition: 0.3s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        .toggle-switch input:checked+.toggle-slider {
+            background: linear-gradient(135deg, var(--employee-primary), var(--employee-secondary));
+        }
+
+        .toggle-switch input:checked+.toggle-slider:before {
+            transform: translateX(24px);
+        }
+
+        /* 설정 항목 */
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-3);
+            background: var(--surface);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-2);
+        }
+
+        .setting-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .setting-item__info {
+            flex: 1;
+        }
+
+        .setting-item__label {
+            font-size: var(--text-sm);
+            font-weight: var(--font-medium);
+            color: var(--text-primary);
+            margin-bottom: var(--space-1);
+        }
+
+        .setting-item__desc {
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+        }
+
+        .setting-item__control {
+            margin-left: var(--space-4);
+        }
+
+        /* 통계 카드 */
+        .stats-card {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            margin-bottom: var(--space-4);
+        }
+
+        .stats-card__title {
+            font-size: var(--text-sm);
+            font-weight: var(--font-semibold);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-3);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-4);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-item__value {
+            font-size: var(--text-2xl);
+            font-weight: var(--font-bold);
+            color: var(--employee-primary);
+            margin-bottom: var(--space-1);
+        }
+
+        .stat-item__label {
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+        }
+
+        /* 경고 박스 */
+        .warning-box {
+            background: rgba(245, 158, 11, 0.1);
+            border: 2px solid var(--employee-accent);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            margin-bottom: var(--space-4);
+            display: flex;
+            gap: var(--space-3);
+        }
+
+        .warning-box__icon {
+            font-size: 24px;
+            color: var(--employee-accent);
+        }
+
+        .warning-box__content {
+            flex: 1;
+        }
+
+        .warning-box__title {
+            font-size: var(--text-base);
+            font-weight: var(--font-bold);
+            color: var(--employee-accent);
+            margin-bottom: var(--space-1);
+        }
+
+        .warning-box__desc {
+            font-size: var(--text-sm);
+            color: var(--text-primary);
+        }
+
+        /* 위험 박스 */
+        .danger-box {
+            background: rgba(239, 68, 68, 0.1);
+            border: 2px solid var(--danger);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            margin-bottom: var(--space-4);
+        }
+
+        .danger-box__title {
+            font-size: var(--text-base);
+            font-weight: var(--font-bold);
+            color: var(--danger);
+            margin-bottom: var(--space-2);
+        }
+
+        .danger-box__desc {
+            font-size: var(--text-sm);
+            color: var(--text-primary);
+            margin-bottom: var(--space-3);
+        }
+
+        /* 액션 버튼 */
+        .action-buttons {
+            display: flex;
+            gap: var(--space-2);
+            justify-content: flex-end;
+            margin-top: var(--space-6);
+            padding-top: var(--space-4);
+            border-top: 2px solid var(--border);
+        }
+
+        /* 반응형 */
+        @media (max-width: 1024px) {
+            .settings-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .settings-sidebar {
+                position: static;
+            }
+
+            .settings-nav {
+                flex-direction: row;
+                overflow-x: auto;
+            }
+
+            .settings-nav__item {
+                white-space: nowrap;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header__left">
+                <button id="menuToggle" class="header__icon-button hidden-desktop">
+                    <span>☰</span>
+                </button>
+                <a href="dashboard.html" class="header__logo">
+                    <span class="header__logo-icon">🌱</span>
+                    <span>GrowFit</span>
+                </a>
+            </div>
+
+            <div class="header__right">
+                <button id="notificationBtn" class="header__icon-button">
+                    <span>🔔</span>
+                    <span class="header__badge">3</span>
+                </button>
+
+                <div id="profileBtn" class="header__profile">
+                    <div class="header__avatar" style="background: linear-gradient(135deg, #10b981, #06b6d4);">김</div>
+                    <span class="hidden-mobile">김직원</span>
+                    <span class="hidden-mobile">▼</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="container">
+            <!-- Sidebar -->
+            <aside class="sidebar sidebar--open">
+                <div class="sidebar__user">
+                    <div class="sidebar__user-info">
+                        <div class="sidebar__user-avatar"
+                            style="background: linear-gradient(135deg, #10b981, #06b6d4);">김</div>
+                        <div class="sidebar__user-details">
+                            <div class="sidebar__user-name">김직원</div>
+                            <div class="sidebar__user-role">AI 실습생</div>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="sidebar__nav">
+                    <ul class="sidebar__menu">
+                        <li class="sidebar__menu-item">
+                            <a href="dashboard.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">🏠</span>
+                                <span>대시보드</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="practice.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">💬</span>
+                                <span>AI 실습</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="my-projects.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">📂</span>
+                                <span>내 프로젝트</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="my-agents.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">🤖</span>
+                                <span>내 에이전트</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="my-documents.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">📚</span>
+                                <span>내 문서</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="history.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">📊</span>
+                                <span>내 기록</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="profile.html" class="sidebar__menu-link sidebar__menu-link--active">
+                                <span class="sidebar__menu-icon">⚙️</span>
+                                <span>설정</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <div class="sidebar__footer">
+                    <div
+                        style="padding: var(--space-3); background: var(--surface); border-radius: var(--radius-md); font-size: var(--text-xs);">
+                        <div style="color: var(--text-secondary); margin-bottom: var(--space-1);">이번 주 실습</div>
+                        <div style="font-weight: var(--font-bold); color: var(--employee-primary);">3시간 24분</div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main">
+                <!-- 페이지 헤더 -->
+                <div class="page-header">
+                    <h1 class="page-header__title">⚙️ 설정</h1>
+                    <p class="page-header__subtitle">계정 정보 및 환경 설정을 관리하세요</p>
+                </div>
+
+                <!-- 설정 레이아웃 -->
+                <div class="settings-layout">
+                    <!-- 설정 사이드바 -->
+                    <div class="settings-sidebar">
+                        <nav class="settings-nav">
+                            <div class="settings-nav__item settings-nav__item--active" onclick="showSection('profile')">
+                                <span class="settings-nav__icon">👤</span>
+                                <span>프로필</span>
+                            </div>
+                            <div class="settings-nav__item" onclick="showSection('preferences')">
+                                <span class="settings-nav__icon">🎨</span>
+                                <span>환경설정</span>
+                            </div>
+                            <div class="settings-nav__item" onclick="showSection('notifications')">
+                                <span class="settings-nav__icon">🔔</span>
+                                <span>알림</span>
+                            </div>
+                            <div class="settings-nav__item" onclick="showSection('privacy')">
+                                <span class="settings-nav__icon">🔒</span>
+                                <span>개인정보</span>
+                            </div>
+                            <div class="settings-nav__item" onclick="showSection('usage')">
+                                <span class="settings-nav__icon">📊</span>
+                                <span>사용량</span>
+                            </div>
+                            <div class="settings-nav__item" onclick="showSection('help')">
+                                <span class="settings-nav__icon">❓</span>
+                                <span>도움말</span>
+                            </div>
+                        </nav>
+                    </div>
+
+                    <!-- 설정 컨텐츠 -->
+                    <div class="settings-content">
+                        <!-- 1. 프로필 섹션 -->
+                        <div id="profileSection" class="settings-section settings-section--active">
+                            <h2 class="settings-section__title">프로필 설정</h2>
+                            <p class="settings-section__desc">개인 정보를 관리하고 업데이트하세요</p>
+
+                            <!-- 프로필 아바타 -->
+                            <div class="setting-group">
+                                <h3 class="setting-group__title">프로필 사진</h3>
+                                <div class="profile-avatar">
+                                    <div class="profile-avatar__image">김</div>
+                                    <div class="profile-avatar__actions">
+                                        <button class="btn btn--sm btn--outline" onclick="changeAvatar()">
+                                            사진 변경
+                                        </button>
+                                        <button class="btn btn--sm btn--outline" onclick="removeAvatar()">
+                                            사진 제거
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 기본 정보 -->
+                            <div class="setting-group">
+                                <h3 class="setting-group__title">기본 정보</h3>
+                                <p class="setting-group__desc">기본적인 계정 정보를 관리합니다</p>
+
+                                <div class="form-group">
+                                    <label class="form-label">이름</label>
+                                    <input type="text" class="form-input" id="userName" value="김직원">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">이메일</label>
+                                    <input type="email" class="form-input" id="userEmail" value="kim@example.com" disabled>
+                                    <div class="form-hint">이메일은 관리자만 변경할 수 있습니다</div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">직급/직책</label>
+                                    <input type="text" class="form-input" id="userRole" value="AI 실습생">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">소개</label>
+                                    <textarea class="form-textarea" id="userBio" placeholder="자기소개를 입력하세요">AI와 데이터 분석에 관심이 많은 실습생입니다. 새로운 기술을 배우고 실습하는 것을 좋아합니다.</textarea>
+                                </div>
+                            </div>
+
+                            <!-- 연락처 정보 -->
+                            <div class="setting-group">
+                                <h3 class="setting-group__title">연락처 정보</h3>
+                                <p class="setting-group__desc">추가 연락 방법을 설정하세요</p>
+
+                                <div class="form-group">
+                                    <label class="form-label">전화번호</label>
+                                    <input type="tel" class="form-input" id="userPhone" value="010-1234-5678">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">부서</label>
+                                    <input type="text" class="form-input" id="userDepartment" value="마케팅팀">
+                                </div>
+                            </div>
+
+                            <!-- 액션 버튼 -->
+                            <div class="action-buttons">
+                                <button class="btn btn--outline" onclick="cancelProfileChanges()">
+                                    취소
+                                </button>
+                                <button class="btn btn--primary" style="background: var(--employee-primary);" onclick="saveProfile()">
+                                    ✓ 변경사항 저장
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 2. 환경설정 섹션 -->
+                        <div id="preferencesSection" class="settings-section">
+                            <h2 class="settings-section__title">환경설정</h2>
+                            <p class="settings-section__desc">작업 환경을 개인화하세요</p>
+
+                            <!-- 테마 설정 -->
+                            <div class="setting-group">
+                                <h3 class="setting-group__title">테마</h3>
+                                <p class="setting-group__desc">화면 테마를 선택하세요</p>
+
+                                <div class="form-group">
+                                    <label class="form-label">테마 모드</label>
+                                    <select class="form-select" id="themeMode">
+                                        <option value="light">라이트 모드</option>
+                                        <option value="dark">다크 모드</option>
+                                        <option value="auto">시스템 설정 따르기</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">강조 색상</label>
+                                    <select class="form-select" id="accentColor">
+                                        <option value="green" selected>그린 (기본)</option>
+                                        <option value="blue">블루</option>
+                                        <option value="purple">퍼플</option>
+                                        <option value="orange">오렌지</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- 언어 설정 -->
+                            <div class="setting-group">
+                                <h3 class="setting-group__title">언어 및 지역</h3>
+                                <p class="setting-group__desc">언어 및 시간대를 설정하세요</p>
+
+                                <div class="form-group">
+                                    <label class="form-label">언어</label>
+                                    <select class="form-select" id="language">
+                                        <option value="ko" selected>한국어</option>
+                                        <option value="en">English</option>
+                                        <option value="ja">日本語</option>
+                                        <option value="zh">中文</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">시간대</label>
+                                    <select class="form-select" id="timezone">
+                                        <option value="Asia/Seoul" selected>서울 (GMT+9)</option>
+                                        <option value="America/New_York">뉴욕 (GMT-5)</option>
+                                        <option value="Europe/London">런던 (GMT+0)</option>
+                                        <option value="Asia/Tokyo">도쿄 (GMT+9)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- AI 설정 -->
+                            <div class="setting-group">
+                                <h3 class="setting-group__title">AI 응답 설정</h3>
+                                <p class="setting-group__desc">AI의 응답 스타일을 조정하세요</p>
+
+                                <div class="setting-item">
+                                    <div class="setting-item__info">
+                                        <div class="setting-item__label">상세한 응답</div>
+                                        <div class="setting-item__desc">더 자세하고 설명적인 응답을 받습니다</div>
+                                    </div>
+                                    <div class="setting-item__control">
+                                        <label class="toggle-switch">
+                                            <input type="checkbox" id="detailedResponse" checked>
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="setting-item">
+                                    <div class="setting-item__info">
+                                        <div class="setting-item__label">코드 예제 포함</div>
+                                        <div class="setting-item__desc">응답에 실행 가능한 코드 예제를 포함합니다</div>
+                                    </div>
+                                    <div class="setting-item__control">
+                                        <label class="toggle-switch">
+                                            <input type="checkbox" id="includeCodeExamples" checked>
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="setting-item">
+                                    <div class="setting-item__info">
+                                        <div class="setting-item__label">출처 표시</div>
+                                        <div class="setting-item__desc">응답에 정보의 출처를 표시합니다</div>
+                                    </div>
+                                    <div class="setting-item__control">
+                                        <label class="toggle-switch">
+                                            <input type="checkbox" id="showSources">
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 에디터 설정 -->
+                            <div class="setting-group">
+                                <h3 class="setting-group__title">에디터 설정</h3>
+                                <p class="setting-group__desc">텍스트 편집 환경을 설정하세요</p>
+
+                                <div class="form-group">
+                                    <label class="form-label">폰트 크기</label>
+                                    <select class="form-select" id="fontSize">
+                                        <option value="small">작게</option>
+                                        <option value="medium" selected>보통</option>
+                                        <option value="large">크게</option>
+                                    </select>
+                                </div>
+
+                                <div class="setting-item">
+                                    <div class="setting-item__info">
+                                        <div class="setting-item__label">자동 저장</div>
+                                        <div class="setting-item__desc">작업 내용을 자동으로 저장합니다</div>
+                                    </div>
+                                    <div class="setting-item__control">
+                                        <label class="toggle-switch">
+                                            <input type="checkbox" id="autoSave" checked>
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="setting-item">
+                                    <div class="setting-item__info">
+                                        <div class="setting-item__label">맞춤법 검사</div>
+                                        <div class="setting-item__desc">입력 시 맞춤법을 자동으로 검사합니다</div>
+                                    </div>
+                                    <div class="setting-item__control">
+                                        <label class="toggle-switch">
+                                            <input type="checkbox" id="spellCheck" checked>
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 액션 버튼 -->
+                            <div class="action-buttons">
+                                <button class="btn btn--outline" onclick="resetPreferences()">
+                                    기본값으로 초기화
+                                </button>
+                                <button class="btn btn--primary" style="background: var(--employee-primary);" onclick="savePreferences()">
+                                    ✓ 변경사항 저장
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 3. 알림 섹션 -->
+                        <div id="notificationsSection" class="settings-section">
+                            <h2 class="settings-section__title">알림 설정</h2>
+                            <p class="settings-section__desc">알림을 받을 항목을 선택하세요</p>
+
+                            <!-- 이메일 알림 -->
+                            <div class="setting-group">
+                                <h3 class="setting-group__title">이메일 알림</h3>
+                                <p class="setting-group__desc">이메일로 받을 알림을 설정하세요</p>
+
+                                <div class="setting-item">
+                                    <div class="setting-item__info">
+                                        <div class="setting-item__label">프로젝트 업데이트</div>
+                                        <div class="setting-item__desc">프로젝트에 변경사항이 있을 때 알림</div>
+                                    </div>
+                                    <div class="setting-item__control">
+                                        <label class="toggle-switch">
+                                            <input type="checkbox" id="emailProjectUpdates" checked>
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="setting-item">
+                                    <div class="setting-item__info">
+                                        <div class="setting-item__label">AI 응답 완료</div>
+                                        <div class="setting-item__desc">AI의 작업이 완료되었을 때 알림</div>
+                                    </div>
+                                    <div class="setting-item__control">
+                                        <label class="toggle-switch">
+                                            <input type="checkbox" id="emailAIComplete">
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="setting-item">
+                                    <div class="setting-item__info">
+                                        <div class="setting-item__label">주간 리포트</div>
+                                        <div class="setting-item__desc">매주 활동 요약을 받습니다</div>
+                                    </div>
+                                    <div class="setting-item__control">
+                                        <label class="toggle-switch">
+                                            <input type="checkbox" id="emailWeeklyReport" checked>
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="setting-item">
+                                    <div class="setting-item__info">
+                                        <div class="setting-item__label">새로운 기능</div>
+                                        <div class="setting-item__desc">신규 기능 안내를 받습니다</div>
+                                    </div>
+                                    <div class="setting-item__control">
+                                        <label class="toggle-switch">
+                                            <input type="checkbox" id="emailNewFeatures" checked>
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 푸시 알림 -->
+                            <div class="setting-group">
+                                <h3 class="setting-group__title">푸시 알림</h3>
+                                <p class="setting-group__desc">브라우저 알림을 설정하세요</p>
+
+                                <div class="setting-item">
+                                    <div class="setting-item__info">
+                                        <div class="setting-item__label">브라우저 알림 활성화</div>
+                                        <div class="setting-item__desc">브라우저에서 알림을 받습니다</div>
+                                    </div>
+                                    <div class="setting-item__control">
+                                        <label class="toggle-switch">
+                                            <input type="checkbox" id="pushNotifications">
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="setting-item">
+                                    <div class="setting-item__info">
+                                        <div class="setting-item__label">소리 알림</div>
+                                        <div class="setting-item__desc">알림 시 소리가 재생됩니다</div>
+                                    </div>
+                                    <div class="setting-item__control">
+                                        <label class="toggle-switch">
+                                            <input type="checkbox" id="notificationSound" checked>
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 방해 금지 모드 -->
+                            <div class="setting-group">
+                                <h3 class="setting-group__title">방해 금지 모드</h3>
+                                <p class="setting-group__desc">특정 시간에 알림을 받지 않습니다</p>
+
+                                <div class="setting-item">
+                                    <div class="setting-item__info">
+                                        <div class="setting-item__label">방해 금지 모드</div>
+                                        <div class="setting-item__desc">지정한 시간에 알림을 끕니다</div>
+                                    </div>
+                                    <div class="setting-item__control">
+                                        <label class="toggle-switch">
+                                            <input type="checkbox" id="doNotDisturb">
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">시작 시간</label>
+                                    <input type="time" class="form-input" id="dndStartTime" value="22:00">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">종료 시간</label>
+                                    <input type="time" class="form-input" id="dndEndTime" value="08:00">
+                                </div>
+                            </div>
+
+                            <!-- 액션 버튼 -->
+                            <div class="action-buttons">
+                                <button class="btn btn--outline" onclick="testNotification()">
+                                    알림 테스트
+                                </button>
+                                <button class="btn btn--primary" style="background: var(--employee-primary);" onclick="saveNotifications()">
+                                    ✓ 변경사항 저장
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 4. 개인정보 섹션 -->
+                        <div id="privacySection" class="settings-section">
+                            <h2 class="settings-section__title">개인정보 및 보안</h2>
+                            <p class="settings-section__desc">계정 보안 및 개인정보를 관리하세요</p>
+
+                            <!-- 비밀번호 변경 -->
+                            <div class="setting-group">
+                                <h3 class="setting-group__title">비밀번호 변경</h3>
+                                <p class="setting-group__desc">정기적으로 비밀번호를 변경하세요</p>
+
+                                <div class="form-group">
+                                    <label class="form-label">현재 비밀번호</label>
+                                    <input type="password" class="form-input" id="currentPassword" placeholder="현재 비밀번호 입력">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">새 비밀번호</label>
+                                    <input type="password" class="form-input" id="newPassword" placeholder="새 비밀번호 입력">
+                                    <div class="form-hint">최소 8자 이상, 영문, 숫자, 특수문자 포함</div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">새 비밀번호 확인</label>
+                                    <input type="password" class="form-input" id="confirmPassword" placeholder="새 비밀번호 다시 입력">
+                                </div>
+
+                                <button class="btn btn--primary" style="background: var(--employee-primary);" onclick="changePassword()">
+                                    🔒 비밀번호 변경
+                                </button>
+                            </div>
+
+                            <!-- 2단계 인증 -->
+                            <div class="setting-group">
+                                <h3 class="setting-group__title">2단계 인증</h3>
+                                <p class="setting-group__desc">계정 보안을 강화하세요</p>
+
+                                <div class="setting-item">
+                                    <div class="setting-item__info">
+                                        <div class="setting-item__label">2단계 인증 활성화</div>
+                                        <div class="setting-item__desc">로그인 시 추가 인증 단계를 거칩니다</div>
+                                    </div>
+                                    <div class="setting-item__control">
+                                        <label class="toggle-switch">
+                                            <input type="checkbox" id="twoFactorAuth">
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div style="margin-top: var(--space-3);">
+                                    <button class="btn btn--outline" onclick="setup2FA()">
+                                        📱 2단계 인증 설정
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- 로그인 기록 -->
+                            <div class="setting-group">
+                                <h3 class="setting-group__title">최근 로그인 기록</h3>
+                                <p class="setting-group__desc">최근 계정 접속 내역을 확인하세요</p>
+
+                                <div class="activity-list">
+                                    <div class="activity-item">
+                                        <div class="activity-item__icon">💻</div>
+                                        <div class="activity-item__content">
+                                            <div class="activity-item__title">Chrome on Windows</div>
+                                            <div class="activity-item__desc">서울, 대한민국 • 112.220.xxx.xxx</div>
+                                            <div class="activity-item__time">현재 세션</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="activity-item">
+                                        <div class="activity-item__icon">📱</div>
+                                        <div class="activity-item__content">
+                                            <div class="activity-item__title">Safari on iPhone</div>
+                                            <div class="activity-item__desc">서울, 대한민국 • 211.xxx.xxx.xxx</div>
+                                            <div class="activity-item__time">2시간 전</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="activity-item">
+                                        <div class="activity-item__icon">💻</div>
+                                        <div class="activity-item__content">
+                                            <div class="activity-item__title">Chrome on Mac</div>
+                                            <div class="activity-item__desc">서울, 대한민국 • 175.xxx.xxx.xxx</div>
+                                            <div class="activity-item__time">어제</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style="margin-top: var(--space-3);">
+                                    <button class="btn btn--outline" onclick="viewAllSessions()">
+                                        전체 기록 보기
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- 데이터 프라이버시 -->
+                            <div class="setting-group">
+                                <h3 class="setting-group__title">데이터 프라이버시</h3>
+                                <p class="setting-group__desc">개인 데이터 사용 및 저장을 관리하세요</p>
+
+                                <div class="setting-item">
+                                    <div class="setting-item__info">
+                                        <div class="setting-item__label">대화 기록 저장</div>
+                                        <div class="setting-item__desc">AI와의 대화 내용을 저장합니다</div>
+                                    </div>
+                                    <div class="setting-item__control">
+                                        <label class="toggle-switch">
+                                            <input type="checkbox" id="saveChatHistory" checked>
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="setting-item">
+                                    <div class="setting-item__info">
+                                        <div class="setting-item__label">사용 데이터 수집</div>
+                                        <div class="setting-item__desc">서비스 개선을 위해 사용 데이터를 수집합니다</div>
+                                    </div>
+                                    <div class="setting-item__control">
+                                        <label class="toggle-switch">
+                                            <input type="checkbox" id="collectUsageData" checked>
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="setting-item">
+                                    <div class="setting-item__info">
+                                        <div class="setting-item__label">개인화 추천</div>
+                                        <div class="setting-item__desc">사용 패턴을 분석하여 개인화된 추천을 제공합니다</div>
+                                    </div>
+                                    <div class="setting-item__control">
+                                        <label class="toggle-switch">
+                                            <input type="checkbox" id="personalizedRecommendations" checked>
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div style="margin-top: var(--space-4); display: flex; gap: var(--space-2);">
+                                    <button class="btn btn--outline" onclick="downloadData()">
+                                        📥 내 데이터 다운로드
+                                    </button>
+                                    <button class="btn btn--outline" onclick="viewPrivacyPolicy()">
+                                        개인정보 처리방침
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- 위험 영역 -->
+                            <div class="setting-group">
+                                <h3 class="setting-group__title">위험 영역</h3>
+                                
+                                <div class="danger-box">
+                                    <div class="danger-box__title">⚠️ 계정 삭제</div>
+                                    <div class="danger-box__desc">
+                                        계정을 삭제하면 모든 데이터가 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
+                                    </div>
+                                    <button class="btn" style="background: var(--danger); color: white;" onclick="deleteAccount()">
+                                        계정 삭제
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 5. 사용량 섹션 -->
+                        <div id="usageSection" class="settings-section">
+                            <h2 class="settings-section__title">사용량 통계</h2>
+                            <p class="settings-section__desc">서비스 사용 현황을 확인하세요</p>
+
+                            <!-- 통계 개요 -->
+                            <div class="stats-card">
+                                <div class="stats-card__title">📊 이번 달 사용량</div>
+                                <div class="stats-grid">
+                                    <div class="stat-item">
+                                        <div class="stat-item__value">24.5시간</div>
+                                        <div class="stat-item__label">총 실습 시간</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-item__value">156회</div>
+                                        <div class="stat-item__label">AI 대화</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-item__value">8개</div>
+                                        <div class="stat-item__label">프로젝트</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 상세 사용량 -->
+                            <div class="setting-group">
+                                <h3 class="setting-group__title">기능별 사용량</h3>
+                                <p class="setting-group__desc">각 기능의 사용 빈도를 확인하세요</p>
+
+                                <div style="display: flex; flex-direction: column; gap: var(--space-3);">
+                                    <div>
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-2);">
+                                            <span style="font-size: var(--text-sm); font-weight: var(--font-semibold); color: var(--text-primary);">AI 실습</span>
+                                            <span style="font-size: var(--text-sm); color: var(--text-secondary);">156회</span>
+                                        </div>
+                                        <div class="progress-bar">
+                                            <div class="progress-bar__fill" style="width: 85%;"></div>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-2);">
+                                            <span style="font-size: var(--text-sm); font-weight: var(--font-semibold); color: var(--text-primary);">프로젝트 관리</span>
+                                            <span style="font-size: var(--text-sm); color: var(--text-secondary);">89회</span>
+                                        </div>
+                                        <div class="progress-bar">
+                                            <div class="progress-bar__fill" style="width: 65%;"></div>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-2);">
+                                            <span style="font-size: var(--text-sm); font-weight: var(--font-semibold); color: var(--text-primary);">에이전트 생성</span>
+                                            <span style="font-size: var(--text-sm); color: var(--text-secondary);">23회</span>
+                                        </div>
+                                        <div class="progress-bar">
+                                            <div class="progress-bar__fill" style="width: 35%;"></div>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-2);">
+                                            <span style="font-size: var(--text-sm); font-weight: var(--font-semibold); color: var(--text-primary);">문서 업로드</span>
+                                            <span style="font-size: var(--text-sm); color: var(--text-secondary);">45회</span>
+                                        </div>
+                                        <div class="progress-bar">
+                                            <div class="progress-bar__fill" style="width: 50%;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 시간별 활동 -->
+                            <div class="setting-group">
+                                <h3 class="setting-group__title">주간 활동</h3>
+                                <p class="setting-group__desc">최근 7일간의 활동 패턴입니다</p>
+
+                                <div style="background: var(--surface); border-radius: var(--radius-lg); padding: var(--space-4); text-align: center;">
+                                    <div style="font-size: var(--text-sm); color: var(--text-secondary); margin-bottom: var(--space-4);">
+                                        📈 주간 활동 차트 (개발 예정)
+                                    </div>
+                                    <div style="height: 200px; display: flex; align-items: center; justify-content: center; border: 2px dashed var(--border); border-radius: var(--radius-md);">
+                                        <span style="color: var(--text-tertiary);">차트 영역</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 저장 공간 -->
+                            <div class="setting-group">
+                                <h3 class="setting-group__title">저장 공간</h3>
+                                <p class="setting-group__desc">파일 및 데이터 저장 현황입니다</p>
+
+                                <div class="stats-card">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-3);">
+                                        <span style="font-size: var(--text-sm); font-weight: var(--font-semibold);">사용 중</span>
+                                        <span style="font-size: var(--text-sm); color: var(--text-secondary);">2.3GB / 10GB</span>
+                                    </div>
+                                    <div class="progress-bar" style="height: 8px;">
+                                        <div class="progress-bar__fill" style="width: 23%;"></div>
+                                    </div>
+                                </div>
+
+                                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-3); margin-top: var(--space-4);">
+                                    <div style="background: var(--surface); padding: var(--space-3); border-radius: var(--radius-md);">
+                                        <div style="font-size: var(--text-xs); color: var(--text-secondary); margin-bottom: var(--space-1);">📄 문서</div>
+                                        <div style="font-size: var(--text-lg); font-weight: var(--font-bold); color: var(--employee-primary);">1.2GB</div>
+                                    </div>
+                                    <div style="background: var(--surface); padding: var(--space-3); border-radius: var(--radius-md);">
+                                        <div style="font-size: var(--text-xs); color: var(--text-secondary); margin-bottom: var(--space-1);">📂 프로젝트</div>
+                                        <div style="font-size: var(--text-lg); font-weight: var(--font-bold); color: var(--employee-primary);">850MB</div>
+                                    </div>
+                                    <div style="background: var(--surface); padding: var(--space-3); border-radius: var(--radius-md);">
+                                        <div style="font-size: var(--text-xs); color: var(--text-secondary); margin-bottom: var(--space-1);">🤖 에이전트</div>
+                                        <div style="font-size: var(--text-lg); font-weight: var(--font-bold); color: var(--employee-primary);">150MB</div>
+                                    </div>
+                                    <div style="background: var(--surface); padding: var(--space-3); border-radius: var(--radius-md);">
+                                        <div style="font-size: var(--text-xs); color: var(--text-secondary); margin-bottom: var(--space-1);">💬 대화 기록</div>
+                                        <div style="font-size: var(--text-lg); font-weight: var(--font-bold); color: var(--employee-primary);">100MB</div>
+                                    </div>
+                                </div>
+
+                                <div style="margin-top: var(--space-4);">
+                                    <button class="btn btn--outline" onclick="manageStorage()">
+                                        💾 저장 공간 관리
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- 내보내기 -->
+                            <div class="setting-group">
+                                <h3 class="setting-group__title">데이터 내보내기</h3>
+                                <p class="setting-group__desc">사용 데이터를 다운로드하세요</p>
+
+                                <div style="display: flex; gap: var(--space-2); flex-wrap: wrap;">
+                                    <button class="btn btn--outline" onclick="exportUsageReport()">
+                                        📊 사용량 리포트
+                                    </button>
+                                    <button class="btn btn--outline" onclick="exportChatHistory()">
+                                        💬 대화 기록
+                                    </button>
+                                    <button class="btn btn--outline" onclick="exportProjects()">
+                                        📂 프로젝트 데이터
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 6. 도움말 섹션 -->
+                        <div id="helpSection" class="settings-section">
+                            <h2 class="settings-section__title">도움말 및 지원</h2>
+                            <p class="settings-section__desc">필요한 도움을 받으세요</p>
+
+                            <!-- 빠른 가이드 -->
+                            <div class="setting-group">
+                                <h3 class="setting-group__title">빠른 시작 가이드</h3>
+                                <p class="setting-group__desc">GrowFit을 시작하는 방법을 배우세요</p>
+
+                                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-3);">
+                                    <div style="background: var(--surface); padding: var(--space-4); border-radius: var(--radius-lg); cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--surface)'" onclick="openGuide('getting-started')">
+                                        <div style="font-size: 32px; margin-bottom: var(--space-2);">🚀</div>
+                                        <div style="font-size: var(--text-base); font-weight: var(--font-bold); color: var(--text-primary); margin-bottom: var(--space-1);">시작하기</div>
+                                        <div style="font-size: var(--text-sm); color: var(--text-secondary);">기본 기능 사용법</div>
+                                    </div>
+
+                                    <div style="background: var(--surface); padding: var(--space-4); border-radius: var(--radius-lg); cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--surface)'" onclick="openGuide('ai-practice')">
+                                        <div style="font-size: 32px; margin-bottom: var(--space-2);">💬</div>
+                                        <div style="font-size: var(--text-base); font-weight: var(--font-bold); color: var(--text-primary); margin-bottom: var(--space-1);">AI 실습</div>
+                                        <div style="font-size: var(--text-sm); color: var(--text-secondary);">효과적인 AI 활용법</div>
+                                    </div>
+
+                                    <div style="background: var(--surface); padding: var(--space-4); border-radius: var(--radius-lg); cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--surface)'" onclick="openGuide('agents')">
+                                        <div style="font-size: 32px; margin-bottom: var(--space-2);">🤖</div>
+                                        <div style="font-size: var(--text-base); font-weight: var(--font-bold); color: var(--text-primary); margin-bottom: var(--space-1);">에이전트 만들기</div>
+                                        <div style="font-size: var(--text-sm); color: var(--text-secondary);">맞춤 AI 생성 가이드</div>
+                                    </div>
+
+                                    <div style="background: var(--surface); padding: var(--space-4); border-radius: var(--radius-lg); cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--surface)'" onclick="openGuide('projects')">
+                                        <div style="font-size: 32px; margin-bottom: var(--space-2);">📂</div>
+                                        <div style="font-size: var(--text-base); font-weight: var(--font-bold); color: var(--text-primary); margin-bottom: var(--space-1);">프로젝트 관리</div>
+                                        <div style="font-size: var(--text-sm); color: var(--text-secondary);">효율적인 작업 관리</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 자주 묻는 질문 -->
+                            <div class="setting-group">
+                                <h3 class="setting-group__title">자주 묻는 질문</h3>
+                                <p class="setting-group__desc">일반적인 질문과 답변입니다</p>
+
+                                <div style="display: flex; flex-direction: column; gap: var(--space-2);">
+                                    <div class="setting-item" style="cursor: pointer;" onclick="toggleFAQ(this)">
+                                        <div class="setting-item__info">
+                                            <div class="setting-item__label">AI 에이전트는 어떻게 만드나요?</div>
+                                        </div>
+                                        <div style="font-size: 20px; color: var(--text-secondary);">▼</div>
+                                    </div>
+                                    <div style="display: none; padding: var(--space-3); background: var(--surface); border-radius: var(--radius-md); font-size: var(--text-sm); color: var(--text-secondary); line-height: 1.6;">
+                                        "내 에이전트" 메뉴에서 새 에이전트를 만들 수 있습니다. 시스템 프롬프트를 작성하고 예제를 추가하면 나만의 AI 에이전트가 완성됩니다.
+                                    </div>
+
+                                    <div class="setting-item" style="cursor: pointer;" onclick="toggleFAQ(this)">
+                                        <div class="setting-item__info">
+                                            <div class="setting-item__label">대화 기록은 어디서 볼 수 있나요?</div>
+                                        </div>
+                                        <div style="font-size: 20px; color: var(--text-secondary);">▼</div>
+                                    </div>
+                                    <div style="display: none; padding: var(--space-3); background: var(--surface); border-radius: var(--radius-md); font-size: var(--text-sm); color: var(--text-secondary); line-height: 1.6;">
+                                        "내 기록" 메뉴에서 모든 AI 대화 기록을 확인할 수 있습니다. 날짜별, 에이전트별로 필터링도 가능합니다.
+                                    </div>
+
+                                    <div class="setting-item" style="cursor: pointer;" onclick="toggleFAQ(this)">
+                                        <div class="setting-item__info">
+                                            <div class="setting-item__label">파일 업로드 용량 제한이 있나요?</div>
+                                        </div>
+                                        <div style="font-size: 20px; color: var(--text-secondary);">▼</div>
+                                    </div>
+                                    <div style="display: none; padding: var(--space-3); background: var(--surface); border-radius: var(--radius-md); font-size: var(--text-sm); color: var(--text-secondary); line-height: 1.6;">
+                                        파일당 최대 50MB까지 업로드 가능하며, 총 저장 공간은 10GB입니다. 필요시 관리자에게 용량 증설을 요청할 수 있습니다.
+                                    </div>
+
+                                    <div class="setting-item" style="cursor: pointer;" onclick="toggleFAQ(this)">
+                                        <div class="setting-item__info">
+                                            <div class="setting-item__label">프로젝트를 팀원과 공유할 수 있나요?</div>
+                                        </div>
+                                        <div style="font-size: 20px; color: var(--text-secondary);">▼</div>
+                                    </div>
+                                    <div style="display: none; padding: var(--space-3); background: var(--surface); border-radius: var(--radius-md); font-size: var(--text-sm); color: var(--text-secondary); line-height: 1.6;">
+                                        네, 프로젝트 상세 페이지에서 "공유" 버튼을 클릭하여 팀원을 초대할 수 있습니다. 읽기 전용 또는 편집 권한을 부여할 수 있습니다.
+                                    </div>
+                                </div>
+
+                                <div style="margin-top: var(--space-4);">
+                                    <button class="btn btn--outline" onclick="viewAllFAQ()">
+                                        전체 FAQ 보기 →
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- 지원 요청 -->
+                            <div class="setting-group">
+                                <h3 class="setting-group__title">지원 요청</h3>
+                                <p class="setting-group__desc">문제가 해결되지 않으면 문의하세요</p>
+
+                                <div style="display: flex; gap: var(--space-2); flex-wrap: wrap;">
+                                    <button class="btn btn--primary" style="background: var(--employee-primary);" onclick="contactSupport()">
+                                        💬 채팅 지원
+                                    </button>
+                                    <button class="btn btn--outline" onclick="emailSupport()">
+                                        ✉️ 이메일 문의
+                                    </button>
+                                    <button class="btn btn--outline" onclick="reportBug()">
+                                        🐛 버그 신고
+                                    </button>
+                                    <button class="btn btn--outline" onclick="requestFeature()">
+                                        💡 기능 제안
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- 시스템 정보 -->
+                            <div class="setting-group">
+                                <h3 class="setting-group__title">시스템 정보</h3>
+                                
+                                <div style="background: var(--surface); padding: var(--space-4); border-radius: var(--radius-lg); font-size: var(--text-sm);">
+                                    <div style="display: grid; grid-template-columns: 120px 1fr; gap: var(--space-2); color: var(--text-secondary);">
+                                        <div>버전</div>
+                                        <div style="color: var(--text-primary); font-weight: var(--font-semibold);">v1.2.5</div>
+                                        
+                                        <div>브라우저</div>
+                                        <div style="color: var(--text-primary);">Chrome 120.0.0</div>
+                                        
+                                        <div>운영체제</div>
+                                        <div style="color: var(--text-primary);">Windows 11</div>
+                                        
+                                        <div>마지막 업데이트</div>
+                                        <div style="color: var(--text-primary);">2025년 1월 8일</div>
+                                    </div>
+                                </div>
+
+                                <div style="margin-top: var(--space-3);">
+                                    <button class="btn btn--outline" onclick="checkUpdates()">
+                                        🔄 업데이트 확인
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- 공통 스크립트 -->
+    <script src="../common/layout.js"></script>
+    <script src="../common/utils.js"></script>
+
+    <!-- 페이지 전용 스크립트 -->
+    <script>
+        // ========== Profile Settings 전용 로직 ==========
+
+        // 전역 변수
+        let currentSection = 'profile';
+        let hasUnsavedChanges = false;
+
+        // ========== 초기화 ==========
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Profile Settings 초기화');
+            initializeSettings();
+            setupEventListeners();
+        });
+
+        function initializeSettings() {
+            // 로컬 스토리지에서 설정 불러오기
+            loadSettings();
+            
+            // 기본 섹션 표시
+            showSection('profile');
+        }
+
+        function setupEventListeners() {
+            // 입력 필드 변경 감지
+            const formInputs = document.querySelectorAll('.form-input, .form-select, .form-textarea, .toggle-switch input');
+            formInputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    hasUnsavedChanges = true;
+                    updateSaveStatus();
+                });
+            });
+
+            // 페이지 벗어날 때 경고
+            window.addEventListener('beforeunload', function(e) {
+                if (hasUnsavedChanges) {
+                    e.preventDefault();
+                    e.returnValue = '';
+                }
+            });
+        }
+
+        function updateSaveStatus() {
+            if (hasUnsavedChanges) {
+                console.log('변경사항이 있습니다.');
+            }
+        }
+
+        // ========== 섹션 전환 ==========
+        function showSection(sectionName) {
+            // 변경사항 확인
+            if (hasUnsavedChanges && currentSection !== sectionName) {
+                if (!confirm('저장하지 않은 변경사항이 있습니다. 계속하시겠습니까?')) {
+                    return;
+                }
+                hasUnsavedChanges = false;
+            }
+
+            currentSection = sectionName;
+
+            // 모든 섹션 숨기기
+            document.querySelectorAll('.settings-section').forEach(section => {
+                section.classList.remove('settings-section--active');
+            });
+
+            // 네비게이션 아이템 비활성화
+            document.querySelectorAll('.settings-nav__item').forEach(item => {
+                item.classList.remove('settings-nav__item--active');
+            });
+
+            // 선택된 섹션 표시
+            const sectionMap = {
+                'profile': 'profileSection',
+                'preferences': 'preferencesSection',
+                'notifications': 'notificationsSection',
+                'privacy': 'privacySection',
+                'usage': 'usageSection',
+                'help': 'helpSection'
+            };
+
+            const sectionId = sectionMap[sectionName];
+            if (sectionId) {
+                document.getElementById(sectionId).classList.add('settings-section--active');
+            }
+
+            // 네비게이션 아이템 활성화
+            event.currentTarget.classList.add('settings-nav__item--active');
+
+            console.log('섹션 전환:', sectionName);
+        }
+
+        // ========== 프로필 관련 함수 ==========
+        function changeAvatar() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    // 실제로는 서버에 업로드
+                    console.log('아바타 변경:', file.name);
+                    window.GrowFitUtils.showToast('프로필 사진이 변경되었습니다', 'success');
+                    hasUnsavedChanges = true;
+                }
+            };
+            input.click();
+        }
+
+        function removeAvatar() {
+            if (confirm('프로필 사진을 제거하시겠습니까?')) {
+                console.log('아바타 제거');
+                window.GrowFitUtils.showToast('프로필 사진이 제거되었습니다', 'success');
+                hasUnsavedChanges = true;
+            }
+        }
+
+        function saveProfile() {
+            // 유효성 검사
+            const name = document.getElementById('userName').value.trim();
+            if (!name) {
+                window.GrowFitUtils.showToast('이름을 입력하세요', 'warning');
+                return;
+            }
+
+            // 데이터 수집
+            const profileData = {
+                name: name,
+                role: document.getElementById('userRole').value,
+                bio: document.getElementById('userBio').value,
+                phone: document.getElementById('userPhone').value,
+                department: document.getElementById('userDepartment').value
+            };
+
+            // 서버에 저장 (시뮬레이션)
+            console.log('프로필 저장:', profileData);
+
+            // 로컬 스토리지에 저장
+            localStorage.setItem('employeeProfile', JSON.stringify(profileData));
+
+            hasUnsavedChanges = false;
+            window.GrowFitUtils.showToast('프로필이 저장되었습니다', 'success');
+        }
+
+        function cancelProfileChanges() {
+            if (hasUnsavedChanges) {
+                if (confirm('변경사항을 취소하시겠습니까?')) {
+                    loadSettings();
+                    hasUnsavedChanges = false;
+                    window.GrowFitUtils.showToast('변경사항이 취소되었습니다', 'info');
+                }
+            }
+        }
+
+        // ========== 환경설정 관련 함수 ==========
+        function savePreferences() {
+            const preferences = {
+                themeMode: document.getElementById('themeMode').value,
+                accentColor: document.getElementById('accentColor').value,
+                language: document.getElementById('language').value,
+                timezone: document.getElementById('timezone').value,
+                detailedResponse: document.getElementById('detailedResponse').checked,
+                includeCodeExamples: document.getElementById('includeCodeExamples').checked,
+                showSources: document.getElementById('showSources').checked,
+                fontSize: document.getElementById('fontSize').value,
+                autoSave: document.getElementById('autoSave').checked,
+                spellCheck: document.getElementById('spellCheck').checked
+            };
+
+            // 로컬 스토리지에 저장
+            localStorage.setItem('employeePreferences', JSON.stringify(preferences));
+
+            // 테마 적용
+            applyTheme(preferences.themeMode);
+
+            hasUnsavedChanges = false;
+            window.GrowFitUtils.showToast('환경설정이 저장되었습니다', 'success');
+        }
+
+        function resetPreferences() {
+            if (confirm('모든 설정을 기본값으로 초기화하시겠습니까?')) {
+                // 기본값 설정
+                document.getElementById('themeMode').value = 'light';
+                document.getElementById('accentColor').value = 'green';
+                document.getElementById('language').value = 'ko';
+                document.getElementById('timezone').value = 'Asia/Seoul';
+                document.getElementById('detailedResponse').checked = true;
+                document.getElementById('includeCodeExamples').checked = true;
+                document.getElementById('showSources').checked = false;
+                document.getElementById('fontSize').value = 'medium';
+                document.getElementById('autoSave').checked = true;
+                document.getElementById('spellCheck').checked = true;
+
+                localStorage.removeItem('employeePreferences');
+
+                hasUnsavedChanges = true;
+                window.GrowFitUtils.showToast('설정이 초기화되었습니다', 'info');
+            }
+        }
+
+        function applyTheme(mode) {
+            // 테마 적용 로직
+            if (mode === 'dark') {
+                document.documentElement.classList.add('dark-mode');
+            } else {
+                document.documentElement.classList.remove('dark-mode');
+            }
+            console.log('테마 적용:', mode);
+        }
+
+        // ========== 알림 관련 함수 ==========
+        function saveNotifications() {
+            const notifications = {
+                emailProjectUpdates: document.getElementById('emailProjectUpdates').checked,
+                emailAIComplete: document.getElementById('emailAIComplete').checked,
+                emailWeeklyReport: document.getElementById('emailWeeklyReport').checked,
+                emailNewFeatures: document.getElementById('emailNewFeatures').checked,
+                pushNotifications: document.getElementById('pushNotifications').checked,
+                notificationSound: document.getElementById('notificationSound').checked,
+                doNotDisturb: document.getElementById('doNotDisturb').checked,
+                dndStartTime: document.getElementById('dndStartTime').value,
+                dndEndTime: document.getElementById('dndEndTime').value
+            };
+
+            localStorage.setItem('employeeNotifications', JSON.stringify(notifications));
+
+            hasUnsavedChanges = false;
+            window.GrowFitUtils.showToast('알림 설정이 저장되었습니다', 'success');
+        }
+
+        function testNotification() {
+            // 브라우저 알림 권한 확인
+            if ('Notification' in window) {
+                if (Notification.permission === 'granted') {
+                    new Notification('GrowFit 알림 테스트', {
+                        body: '알림이 정상적으로 작동합니다! 🎉',
+                        icon: '/favicon.ico'
+                    });
+                } else if (Notification.permission !== 'denied') {
+                    Notification.requestPermission().then(permission => {
+                        if (permission === 'granted') {
+                            new Notification('GrowFit 알림 테스트', {
+                                body: '알림이 정상적으로 작동합니다! 🎉',
+                                icon: '/favicon.ico'
+                            });
+                        }
+                    });
+                } else {
+                    window.GrowFitUtils.showToast('알림 권한이 차단되었습니다. 브라우저 설정에서 권한을 허용해주세요.', 'warning');
+                }
+            } else {
+                window.GrowFitUtils.showToast('이 브라우저는 알림을 지원하지 않습니다', 'warning');
+            }
+        }
+
+        // ========== 개인정보 및 보안 관련 함수 ==========
+        function changePassword() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            // 유효성 검사
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                window.GrowFitUtils.showToast('모든 필드를 입력하세요', 'warning');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                window.GrowFitUtils.showToast('새 비밀번호가 일치하지 않습니다', 'error');
+                return;
+            }
+
+            if (newPassword.length < 8) {
+                window.GrowFitUtils.showToast('비밀번호는 최소 8자 이상이어야 합니다', 'warning');
+                return;
+            }
+
+            // 비밀번호 복잡성 검사
+            const hasUpperCase = /[A-Z]/.test(newPassword);
+            const hasLowerCase = /[a-z]/.test(newPassword);
+            const hasNumbers = /\d/.test(newPassword);
+            const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(newPassword);
+
+            if (!hasUpperCase || !hasLowerCase || !hasNumbers || !hasSpecialChar) {
+                window.GrowFitUtils.showToast('비밀번호는 영문 대소문자, 숫자, 특수문자를 포함해야 합니다', 'warning');
+                return;
+            }
+
+            // 서버에 비밀번호 변경 요청 (시뮬레이션)
+            console.log('비밀번호 변경 요청');
+
+            // 입력 필드 초기화
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+
+            window.GrowFitUtils.showToast('비밀번호가 변경되었습니다', 'success');
+        }
+
+        function setup2FA() {
+            window.GrowFitUtils.showToast('2단계 인증 설정 페이지로 이동합니다', 'info');
+            // 실제로는 2FA 설정 모달이나 페이지로 이동
+            console.log('2FA 설정');
+        }
+
+        function viewAllSessions() {
+            window.GrowFitUtils.showToast('전체 로그인 기록을 불러오는 중...', 'info');
+            console.log('전체 세션 보기');
+        }
+
+        function downloadData() {
+            if (confirm('모든 개인 데이터를 다운로드하시겠습니까?')) {
+                window.GrowFitUtils.showToast('데이터를 준비하는 중입니다. 완료되면 이메일로 알려드립니다.', 'success');
+                console.log('데이터 다운로드 요청');
+            }
+        }
+
+        function viewPrivacyPolicy() {
+            window.open('/privacy-policy.html', '_blank');
+        }
+
+        function deleteAccount() {
+            const confirmation = prompt('정말로 계정을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.\n\n계속하려면 "계정삭제"를 입력하세요:');
+            
+            if (confirmation === '계정삭제') {
+                const finalConfirm = confirm('마지막 확인: 모든 데이터가 영구적으로 삭제됩니다. 정말 진행하시겠습니까?');
+                
+                if (finalConfirm) {
+                    console.log('계정 삭제 요청');
+                    window.GrowFitUtils.showToast('계정 삭제 요청이 처리되었습니다', 'info');
+                    // 실제로는 서버에 삭제 요청 후 로그아웃
+                }
+            }
+        }
+
+        // ========== 사용량 관련 함수 ==========
+        function manageStorage() {
+            window.GrowFitUtils.showToast('저장 공간 관리 페이지로 이동합니다', 'info');
+            console.log('저장 공간 관리');
+        }
+
+        function exportUsageReport() {
+            window.GrowFitUtils.showToast('사용량 리포트를 생성하는 중...', 'info');
+            
+            setTimeout(() => {
+                // CSV 파일 생성 (시뮬레이션)
+                const csvContent = 'data:text/csv;charset=utf-8,날짜,활동,횟수\n2025-01-08,AI 실습,156\n2025-01-08,프로젝트,89\n';
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement('a');
+                link.setAttribute('href', encodedUri);
+                link.setAttribute('download', 'usage_report.csv');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                window.GrowFitUtils.showToast('사용량 리포트가 다운로드되었습니다', 'success');
+            }, 1000);
+        }
+
+        function exportChatHistory() {
+            if (confirm('모든 대화 기록을 다운로드하시겠습니까?')) {
+                window.GrowFitUtils.showToast('대화 기록을 준비하는 중입니다...', 'info');
+                console.log('대화 기록 내보내기');
+            }
+        }
+
+        function exportProjects() {
+            if (confirm('모든 프로젝트 데이터를 다운로드하시겠습니까?')) {
+                window.GrowFitUtils.showToast('프로젝트 데이터를 준비하는 중입니다...', 'info');
+                console.log('프로젝트 내보내기');
+            }
+        }
+
+        // ========== 도움말 관련 함수 ==========
+        function openGuide(guideType) {
+            window.GrowFitUtils.showToast(`${guideType} 가이드를 여는 중...`, 'info');
+            console.log('가이드 열기:', guideType);
+            // 실제로는 가이드 페이지나 모달 열기
+        }
+
+        function toggleFAQ(element) {
+            const answer = element.nextElementSibling;
+            const icon = element.querySelector('div:last-child');
+            
+            if (answer.style.display === 'none' || answer.style.display === '') {
+                answer.style.display = 'block';
+                icon.textContent = '▲';
+            } else {
+                answer.style.display = 'none';
+                icon.textContent = '▼';
+            }
+        }
+
+        function viewAllFAQ() {
+            window.GrowFitUtils.showToast('FAQ 페이지로 이동합니다', 'info');
+            console.log('전체 FAQ 보기');
+        }
+
+        function contactSupport() {
+            window.GrowFitUtils.showToast('채팅 지원을 시작합니다', 'info');
+            console.log('채팅 지원');
+            // 실제로는 채팅 위젯 열기
+        }
+
+        function emailSupport() {
+            window.location.href = 'mailto:support@growfit.com?subject=문의사항';
+        }
+
+        function reportBug() {
+            window.GrowFitUtils.showToast('버그 신고 폼을 여는 중...', 'info');
+            console.log('버그 신고');
+        }
+
+        function requestFeature() {
+            window.GrowFitUtils.showToast('기능 제안 폼을 여는 중...', 'info');
+            console.log('기능 제안');
+        }
+
+        function checkUpdates() {
+            window.GrowFitUtils.showToast('업데이트를 확인하는 중...', 'info');
+            
+            setTimeout(() => {
+                window.GrowFitUtils.showToast('최신 버전을 사용 중입니다', 'success');
+            }, 1500);
+        }
+
+        // ========== 설정 로드/저장 ==========
+        function loadSettings() {
+            // 프로필 로드
+            const savedProfile = localStorage.getItem('employeeProfile');
+            if (savedProfile) {
+                try {
+                    const profile = JSON.parse(savedProfile);
+                    document.getElementById('userName').value = profile.name || '';
+                    document.getElementById('userRole').value = profile.role || '';
+                    document.getElementById('userBio').value = profile.bio || '';
+                    document.getElementById('userPhone').value = profile.phone || '';
+                    document.getElementById('userDepartment').value = profile.department || '';
+                } catch (e) {
+                    console.error('프로필 로드 오류:', e);
+                }
+            }
+
+            // 환경설정 로드
+            const savedPreferences = localStorage.getItem('employeePreferences');
+            if (savedPreferences) {
+                try {
+                    const prefs = JSON.parse(savedPreferences);
+                    if (prefs.themeMode) document.getElementById('themeMode').value = prefs.themeMode;
+                    if (prefs.accentColor) document.getElementById('accentColor').value = prefs.accentColor;
+                    if (prefs.language) document.getElementById('language').value = prefs.language;
+                    if (prefs.timezone) document.getElementById('timezone').value = prefs.timezone;
+                    document.getElementById('detailedResponse').checked = prefs.detailedResponse !== false;
+                    document.getElementById('includeCodeExamples').checked = prefs.includeCodeExamples !== false;
+                    document.getElementById('showSources').checked = prefs.showSources === true;
+                    if (prefs.fontSize) document.getElementById('fontSize').value = prefs.fontSize;
+                    document.getElementById('autoSave').checked = prefs.autoSave !== false;
+                    document.getElementById('spellCheck').checked = prefs.spellCheck !== false;
+                    
+                    // 테마 적용
+                    applyTheme(prefs.themeMode || 'light');
+                } catch (e) {
+                    console.error('환경설정 로드 오류:', e);
+                }
+            }
+
+            // 알림 설정 로드
+            const savedNotifications = localStorage.getItem('employeeNotifications');
+            if (savedNotifications) {
+                try {
+                    const notifs = JSON.parse(savedNotifications);
+                    document.getElementById('emailProjectUpdates').checked = notifs.emailProjectUpdates !== false;
+                    document.getElementById('emailAIComplete').checked = notifs.emailAIComplete === true;
+                    document.getElementById('emailWeeklyReport').checked = notifs.emailWeeklyReport !== false;
+                    document.getElementById('emailNewFeatures').checked = notifs.emailNewFeatures !== false;
+                    document.getElementById('pushNotifications').checked = notifs.pushNotifications === true;
+                    document.getElementById('notificationSound').checked = notifs.notificationSound !== false;
+                    document.getElementById('doNotDisturb').checked = notifs.doNotDisturb === true;
+                    if (notifs.dndStartTime) document.getElementById('dndStartTime').value = notifs.dndStartTime;
+                    if (notifs.dndEndTime) document.getElementById('dndEndTime').value = notifs.dndEndTime;
+                } catch (e) {
+                    console.error('알림 설정 로드 오류:', e);
+                }
+            }
+
+            console.log('설정 로드 완료');
+        }
+
+        // ========== 키보드 단축키 ==========
+        document.addEventListener('keydown', function(e) {
+            // Ctrl/Cmd + S: 저장
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                
+                switch(currentSection) {
+                    case 'profile':
+                        saveProfile();
+                        break;
+                    case 'preferences':
+                        savePreferences();
+                        break;
+                    case 'notifications':
+                        saveNotifications();
+                        break;
+                }
+            }
+
+            // ESC: 변경사항 취소
+            if (e.key === 'Escape' && hasUnsavedChanges) {
+                if (confirm('변경사항을 취소하시겠습니까?')) {
+                    loadSettings();
+                    hasUnsavedChanges = false;
+                }
+            }
+        });
+
+        // ========== 초기화 완료 ==========
+        console.log('✅ Profile Settings 로드 완료');
+        console.log('단축키: Ctrl+S (저장), ESC (취소)');
+    </script>
+    <!-- 추가 스타일: 애니메이션 및 반응형 -->
+    <style>
+        /* 스크롤바 스타일 */
+        .settings-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .settings-content::-webkit-scrollbar-thumb {
+            background: var(--gray-300);
+            border-radius: var(--radius-full);
+        }
+
+        .settings-content::-webkit-scrollbar-thumb:hover {
+            background: var(--gray-400);
+        }
+
+        /* FAQ 토글 애니메이션 */
+        .setting-item {
+            transition: all 0.2s;
+        }
+
+        .setting-item:hover {
+            background: var(--border);
+        }
+
+        /* 프로그레스 바 애니메이션 */
+        .progress-bar__fill {
+            transition: width 0.5s ease-out;
+        }
+
+        /* 토글 스위치 애니메이션 */
+        .toggle-slider {
+            transition: background-color 0.3s;
+        }
+
+        .toggle-slider:before {
+            transition: transform 0.3s;
+        }
+
+        /* 버튼 호버 효과 */
+        .btn {
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        /* 입력 필드 포커스 애니메이션 */
+        .form-input,
+        .form-select,
+        .form-textarea {
+            transition: all 0.2s;
+        }
+
+        /* 설정 항목 애니메이션 */
+        .setting-item {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* 활동 항목 호버 */
+        .activity-item {
+            transition: all 0.2s;
+        }
+
+        .activity-item:hover {
+            transform: translateX(4px);
+        }
+
+        /* 통계 카드 호버 */
+        .stat-item {
+            transition: all 0.2s;
+        }
+
+        .stat-item:hover .stat-item__value {
+            transform: scale(1.1);
+            transition: transform 0.2s;
+        }
+
+        /* 다크 모드 지원 */
+        @media (prefers-color-scheme: dark) {
+            :root:not(.light-mode) {
+                --background: #1a1a1a;
+                --surface: #2a2a2a;
+                --border: #3a3a3a;
+                --text-primary: #ffffff;
+                --text-secondary: #b0b0b0;
+                --text-tertiary: #808080;
+            }
+        }
+
+        /* 인쇄 스타일 */
+        @media print {
+            .header,
+            .sidebar,
+            .settings-sidebar,
+            .action-buttons {
+                display: none !important;
+            }
+
+            .settings-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .settings-content {
+                border: none;
+                padding: 0;
+            }
+
+            .settings-section {
+                page-break-inside: avoid;
+            }
+        }
+
+        /* 접근성 개선 */
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: 2px solid var(--employee-primary);
+            outline-offset: 2px;
+        }
+
+        .toggle-switch input:focus + .toggle-slider {
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+        }
+
+        /* 작은 화면 최적화 */
+        @media (max-width: 640px) {
+            .page-header__title {
+                font-size: var(--text-2xl);
+            }
+
+            .settings-nav {
+                gap: var(--space-1);
+                padding: var(--space-2);
+            }
+
+            .settings-nav__item {
+                font-size: var(--text-xs);
+                padding: var(--space-2);
+            }
+
+            .settings-content {
+                padding: var(--space-4);
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .action-buttons .btn {
+                width: 100%;
+            }
+
+            .profile-avatar {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .profile-avatar__actions {
+                width: 100%;
+            }
+
+            .profile-avatar__actions .btn {
+                width: 100%;
+            }
+        }
+
+        /* 로딩 상태 */
+        .loading {
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 2px solid var(--employee-primary);
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* 성공 메시지 */
+        .success-message {
+            background: rgba(16, 185, 129, 0.1);
+            border: 2px solid var(--employee-primary);
+            border-radius: var(--radius-md);
+            padding: var(--space-3);
+            margin-bottom: var(--space-4);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .success-message__icon {
+            font-size: 20px;
+            color: var(--employee-primary);
+        }
+
+        .success-message__text {
+            font-size: var(--text-sm);
+            color: var(--text-primary);
+        }
+
+        /* 에러 메시지 */
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 2px solid var(--danger);
+            border-radius: var(--radius-md);
+            padding: var(--space-3);
+            margin-bottom: var(--space-4);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .error-message__icon {
+            font-size: 20px;
+            color: var(--danger);
+        }
+
+        .error-message__text {
+            font-size: var(--text-sm);
+            color: var(--text-primary);
+        }
+
+        /* 툴팁 */
+        [data-tooltip] {
+            position: relative;
+            cursor: help;
+        }
+
+        [data-tooltip]:hover::before {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: var(--space-2) var(--space-3);
+            background: var(--gray-900);
+            color: white;
+            font-size: var(--text-xs);
+            border-radius: var(--radius-md);
+            white-space: nowrap;
+            z-index: 1000;
+            margin-bottom: var(--space-1);
+        }
+
+        [data-tooltip]:hover::after {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 4px solid transparent;
+            border-top-color: var(--gray-900);
+            z-index: 1000;
+        }
+
+        /* 배지 */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: var(--radius-full);
+            font-size: var(--text-xs);
+            font-weight: var(--font-bold);
+        }
+
+        .badge--new {
+            background: var(--employee-primary);
+            color: white;
+        }
+
+        .badge--beta {
+            background: var(--employee-accent);
+            color: white;
+        }
+
+        .badge--pro {
+            background: linear-gradient(135deg, var(--employee-primary), var(--employee-secondary));
+            color: white;
+        }
+
+        /* 스켈레톤 로더 */
+        .skeleton {
+            background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-300) 50%, var(--gray-200) 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s ease-in-out infinite;
+            border-radius: var(--radius-md);
+        }
+
+        @keyframes loading {
+            0% {
+                background-position: 200% 0;
+            }
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        .skeleton-text {
+            height: 16px;
+            margin-bottom: var(--space-2);
+        }
+
+        .skeleton-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+        }
+
+        /* 빈 상태 */
+        .empty-state {
+            text-align: center;
+            padding: var(--space-8) var(--space-4);
+        }
+
+        .empty-state__icon {
+            font-size: 64px;
+            margin-bottom: var(--space-3);
+            opacity: 0.5;
+        }
+
+        .empty-state__title {
+            font-size: var(--text-xl);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-2);
+        }
+
+        .empty-state__desc {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+        }
+
+        /* 모바일 네비게이션 개선 */
+        @media (max-width: 1024px) {
+            .settings-nav {
+                overflow-x: auto;
+                scrollbar-width: none;
+                -ms-overflow-style: none;
+            }
+
+            .settings-nav::-webkit-scrollbar {
+                display: none;
+            }
+
+            .settings-nav__item {
+                flex-shrink: 0;
+            }
+        }
+
+        /* 고대비 모드 지원 */
+        @media (prefers-contrast: high) {
+            .form-input,
+            .form-select,
+            .form-textarea {
+                border-width: 3px;
+            }
+
+            .toggle-slider {
+                border: 2px solid currentColor;
+            }
+        }
+
+        /* 애니메이션 축소 모드 */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* 포커스 표시 개선 */
+        *:focus-visible {
+            outline: 2px solid var(--employee-primary);
+            outline-offset: 2px;
+        }
+
+        /* 선택 텍스트 스타일 */
+        ::selection {
+            background: var(--employee-primary);
+            color: white;
+        }
+
+        ::-moz-selection {
+            background: var(--employee-primary);
+            color: white;
+        }
+    </style>
+</body>
+</html>

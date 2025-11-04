@@ -1,0 +1,2479 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>매출/과금 관리 - GrowFit Platform Admin</title>
+
+    <!-- 공통 CSS -->
+    <link rel="stylesheet" href="../common/variables.css">
+    <link rel="stylesheet" href="../common/layout.css">
+    <link rel="stylesheet" href="../common/components.css">
+
+    <style>
+        /* ========== Revenue & Billing 전용 스타일 ========== */
+        :root {
+            --platform-primary: #6366f1;
+            --platform-primary-light: #818cf8;
+            --platform-primary-dark: #4f46e5;
+            --platform-secondary: #ec4899;
+            --platform-accent: #f59e0b;
+            --platform-success: #10b981;
+            --platform-warning: #f59e0b;
+            --platform-danger: #ef4444;
+            --platform-purple: #8b5cf6;
+            --platform-blue: #3b82f6;
+            --platform-green: #10b981;
+            --platform-orange: #f59e0b;
+        }
+
+        /* 페이지 헤더 */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-6);
+        }
+
+        .page-header__left h1 {
+            font-size: var(--text-3xl);
+            font-weight: var(--font-bold);
+            background: linear-gradient(135deg, var(--platform-success), var(--platform-primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: var(--space-1);
+        }
+
+        .page-header__left p {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+        }
+
+        .page-header__actions {
+            display: flex;
+            gap: var(--space-2);
+        }
+
+        /* 통계 카드 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--space-4);
+            margin-bottom: var(--space-6);
+        }
+
+        .stat-card {
+            background: var(--background);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: var(--space-5);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.1), transparent);
+            border-radius: 50%;
+            transform: translate(30%, -30%);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(16, 185, 129, 0.15);
+            border-color: var(--platform-success);
+        }
+
+        .stat-card__icon {
+            font-size: 32px;
+            margin-bottom: var(--space-3);
+        }
+
+        .stat-card__label {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-2);
+            font-weight: var(--font-medium);
+        }
+
+        .stat-card__value {
+            font-size: var(--text-3xl);
+            font-weight: var(--font-bold);
+            color: var(--platform-success);
+            margin-bottom: var(--space-2);
+            letter-spacing: -0.5px;
+        }
+
+        .stat-card__change {
+            font-size: var(--text-xs);
+            font-weight: var(--font-bold);
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-1);
+        }
+
+        .stat-card__change--up {
+            color: var(--platform-success);
+        }
+
+        .stat-card__change--down {
+            color: var(--platform-danger);
+        }
+
+        .stat-card__meta {
+            font-size: var(--text-xs);
+            color: var(--text-tertiary);
+            margin-top: var(--space-1);
+        }
+
+        /* 차트 섹션 */
+        .chart-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: var(--space-4);
+            margin-bottom: var(--space-6);
+        }
+
+        .chart-card {
+            background: var(--background);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: var(--space-5);
+        }
+
+        .chart-card__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-4);
+        }
+
+        .chart-card__title {
+            font-size: var(--text-lg);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+        }
+
+        .chart-card__subtitle {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            margin-top: var(--space-1);
+        }
+
+        .chart-placeholder {
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(99, 102, 241, 0.05));
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            font-size: var(--text-sm);
+            border: 2px dashed var(--border);
+        }
+
+        /* 플랜 분포 */
+        .plan-distribution {
+            display: grid;
+            gap: var(--space-3);
+        }
+
+        .plan-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-3);
+            background: var(--surface);
+            border-radius: var(--radius-md);
+            transition: all 0.2s;
+        }
+
+        .plan-item:hover {
+            background: var(--border);
+            transform: translateX(4px);
+        }
+
+        .plan-item__info {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+        }
+
+        .plan-item__icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .plan-item__details {
+            flex: 1;
+        }
+
+        .plan-item__name {
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+
+        .plan-item__count {
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+        }
+
+        .plan-item__revenue {
+            text-align: right;
+        }
+
+        .plan-item__amount {
+            font-weight: var(--font-bold);
+            color: var(--platform-success);
+            font-size: var(--text-lg);
+        }
+
+        .plan-item__percentage {
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+        }
+
+        /* 필터 섹션 */
+        .filter-section {
+            background: var(--background);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: var(--space-4);
+            margin-bottom: var(--space-4);
+        }
+
+        .filter-row {
+            display: flex;
+            gap: var(--space-3);
+            align-items: end;
+        }
+
+        .filter-group {
+            flex: 1;
+        }
+
+        .filter-label {
+            font-size: var(--text-sm);
+            font-weight: var(--font-medium);
+            color: var(--text-primary);
+            margin-bottom: var(--space-2);
+        }
+
+        .filter-select {
+            width: 100%;
+            padding: var(--space-3);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--platform-primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        /* 거래 테이블 */
+        .transaction-table-container {
+            background: var(--background);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+        }
+
+        .transaction-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .transaction-table thead {
+            background: var(--surface);
+        }
+
+        .transaction-table th {
+            padding: var(--space-4);
+            text-align: left;
+            font-size: var(--text-sm);
+            font-weight: var(--font-semibold);
+            color: var(--text-secondary);
+            border-bottom: 2px solid var(--border);
+            white-space: nowrap;
+        }
+
+        .transaction-table th.sortable {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .transaction-table th.sortable:hover {
+            color: var(--platform-primary);
+        }
+
+        .transaction-table td {
+            padding: var(--space-4);
+            font-size: var(--text-sm);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .transaction-table tbody tr {
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .transaction-table tbody tr:hover {
+            background: var(--surface);
+        }
+
+        /* 거래 정보 */
+        .transaction-info {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-1);
+        }
+
+        .transaction-id {
+            font-family: 'Courier New', monospace;
+            font-size: var(--text-xs);
+            color: var(--text-tertiary);
+        }
+
+        .transaction-org {
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+        }
+
+        /* 금액 표시 */
+        .amount {
+            font-weight: var(--font-bold);
+            font-size: var(--text-lg);
+        }
+
+        .amount--positive {
+            color: var(--platform-success);
+        }
+
+        .amount--negative {
+            color: var(--platform-danger);
+        }
+
+        .amount--pending {
+            color: var(--platform-warning);
+        }
+
+        /* 상태 배지 */
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: var(--radius-full);
+            font-size: var(--text-xs);
+            font-weight: var(--font-bold);
+            display: inline-block;
+        }
+
+        .status-badge--completed {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--platform-success);
+        }
+
+        .status-badge--pending {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--platform-warning);
+        }
+
+        .status-badge--failed {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--platform-danger);
+        }
+
+        .status-badge--refunded {
+            background: rgba(107, 114, 128, 0.1);
+            color: var(--text-secondary);
+        }
+
+        /* 결제 방법 */
+        .payment-method {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: 4px 12px;
+            background: var(--surface);
+            border-radius: var(--radius-md);
+            font-size: var(--text-xs);
+        }
+
+        /* 페이지네이션 */
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-4);
+            background: var(--surface);
+            border-top: 2px solid var(--border);
+        }
+
+        .pagination-info {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: var(--space-2);
+        }
+
+        .pagination-btn {
+            padding: var(--space-2) var(--space-3);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-md);
+            background: white;
+            font-size: var(--text-sm);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            border-color: var(--platform-primary);
+            color: var(--platform-primary);
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination-btn--active {
+            background: var(--platform-primary);
+            color: white;
+            border-color: var(--platform-primary);
+        }
+
+        /* 액션 버튼 */
+        .action-buttons {
+            display: flex;
+            gap: var(--space-2);
+        }
+
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-md);
+            border: 2px solid var(--border);
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 16px;
+        }
+
+        .action-btn:hover {
+            border-color: var(--platform-primary);
+            background: var(--surface);
+            transform: scale(1.1);
+        }
+
+        /* 모달 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay--active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: var(--radius-xl);
+            width: 90%;
+            max-width: 700px;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: modalSlideUp 0.3s ease-out;
+        }
+
+        @keyframes modalSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            padding: var(--space-5);
+            border-bottom: 2px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: var(--text-xl);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-md);
+            border: none;
+            background: var(--surface);
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: var(--platform-danger);
+            color: white;
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: var(--space-5);
+            max-height: calc(90vh - 160px);
+            overflow-y: auto;
+        }
+
+        .modal-footer {
+            padding: var(--space-4);
+            border-top: 2px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: var(--space-2);
+        }
+
+        /* 정보 그룹 */
+        .info-group {
+            margin-bottom: var(--space-4);
+        }
+
+        .info-label {
+            font-size: var(--text-sm);
+            font-weight: var(--font-semibold);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-2);
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: var(--space-3);
+            background: var(--surface);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-2);
+        }
+
+        .info-row__label {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+        }
+
+        .info-row__value {
+            font-size: var(--text-sm);
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+        }
+
+        /* 반응형 */
+        @media (max-width: 1400px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .chart-section {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .filter-row {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .transaction-table {
+                display: block;
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header__left">
+                <button id="menuToggle" class="header__icon-button hidden-desktop">
+                    <span>☰</span>
+                </button>
+                <a href="platform-dashboard.html" class="header__logo">
+                    <span class="header__logo-icon">🚀</span>
+                    <span>GrowFit Platform</span>
+                </a>
+            </div>
+
+            <div class="header__right">
+                <button class="header__icon-button" title="새로고침" onclick="refreshRevenue()">
+                    <span>🔄</span>
+                </button>
+
+                <button id="notificationBtn" class="header__icon-button">
+                    <span>🔔</span>
+                    <span class="header__badge">5</span>
+                </button>
+
+                <div id="profileBtn" class="header__profile">
+                    <div class="header__avatar" style="background: linear-gradient(135deg, #6366f1, #ec4899);">플</div>
+                    <span class="hidden-mobile">플랫폼 관리자</span>
+                    <span class="hidden-mobile">▼</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="container">
+            <!-- Sidebar -->
+            <aside class="sidebar sidebar--open">
+                <div class="sidebar__user">
+                    <div class="sidebar__user-info">
+                        <div class="sidebar__user-avatar"
+                            style="background: linear-gradient(135deg, #6366f1, #ec4899);">플</div>
+                        <div class="sidebar__user-details">
+                            <div class="sidebar__user-name">플랫폼 관리자</div>
+                            <div class="sidebar__user-role">Platform Admin</div>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="sidebar__nav">
+                    <ul class="sidebar__menu">
+                        <li class="sidebar__menu-item">
+                            <a href="platform-dashboard.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">🏠</span>
+                                <span>플랫폼 대시보드</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="organization-management.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">🏢</span>
+                                <span>조직 관리</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="user-management.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">👥</span>
+                                <span>전체 사용자</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="revenue-billing.html" class="sidebar__menu-link sidebar__menu-link--active">
+                                <span class="sidebar__menu-icon">💰</span>
+                                <span>매출/과금</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="analytics-reports.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">📊</span>
+                                <span>분석 & 리포트</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="system-monitoring.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">🔧</span>
+                                <span>시스템 모니터링</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="platform-settings.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">⚙️</span>
+                                <span>시스템 설정</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <div class="sidebar__footer">
+                    <div
+                        style="padding: var(--space-3); background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(99, 102, 241, 0.1)); border-radius: var(--radius-md); font-size: var(--text-xs);">
+                        <div style="color: var(--text-secondary); margin-bottom: var(--space-1);">이번 달 MRR</div>
+                        <div
+                            style="font-weight: var(--font-bold); color: var(--platform-success); font-size: var(--text-lg);">
+                            $487K</div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main">
+                <!-- 페이지 헤더 -->
+                <div class="page-header">
+                    <div class="page-header__left">
+                        <h1>💰 매출/과금 관리</h1>
+                        <p>전체 매출 현황과 거래 내역을 관리하세요</p>
+                    </div>
+                    <div class="page-header__actions">
+                        <button class="btn btn--outline" onclick="exportRevenue()">
+                            📥 리포트 내보내기
+                        </button>
+                        <button class="btn btn--outline" onclick="showRevenueAnalytics()">
+                            📊 상세 분석
+                        </button>
+                        <button class="btn btn--primary" onclick="generateInvoice()">
+                            📄 청구서 생성
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 통계 카드 -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-card__icon">💵</div>
+                        <div class="stat-card__label">월간 반복 매출 (MRR)</div>
+                        <div class="stat-card__value">$487K</div>
+                        <div class="stat-card__change stat-card__change--up">
+                            <span>↑ 24.7%</span>
+                        </div>
+                        <div class="stat-card__meta">전월 대비 $96.3K 증가</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-card__icon">📈</div>
+                        <div class="stat-card__label">연간 반복 매출 (ARR)</div>
+                        <div class="stat-card__value">$5.84M</div>
+                        <div class="stat-card__change stat-card__change--up">
+                            <span>↑ 28.3%</span>
+                        </div>
+                        <div class="stat-card__meta">MRR × 12 기준</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-card__icon">💳</div>
+                        <div class="stat-card__label">이번 달 거래 건수</div>
+                        <div class="stat-card__value">247</div>
+                        <div class="stat-card__change stat-card__change--up">
+                            <span>↑ 12.5%</span>
+                        </div>
+                        <div class="stat-card__meta">성공률: 98.4%</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-card__icon">📊</div>
+                        <div class="stat-card__label">평균 거래액 (ARPU)</div>
+                        <div class="stat-card__value">$1,972</div>
+                        <div class="stat-card__change stat-card__change--up">
+                            <span>↑ 8.9%</span>
+                        </div>
+                        <div class="stat-card__meta">조직당 평균 매출</div>
+                    </div>
+                </div>
+
+                <!-- 차트 섹션 -->
+                <div class="chart-section">
+                    <!-- 매출 추이 차트 -->
+                    <div class="chart-card">
+                        <div class="chart-card__header">
+                            <div>
+                                <h3 class="chart-card__title">📈 월별 매출 추이</h3>
+                                <p class="chart-card__subtitle">최근 12개월 MRR 변화</p>
+                            </div>
+                            <select class="filter-select" style="width: 150px;" onchange="changeRevenueChart(this.value)">
+                                <option value="mrr">MRR</option>
+                                <option value="arr">ARR</option>
+                                <option value="transactions">거래 건수</option>
+                                <option value="arpu">ARPU</option>
+                            </select>
+                        </div>
+                        <div class="chart-placeholder">
+                            📊 매출 추이 차트
+                            <br>
+                            <span style="font-size: var(--text-xs);">(Chart.js 또는 Recharts로 구현)</span>
+                        </div>
+                    </div>
+
+                    <!-- 플랜별 매출 분포 -->
+                    <div class="chart-card">
+                        <div class="chart-card__header">
+                            <div>
+                                <h3 class="chart-card__title">🎯 플랜별 매출 분포</h3>
+                                <p class="chart-card__subtitle">이번 달 기준</p>
+                            </div>
+                        </div>
+                        <div class="plan-distribution">
+                            <div class="plan-item">
+                                <div class="plan-item__info">
+                                    <div class="plan-item__icon" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
+                                        👑
+                                    </div>
+                                    <div class="plan-item__details">
+                                        <div class="plan-item__name">Enterprise</div>
+                                        <div class="plan-item__count">47개 조직</div>
+                                    </div>
+                                </div>
+                                <div class="plan-item__revenue">
+                                    <div class="plan-item__amount">$141K</div>
+                                    <div class="plan-item__percentage">29%</div>
+                                </div>
+                            </div>
+
+                            <div class="plan-item">
+                                <div class="plan-item__info">
+                                    <div class="plan-item__icon" style="background: linear-gradient(135deg, #3b82f6, #06b6d4);">
+                                        ⭐
+                                    </div>
+                                    <div class="plan-item__details">
+                                        <div class="plan-item__name">Professional</div>
+                                        <div class="plan-item__count">89개 조직</div>
+                                    </div>
+                                </div>
+                                <div class="plan-item__revenue">
+                                    <div class="plan-item__amount">$89K</div>
+                                    <div class="plan-item__percentage">18%</div>
+                                </div>
+                            </div>
+
+                            <div class="plan-item">
+                                <div class="plan-item__info">
+                                    <div class="plan-item__icon" style="background: linear-gradient(135deg, #10b981, #34d399);">
+                                        💫
+                                    </div>
+                                    <div class="plan-item__details">
+                                        <div class="plan-item__name">Starter</div>
+                                        <div class="plan-item__count">76개 조직</div>
+                                    </div>
+                                </div>
+                                <div class="plan-item__revenue">
+                                    <div class="plan-item__amount">$23K</div>
+                                    <div class="plan-item__percentage">5%</div>
+                                </div>
+                            </div>
+
+                            <div class="plan-item">
+                                <div class="plan-item__info">
+                                    <div class="plan-item__icon" style="background: rgba(107, 114, 128, 0.1);">
+                                        🆓
+                                    </div>
+                                    <div class="plan-item__details">
+                                        <div class="plan-item__name">Free</div>
+                                        <div class="plan-item__count">35개 조직</div>
+                                    </div>
+                                </div>
+                                <div class="plan-item__revenue">
+                                    <div class="plan-item__amount">$0</div>
+                                    <div class="plan-item__percentage">0%</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: var(--space-4); padding: var(--space-3); background: var(--surface); border-radius: var(--radius-md); font-size: var(--text-sm);">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-2);">
+                                <span style="color: var(--text-secondary);">총 매출</span>
+                                <span style="font-weight: var(--font-bold); color: var(--platform-success);">$487K</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: var(--text-secondary);">평균 거래액</span>
+                                <span style="font-weight: var(--font-bold); color: var(--text-primary);">$1,972</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 필터 섹션 -->
+                <div class="filter-section">
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <div class="filter-label">📅 기간</div>
+                            <select class="filter-select" onchange="filterByPeriod(this.value)">
+                                <option value="month">이번 달</option>
+                                <option value="last-month">지난 달</option>
+                                <option value="quarter">최근 3개월</option>
+                                <option value="year">올해</option>
+                                <option value="custom">사용자 지정</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <div class="filter-label">🔄 상태</div>
+                            <select class="filter-select" onchange="filterByStatus(this.value)">
+                                <option value="">전체 상태</option>
+                                <option value="completed">완료</option>
+                                <option value="pending">대기 중</option>
+                                <option value="failed">실패</option>
+                                <option value="refunded">환불</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <div class="filter-label">📊 플랜</div>
+                            <select class="filter-select" onchange="filterByPlan(this.value)">
+                                <option value="">전체 플랜</option>
+                                <option value="enterprise">Enterprise</option>
+                                <option value="professional">Professional</option>
+                                <option value="starter">Starter</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <div class="filter-label">💳 결제 방법</div>
+                            <select class="filter-select" onchange="filterByPaymentMethod(this.value)">
+                                <option value="">전체</option>
+                                <option value="card">신용카드</option>
+                                <option value="bank">계좌이체</option>
+                                <option value="paypal">PayPal</option>
+                            </select>
+                        </div>
+
+                        <button class="btn btn--outline" onclick="resetFilters()">
+                            🔄 초기화
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 거래 내역 테이블 -->
+                <div class="transaction-table-container">
+                    <table class="transaction-table">
+                        <thead>
+                            <tr>
+                                <th class="sortable" onclick="sortTable('id')">
+                                    거래 ID <span>↕️</span>
+                                </th>
+                                <th class="sortable" onclick="sortTable('organization')">
+                                    조직 <span>↕️</span>
+                                </th>
+                                <th class="sortable" onclick="sortTable('plan')">
+                                    플랜 <span>↕️</span>
+                                </th>
+                                <th class="sortable" onclick="sortTable('amount')">
+                                    금액 <span>↕️</span>
+                                </th>
+                                <th class="sortable" onclick="sortTable('status')">
+                                    상태 <span>↕️</span>
+                                </th>
+                                <th class="sortable" onclick="sortTable('method')">
+                                    결제 방법 <span>↕️</span>
+                                </th>
+                                <th class="sortable" onclick="sortTable('date')">
+                                    거래일 <span>↕️</span>
+                                </th>
+                                <th style="width: 100px;">액션</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionsTableBody">
+                            <!-- 거래 1 -->
+                            <tr data-transaction-id="txn-1" onclick="viewTransactionDetail('txn-1')">
+                                <td>
+                                    <div class="transaction-info">
+                                        <div class="transaction-id">TXN-2024-1001</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="transaction-org">글로벌무역</div>
+                                </td>
+                                <td>
+                                    <span style="font-weight: var(--font-semibold); color: var(--platform-primary);">Enterprise</span>
+                                </td>
+                                <td>
+                                    <span class="amount amount--positive">$2,999</span>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-badge--completed">완료</span>
+                                </td>
+                                <td>
+                                    <div class="payment-method">
+                                        💳 신용카드
+                                    </div>
+                                </td>
+                                <td style="color: var(--text-secondary);">2024-10-01 14:23</td>
+                                <td onclick="event.stopPropagation();">
+                                    <div class="action-buttons">
+                                        <button class="action-btn" onclick="viewTransactionDetail('txn-1')" title="상세 보기">
+                                            👁️
+                                        </button>
+                                        <button class="action-btn" onclick="downloadInvoice('txn-1')" title="청구서">
+                                            📄
+                                        </button>
+                                        <button class="action-btn" onclick="showMoreActions('txn-1')" title="더보기">
+                                            ⋮
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- 거래 2 -->
+                            <tr data-transaction-id="txn-2" onclick="viewTransactionDetail('txn-2')">
+                                <td>
+                                    <div class="transaction-info">
+                                        <div class="transaction-id">TXN-2024-1002</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="transaction-org">테크스타트업 Inc.</div>
+                                </td>
+                                <td>
+                                    <span style="font-weight: var(--font-semibold); color: var(--platform-blue);">Professional</span>
+                                </td>
+                                <td>
+                                    <span class="amount amount--positive">$999</span>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-badge--completed">완료</span>
+                                </td>
+                                <td>
+                                    <div class="payment-method">
+                                        🏦 계좌이체
+                                    </div>
+                                </td>
+                                <td style="color: var(--text-secondary);">2024-10-01 10:15</td>
+                                <td onclick="event.stopPropagation();">
+                                    <div class="action-buttons">
+                                        <button class="action-btn" onclick="viewTransactionDetail('txn-2')" title="상세 보기">
+                                            👁️
+                                        </button>
+                                        <button class="action-btn" onclick="downloadInvoice('txn-2')" title="청구서">
+                                            📄
+                                        </button>
+                                        <button class="action-btn" onclick="showMoreActions('txn-2')" title="더보기">
+                                            ⋮
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- 거래 3 -->
+                            <tr data-transaction-id="txn-3" onclick="viewTransactionDetail('txn-3')">
+                                <td>
+                                    <div class="transaction-info">
+                                        <div class="transaction-id">TXN-2024-1003</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="transaction-org">AI연구소</div>
+                                </td>
+                                <td>
+                                    <span style="font-weight: var(--font-semibold); color: var(--platform-blue);">Professional</span>
+                                </td>
+                                <td>
+                                    <span class="amount amount--positive">$999</span>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-badge--pending">대기 중</span>
+                                </td>
+                                <td>
+                                    <div class="payment-method">
+                                        💳 신용카드
+                                    </div>
+                                </td>
+                                <td style="color: var(--text-secondary);">2024-10-08 16:42</td>
+                                <td onclick="event.stopPropagation();">
+                                    <div class="action-buttons">
+                                        <button class="action-btn" onclick="viewTransactionDetail('txn-3')" title="상세 보기">
+                                            👁️
+                                        </button>
+                                        <button class="action-btn" onclick="downloadInvoice('txn-3')" title="청구서">
+                                            📄
+                                        </button>
+                                        <button class="action-btn" onclick="showMoreActions('txn-3')" title="더보기">
+                                            ⋮
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- 거래 4 -->
+                            <tr data-transaction-id="txn-4" onclick="viewTransactionDetail('txn-4')">
+                                <td>
+                                    <div class="transaction-info">
+                                        <div class="transaction-id">TXN-2024-0998</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="transaction-org">디자인스튜디오</div>
+                                </td>
+                                <td>
+                                    <span style="font-weight: var(--font-semibold); color: var(--platform-green);">Starter</span>
+                                </td>
+                                <td>
+                                    <span class="amount amount--positive">$299</span>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-badge--completed">완료</span>
+                                </td>
+                                <td>
+                                    <div class="payment-method">
+                                        💳 신용카드
+                                    </div>
+                                </td>
+                                <td style="color: var(--text-secondary);">2024-09-28 11:20</td>
+                                <td onclick="event.stopPropagation();">
+                                    <div class="action-buttons">
+                                        <button class="action-btn" onclick="viewTransactionDetail('txn-4')" title="상세 보기">
+                                            👁️
+                                        </button>
+                                        <button class="action-btn" onclick="downloadInvoice('txn-4')" title="청구서">
+                                            📄
+                                        </button>
+                                        <button class="action-btn" onclick="showMoreActions('txn-4')" title="더보기">
+                                            ⋮
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- 거래 5 -->
+                            <tr data-transaction-id="txn-5" onclick="viewTransactionDetail('txn-5')">
+                                <td>
+                                    <div class="transaction-info">
+                                        <div class="transaction-id">TXN-2024-0995</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="transaction-org">컨설팅그룹</div>
+                                </td>
+                                <td>
+                                    <span style="font-weight: var(--font-semibold); color: var(--platform-primary);">Enterprise</span>
+                                </td>
+                                <td>
+                                    <span class="amount amount--positive">$2,999</span>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-badge--completed">완료</span>
+                                </td>
+                                <td>
+                                    <div class="payment-method">
+                                        🏦 계좌이체
+                                    </div>
+                                </td>
+                                <td style="color: var(--text-secondary);">2024-09-25 09:45</td>
+                                <td onclick="event.stopPropagation();">
+                                    <div class="action-buttons">
+                                        <button class="action-btn" onclick="viewTransactionDetail('txn-5')" title="상세 보기">
+                                            👁️
+                                        </button>
+                                        <button class="action-btn" onclick="downloadInvoice('txn-5')" title="청구서">
+                                            📄
+                                        </button>
+                                        <button class="action-btn" onclick="showMoreActions('txn-5')" title="더보기">
+                                            ⋮
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- 거래 6 (실패) -->
+                            <tr data-transaction-id="txn-6" onclick="viewTransactionDetail('txn-6')">
+                                <td>
+                                    <div class="transaction-info">
+                                        <div class="transaction-id">TXN-2024-0992</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="transaction-org">에듀테크</div>
+                                </td>
+                                <td>
+                                    <span style="font-weight: var(--font-semibold); color: var(--platform-green);">Starter</span>
+                                </td>
+                                <td>
+                                    <span class="amount amount--negative">$299</span>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-badge--failed">실패</span>
+                                </td>
+                                <td>
+                                    <div class="payment-method">
+                                        💳 신용카드
+                                    </div>
+                                </td>
+                                <td style="color: var(--text-secondary);">2024-09-20 15:30</td>
+                                <td onclick="event.stopPropagation();">
+                                    <div class="action-buttons">
+                                        <button class="action-btn" onclick="viewTransactionDetail('txn-6')" title="상세 보기">
+                                            👁️
+                                        </button>
+                                        <button class="action-btn" onclick="retryTransaction('txn-6')" title="재시도">
+                                            🔄
+                                        </button>
+                                        <button class="action-btn" onclick="showMoreActions('txn-6')" title="더보기">
+                                            ⋮
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- 거래 7 (환불) -->
+                            <tr data-transaction-id="txn-7" onclick="viewTransactionDetail('txn-7')">
+                                <td>
+                                    <div class="transaction-info">
+                                        <div class="transaction-id">TXN-2024-0987</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="transaction-org">메디컬센터</div>
+                                </td>
+                                <td>
+                                    <span style="font-weight: var(--font-semibold); color: var(--platform-blue);">Professional</span>
+                                </td>
+                                <td>
+                                    <span class="amount amount--negative">-$999</span>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-badge--refunded">환불</span>
+                                </td>
+                                <td>
+                                    <div class="payment-method">
+                                        💳 신용카드
+                                    </div>
+                                </td>
+                                <td style="color: var(--text-secondary);">2024-09-15 13:10</td>
+                                <td onclick="event.stopPropagation();">
+                                    <div class="action-buttons">
+                                        <button class="action-btn" onclick="viewTransactionDetail('txn-7')" title="상세 보기">
+                                            👁️
+                                        </button>
+                                        <button class="action-btn" onclick="downloadInvoice('txn-7')" title="청구서">
+                                            📄
+                                        </button>
+                                        <button class="action-btn" onclick="showMoreActions('txn-7')" title="더보기">
+                                            ⋮
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- 거래 8 -->
+                            <tr data-transaction-id="txn-8" onclick="viewTransactionDetail('txn-8')">
+                                <td>
+                                    <div class="transaction-info">
+                                        <div class="transaction-id">TXN-2024-0984</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="transaction-org">글로벌무역</div>
+                                </td>
+                                <td>
+                                    <span style="font-weight: var(--font-semibold); color: var(--platform-primary);">Enterprise</span>
+                                </td>
+                                <td>
+                                    <span class="amount amount--positive">$2,999</span>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-badge--completed">완료</span>
+                                </td>
+                                <td>
+                                    <div class="payment-method">
+                                        💳 신용카드
+                                    </div>
+                                </td>
+                                <td style="color: var(--text-secondary);">2024-09-01 14:23</td>
+                                <td onclick="event.stopPropagation();">
+                                    <div class="action-buttons">
+                                        <button class="action-btn" onclick="viewTransactionDetail('txn-8')" title="상세 보기">
+                                            👁️
+                                        </button>
+                                        <button class="action-btn" onclick="downloadInvoice('txn-8')" title="청구서">
+                                            📄
+                                        </button>
+                                        <button class="action-btn" onclick="showMoreActions('txn-8')" title="더보기">
+                                            ⋮
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- 페이지네이션 -->
+                    <div class="pagination">
+                        <div class="pagination-info">
+                            1-8 / 247개 거래
+                        </div>
+                        <div class="pagination-controls">
+                            <button class="pagination-btn" disabled>◀ 이전</button>
+                            <button class="pagination-btn pagination-btn--active">1</button>
+                            <button class="pagination-btn">2</button>
+                            <button class="pagination-btn">3</button>
+                            <button class="pagination-btn">...</button>
+                            <button class="pagination-btn">31</button>
+                            <button class="pagination-btn">다음 ▶</button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- 거래 상세 모달 -->
+        <div id="transactionDetailModal" class="modal-overlay">
+            <div class="modal">
+                <div class="modal-header">
+                    <h2 class="modal-title">💳 거래 상세 정보</h2>
+                    <button class="modal-close" onclick="closeTransactionDetailModal()">✕</button>
+                </div>
+                <div class="modal-body" id="transactionDetailContent">
+                    <!-- 동적으로 채워짐 -->
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn--outline" onclick="closeTransactionDetailModal()">닫기</button>
+                    <button class="btn btn--primary" onclick="downloadCurrentInvoice()">청구서 다운로드</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 공통 스크립트 -->
+    <script src="../common/layout.js"></script>
+    <script src="../common/utils.js"></script>
+
+    <!-- 페이지 전용 스크립트 -->
+    <script>
+        // ========== Revenue & Billing 전용 로직 ==========
+
+        // 전역 변수
+        let transactionsData = [];
+        let filteredTransactions = [];
+        let sortColumn = 'date';
+        let sortDirection = 'desc';
+        let currentPage = 1;
+        let itemsPerPage = 8;
+        let currentTransactionId = null;
+
+        // ========== 초기화 ==========
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Revenue & Billing 페이지 초기화');
+            
+            initializeRevenue();
+            loadRevenueData();
+        });
+
+        function initializeRevenue() {
+            // 초기 데이터 로드
+            transactionsData = getAllTransactions();
+            filteredTransactions = [...transactionsData];
+            
+            // URL 파라미터 확인
+            const urlParams = new URLSearchParams(window.location.search);
+            const action = urlParams.get('action');
+            const txnId = urlParams.get('id');
+
+            if (action === 'view' && txnId) {
+                viewTransactionDetail(txnId);
+            }
+        }
+
+        function loadRevenueData() {
+            // 실제로는 서버에서 데이터 가져옴
+            console.log('매출 데이터 로드 완료:', transactionsData.length);
+            calculateRevenueMetrics();
+        }
+
+        // ========== 데이터 가져오기 ==========
+        function getAllTransactions() {
+            // 실제로는 API 호출
+            return [
+                {
+                    id: 'txn-1',
+                    transactionId: 'TXN-2024-1001',
+                    organization: 'org-1',
+                    organizationName: '글로벌무역',
+                    plan: 'enterprise',
+                    amount: 2999,
+                    status: 'completed',
+                    method: 'card',
+                    date: '2024-10-01 14:23',
+                    description: 'Enterprise 플랜 월간 구독',
+                    invoiceUrl: '#'
+                },
+                {
+                    id: 'txn-2',
+                    transactionId: 'TXN-2024-1002',
+                    organization: 'org-2',
+                    organizationName: '테크스타트업 Inc.',
+                    plan: 'professional',
+                    amount: 999,
+                    status: 'completed',
+                    method: 'bank',
+                    date: '2024-10-01 10:15',
+                    description: 'Professional 플랜 월간 구독',
+                    invoiceUrl: '#'
+                },
+                {
+                    id: 'txn-3',
+                    transactionId: 'TXN-2024-1003',
+                    organization: 'org-3',
+                    organizationName: 'AI연구소',
+                    plan: 'professional',
+                    amount: 999,
+                    status: 'pending',
+                    method: 'card',
+                    date: '2024-10-08 16:42',
+                    description: 'Professional 플랜 월간 구독',
+                    invoiceUrl: '#'
+                },
+                {
+                    id: 'txn-4',
+                    transactionId: 'TXN-2024-0998',
+                    organization: 'org-4',
+                    organizationName: '디자인스튜디오',
+                    plan: 'starter',
+                    amount: 299,
+                    status: 'completed',
+                    method: 'card',
+                    date: '2024-09-28 11:20',
+                    description: 'Starter 플랜 월간 구독',
+                    invoiceUrl: '#'
+                },
+                {
+                    id: 'txn-5',
+                    transactionId: 'TXN-2024-0995',
+                    organization: 'org-5',
+                    organizationName: '컨설팅그룹',
+                    plan: 'enterprise',
+                    amount: 2999,
+                    status: 'completed',
+                    method: 'bank',
+                    date: '2024-09-25 09:45',
+                    description: 'Enterprise 플랜 월간 구독',
+                    invoiceUrl: '#'
+                },
+                {
+                    id: 'txn-6',
+                    transactionId: 'TXN-2024-0992',
+                    organization: 'org-6',
+                    organizationName: '에듀테크',
+                    plan: 'starter',
+                    amount: 299,
+                    status: 'failed',
+                    method: 'card',
+                    date: '2024-09-20 15:30',
+                    description: 'Starter 플랜 월간 구독',
+                    failureReason: '카드 한도 초과',
+                    invoiceUrl: '#'
+                },
+                {
+                    id: 'txn-7',
+                    transactionId: 'TXN-2024-0987',
+                    organization: 'org-7',
+                    organizationName: '메디컬센터',
+                    plan: 'professional',
+                    amount: -999,
+                    status: 'refunded',
+                    method: 'card',
+                    date: '2024-09-15 13:10',
+                    description: 'Professional 플랜 환불',
+                    refundReason: '고객 요청',
+                    invoiceUrl: '#'
+                },
+                {
+                    id: 'txn-8',
+                    transactionId: 'TXN-2024-0984',
+                    organization: 'org-1',
+                    organizationName: '글로벌무역',
+                    plan: 'enterprise',
+                    amount: 2999,
+                    status: 'completed',
+                    method: 'card',
+                    date: '2024-09-01 14:23',
+                    description: 'Enterprise 플랜 월간 구독',
+                    invoiceUrl: '#'
+                }
+            ];
+        }
+
+        // ========== 매출 지표 계산 ==========
+        function calculateRevenueMetrics() {
+            const completedTransactions = transactionsData.filter(t => t.status === 'completed');
+            
+            const metrics = {
+                mrr: completedTransactions.reduce((sum, t) => sum + Math.abs(t.amount), 0),
+                arr: completedTransactions.reduce((sum, t) => sum + Math.abs(t.amount), 0) * 12,
+                transactionCount: transactionsData.length,
+                arpu: completedTransactions.length > 0 
+                    ? completedTransactions.reduce((sum, t) => sum + Math.abs(t.amount), 0) / completedTransactions.length 
+                    : 0
+            };
+
+            console.log('매출 지표:', metrics);
+            return metrics;
+        }
+
+        // ========== 필터링 ==========
+        function filterByPeriod(period) {
+            const now = new Date();
+            
+            if (period === 'custom') {
+                const start = prompt('시작일 (YYYY-MM-DD):');
+                const end = prompt('종료일 (YYYY-MM-DD):');
+                
+                if (start && end) {
+                    filteredTransactions = transactionsData.filter(txn => {
+                        const txnDate = new Date(txn.date);
+                        return txnDate >= new Date(start) && txnDate <= new Date(end);
+                    });
+                }
+            } else {
+                filteredTransactions = transactionsData.filter(txn => {
+                    const txnDate = new Date(txn.date);
+                    
+                    switch(period) {
+                        case 'month':
+                            return txnDate.getMonth() === now.getMonth() && 
+                                   txnDate.getFullYear() === now.getFullYear();
+                        case 'last-month':
+                            const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1);
+                            return txnDate.getMonth() === lastMonth.getMonth() && 
+                                   txnDate.getFullYear() === lastMonth.getFullYear();
+                        case 'quarter':
+                            const quarterAgo = new Date(now - 90 * 24 * 60 * 60 * 1000);
+                            return txnDate >= quarterAgo;
+                        case 'year':
+                            return txnDate.getFullYear() === now.getFullYear();
+                        default:
+                            return true;
+                    }
+                });
+            }
+            
+            currentPage = 1;
+            renderTransactionsTable();
+        }
+
+        function filterByStatus(status) {
+            if (!status) {
+                filteredTransactions = [...transactionsData];
+            } else {
+                filteredTransactions = transactionsData.filter(txn => txn.status === status);
+            }
+            currentPage = 1;
+            renderTransactionsTable();
+        }
+
+        function filterByPlan(plan) {
+            if (!plan) {
+                filteredTransactions = [...transactionsData];
+            } else {
+                filteredTransactions = transactionsData.filter(txn => txn.plan === plan);
+            }
+            currentPage = 1;
+            renderTransactionsTable();
+        }
+
+        function filterByPaymentMethod(method) {
+            if (!method) {
+                filteredTransactions = [...transactionsData];
+            } else {
+                filteredTransactions = transactionsData.filter(txn => txn.method === method);
+            }
+            currentPage = 1;
+            renderTransactionsTable();
+        }
+
+        function resetFilters() {
+            // 모든 필터 초기화
+            document.querySelectorAll('.filter-select').forEach(select => {
+                select.selectedIndex = 0;
+            });
+            
+            filteredTransactions = [...transactionsData];
+            currentPage = 1;
+            renderTransactionsTable();
+            
+            window.GrowFitUtils.showToast('필터가 초기화되었습니다', 'info');
+        }
+
+        // ========== 정렬 ==========
+        function sortTable(column) {
+            if (sortColumn === column) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortColumn = column;
+                sortDirection = 'asc';
+            }
+
+            filteredTransactions.sort((a, b) => {
+                let aVal = a[column];
+                let bVal = b[column];
+
+                // 숫자 비교
+                if (typeof aVal === 'number') {
+                    return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
+                }
+
+                // 문자열 비교
+                if (sortDirection === 'asc') {
+                    return aVal > bVal ? 1 : -1;
+                } else {
+                    return aVal < bVal ? 1 : -1;
+                }
+            });
+
+            renderTransactionsTable();
+            
+            window.GrowFitUtils.showToast(`${column}로 정렬되었습니다`, 'info');
+        }
+
+        // ========== 테이블 렌더링 ==========
+        function renderTransactionsTable() {
+            // 실제 구현에서는 동적으로 테이블 생성
+            console.log('테이블 렌더링:', filteredTransactions.length, '개 거래');
+        }
+
+        // ========== 거래 상세 보기 ==========
+        function viewTransactionDetail(txnId) {
+            const txn = transactionsData.find(t => t.id === txnId);
+            
+            if (!txn) {
+                window.GrowFitUtils.showToast('거래를 찾을 수 없습니다', 'error');
+                return;
+            }
+
+            currentTransactionId = txnId;
+
+            const detailHtml = `
+                <div style="display: grid; gap: var(--space-4);">
+                    <div class="info-group">
+                        <div class="info-label">거래 정보</div>
+                        <div class="info-row">
+                            <div class="info-row__label">거래 ID</div>
+                            <div class="info-row__value" style="font-family: 'Courier New', monospace;">${txn.transactionId}</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-row__label">조직</div>
+                            <div class="info-row__value">${txn.organizationName}</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-row__label">플랜</div>
+                            <div class="info-row__value">${getPlanName(txn.plan)}</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-row__label">설명</div>
+                            <div class="info-row__value">${txn.description}</div>
+                        </div>
+                    </div>
+
+                    <div class="info-group">
+                        <div class="info-label">결제 정보</div>
+                        <div class="info-row">
+                            <div class="info-row__label">금액</div>
+                            <div class="info-row__value" style="font-size: var(--text-xl); font-weight: var(--font-bold); color: ${txn.amount >= 0 ? 'var(--platform-success)' : 'var(--platform-danger)'};">
+                                ${txn.amount >= 0 ? '$' : '-$'}${Math.abs(txn.amount).toLocaleString()}
+                            </div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-row__label">상태</div>
+                            <div class="info-row__value">
+                                <span class="status-badge status-badge--${txn.status}">${getStatusName(txn.status)}</span>
+                            </div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-row__label">결제 방법</div>
+                            <div class="info-row__value">${getPaymentMethodName(txn.method)}</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-row__label">거래일시</div>
+                            <div class="info-row__value">${txn.date}</div>
+                        </div>
+                    </div>
+
+                    ${txn.failureReason ? `
+                    <div class="info-group">
+                        <div class="info-label">실패 정보</div>
+                        <div style="padding: var(--space-3); background: rgba(239, 68, 68, 0.1); border-radius: var(--radius-md); color: var(--platform-danger);">
+                            ⚠️ ${txn.failureReason}
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    ${txn.refundReason ? `
+                    <div class="info-group">
+                        <div class="info-label">환불 정보</div>
+                        <div style="padding: var(--space-3); background: var(--surface); border-radius: var(--radius-md);">
+                            📝 사유: ${txn.refundReason}
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    <div class="info-group">
+                        <div class="info-label">빠른 액션</div>
+                        <div style="display: flex; gap: var(--space-2); flex-wrap: wrap;">
+                            <button class="btn btn--sm btn--outline" onclick="downloadInvoice('${txn.id}')">📄 청구서 다운로드</button>
+                            <button class="btn btn--sm btn--outline" onclick="sendInvoiceEmail('${txn.id}')">📧 청구서 이메일 발송</button>
+                            ${txn.status === 'failed' ? `<button class="btn btn--sm btn--outline" onclick="retryTransaction('${txn.id}')">🔄 결제 재시도</button>` : ''}
+                            ${txn.status === 'completed' ? `<button class="btn btn--sm btn--outline" onclick="processRefund('${txn.id}')">💸 환불 처리</button>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('transactionDetailContent').innerHTML = detailHtml;
+            document.getElementById('transactionDetailModal').classList.add('modal-overlay--active');
+        }
+
+        function closeTransactionDetailModal() {
+            document.getElementById('transactionDetailModal').classList.remove('modal-overlay--active');
+            currentTransactionId = null;
+        }
+
+        // ========== 청구서 관리 ==========
+        function downloadInvoice(txnId) {
+            const txn = transactionsData.find(t => t.id === txnId);
+            
+            if (!txn) {
+                window.GrowFitUtils.showToast('거래를 찾을 수 없습니다', 'error');
+                return;
+            }
+
+            window.GrowFitUtils.showToast('청구서를 생성하는 중...', 'info');
+            
+            setTimeout(() => {
+                window.GrowFitUtils.showToast(`${txn.transactionId}_invoice.pdf가 다운로드되었습니다`, 'success');
+            }, 1500);
+        }
+
+        function downloadCurrentInvoice() {
+            if (currentTransactionId) {
+                downloadInvoice(currentTransactionId);
+            }
+        }
+
+        function sendInvoiceEmail(txnId) {
+            const txn = transactionsData.find(t => t.id === txnId);
+            
+            if (!txn) {
+                window.GrowFitUtils.showToast('거래를 찾을 수 없습니다', 'error');
+                return;
+            }
+
+            if (confirm(`${txn.organizationName}에 청구서를 이메일로 발송하시겠습니까?`)) {
+                window.GrowFitUtils.showToast('청구서 이메일을 발송하는 중...', 'info');
+                
+                setTimeout(() => {
+                    window.GrowFitUtils.showToast('청구서 이메일이 발송되었습니다', 'success');
+                }, 1500);
+            }
+        }
+
+        function generateInvoice() {
+            const options = `
+📄 청구서 생성
+
+생성 옵션:
+
+1. 개별 조직 청구서
+2. 월별 통합 청구서
+3. 미납 청구서 일괄 생성
+4. 커스텀 청구서
+
+번호를 입력하세요:
+            `.trim();
+
+            const choice = prompt(options);
+
+            if (choice && ['1', '2', '3', '4'].includes(choice)) {
+                handleInvoiceGeneration(choice);
+            }
+        }
+
+        function handleInvoiceGeneration(type) {
+            switch(type) {
+                case '1':
+                    generateSingleInvoice();
+                    break;
+                case '2':
+                    generateMonthlyInvoices();
+                    break;
+                case '3':
+                    generateUnpaidInvoices();
+                    break;
+                case '4':
+                    generateCustomInvoice();
+                    break;
+            }
+        }
+
+        function generateSingleInvoice() {
+            const orgName = prompt('조직명:');
+            
+            if (orgName) {
+                window.GrowFitUtils.showToast('청구서를 생성하는 중...', 'info');
+                
+                setTimeout(() => {
+                    window.GrowFitUtils.showToast('청구서가 생성되었습니다', 'success');
+                }, 1500);
+            }
+        }
+
+        function generateMonthlyInvoices() {
+            if (confirm('이번 달 모든 조직의 청구서를 생성하시겠습니까?')) {
+                window.GrowFitUtils.showToast('청구서를 일괄 생성하는 중...', 'info');
+                
+                setTimeout(() => {
+                    window.GrowFitUtils.showToast('247개 청구서가 생성되었습니다', 'success');
+                }, 2000);
+            }
+        }
+
+        function generateUnpaidInvoices() {
+            window.GrowFitUtils.showToast('미납 청구서를 생성하는 중...', 'info');
+            
+            setTimeout(() => {
+                window.GrowFitUtils.showToast('12개 미납 청구서가 생성되었습니다', 'success');
+            }, 1500);
+        }
+
+        function generateCustomInvoice() {
+            alert('커스텀 청구서 생성 기능은 개발 중입니다');
+        }
+
+        // ========== 거래 처리 ==========
+        function retryTransaction(txnId) {
+            const txn = transactionsData.find(t => t.id === txnId);
+            
+            if (!txn) {
+                window.GrowFitUtils.showToast('거래를 찾을 수 없습니다', 'error');
+                return;
+            }
+
+            if (confirm(`${txn.organizationName}의 결제를 재시도하시겠습니까?`)) {
+                window.GrowFitUtils.showToast('결제를 재시도하는 중...', 'info');
+                
+                setTimeout(() => {
+                    txn.status = 'completed';
+                    window.GrowFitUtils.showToast('결제가 완료되었습니다', 'success');
+                    renderTransactionsTable();
+                }, 2000);
+            }
+        }
+
+        function processRefund(txnId) {
+            const txn = transactionsData.find(t => t.id === txnId);
+            
+            if (!txn) {
+                window.GrowFitUtils.showToast('거래를 찾을 수 없습니다', 'error');
+                return;
+            }
+
+            const reason = prompt(`환불 사유를 입력하세요:\n\n조직: ${txn.organizationName}\n금액: $${txn.amount.toLocaleString()}`);
+            
+            if (reason && reason.trim()) {
+                window.GrowFitUtils.showToast('환불을 처리하는 중...', 'info');
+                
+                setTimeout(() => {
+                    txn.status = 'refunded';
+                    txn.refundReason = reason;
+                    txn.amount = -Math.abs(txn.amount);
+                    
+                    window.GrowFitUtils.showToast('환불이 완료되었습니다', 'success');
+                    renderTransactionsTable();
+                    closeTransactionDetailModal();
+                }, 2000);
+            }
+        }
+
+        // ========== 더보기 액션 ==========
+        function showMoreActions(txnId) {
+            const txn = transactionsData.find(t => t.id === txnId);
+
+            const actions = `
+⋮ ${txn.transactionId} 추가 작업
+
+1. 📄 청구서 다운로드
+2. 📧 이메일 발송
+3. 🔍 상세 내역 보기
+4. 💳 결제 정보 수정
+${txn.status === 'failed' ? '5. 🔄 결제 재시도' : ''}
+${txn.status === 'completed' ? '5. 💸 환불 처리' : ''}
+
+번호를 입력하세요:
+            `.trim();
+
+            const choice = prompt(actions);
+
+            if (choice && ['1', '2', '3', '4', '5'].includes(choice)) {
+                handleMoreAction(txnId, choice, txn);
+            }
+        }
+
+        function handleMoreAction(txnId, action, txn) {
+            switch(action) {
+                case '1':
+                    downloadInvoice(txnId);
+                    break;
+                case '2':
+                    sendInvoiceEmail(txnId);
+                    break;
+                case '3':
+                    viewTransactionDetail(txnId);
+                    break;
+                case '4':
+                    editPaymentInfo(txnId);
+                    break;
+                case '5':
+                    if (txn.status === 'failed') {
+                        retryTransaction(txnId);
+                    } else if (txn.status === 'completed') {
+                        processRefund(txnId);
+                    }
+                    break;
+            }
+        }
+
+        function editPaymentInfo(txnId) {
+            alert('결제 정보 수정 기능은 개발 중입니다');
+        }
+
+        // ========== 매출 분석 ==========
+        function showRevenueAnalytics() {
+            const completedTxns = transactionsData.filter(t => t.status === 'completed');
+            const failedTxns = transactionsData.filter(t => t.status === 'failed');
+            const refundedTxns = transactionsData.filter(t => t.status === 'refunded');
+
+            const totalRevenue = completedTxns.reduce((sum, t) => sum + t.amount, 0);
+            const totalRefunds = Math.abs(refundedTxns.reduce((sum, t) => sum + t.amount, 0));
+            const netRevenue = totalRevenue - totalRefunds;
+
+            const analytics = `
+📊 매출 분석 리포트
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+매출 현황:
+- 총 거래액: $${totalRevenue.toLocaleString()}
+- 환불액: $${totalRefunds.toLocaleString()}
+- 순 매출: $${netRevenue.toLocaleString()}
+
+거래 통계:
+- 총 거래: ${transactionsData.length}건
+- 완료: ${completedTxns.length}건 (${Math.round(completedTxns.length / transactionsData.length * 100)}%)
+- 대기: ${transactionsData.filter(t => t.status === 'pending').length}건
+- 실패: ${failedTxns.length}건 (${Math.round(failedTxns.length / transactionsData.length * 100)}%)
+- 환불: ${refundedTxns.length}건 (${Math.round(refundedTxns.length / transactionsData.length * 100)}%)
+
+성공률:
+- 전체: ${Math.round((completedTxns.length / (transactionsData.length - refundedTxns.length)) * 100)}%
+- 카드 결제: 98.7%
+- 계좌이체: 99.2%
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+플랜별 매출:
+- Enterprise: $141K (29%)
+- Professional: $89K (18%)
+- Starter: $23K (5%)
+
+결제 방법별:
+- 신용카드: 67% ($325K)
+- 계좌이체: 28% ($136K)
+- PayPal: 5% ($24K)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+주요 지표:
+- MRR: $487K (+24.7%)
+- ARR: $5.84M (+28.3%)
+- ARPU: $1,972 (+8.9%)
+- Churn Rate: 2.3%
+
+성장 추이:
+- 월간 성장률: +24.7%
+- 분기 성장률: +73.2%
+- 연간 성장률: +287%
+
+[상세 리포트] [PDF 다운로드]
+            `.trim();
+
+            alert(analytics);
+        }
+
+        // ========== 내보내기 ==========
+        function exportRevenue() {
+            const formats = `
+📥 매출 리포트 내보내기
+
+내보낼 형식:
+
+1. CSV (거래 내역)
+2. Excel (상세 리포트)
+3. PDF (월간 리포트)
+4. JSON (API 데이터)
+
+번호를 입력하세요:
+            `.trim();
+
+            const choice = prompt(formats);
+
+            if (choice && ['1', '2', '3', '4'].includes(choice)) {
+                handleExport(choice);
+            }
+        }
+
+        function handleExport(format) {
+            const formatMap = {
+                '1': 'transactions.csv',
+                '2': 'revenue_report.xlsx',
+                '3': 'monthly_report.pdf',
+                '4': 'revenue_data.json'
+            };
+
+            window.GrowFitUtils.showToast('리포트를 생성하는 중...', 'info');
+
+            setTimeout(() => {
+                const filename = formatMap[format];
+                window.GrowFitUtils.showToast(`${filename}이(가) 다운로드되었습니다`, 'success');
+            }, 2000);
+        }
+
+        // ========== 차트 관리 ==========
+        function changeRevenueChart(type) {
+            window.GrowFitUtils.showToast(`${type} 차트로 변경 중...`, 'info');
+            
+            setTimeout(() => {
+                window.GrowFitUtils.showToast('차트가 업데이트되었습니다', 'success');
+            }, 500);
+        }
+
+        // ========== 새로고침 ==========
+        function refreshRevenue() {
+            window.GrowFitUtils.showToast('매출 데이터를 새로고침하는 중...', 'info');
+            
+            setTimeout(() => {
+                loadRevenueData();
+                renderTransactionsTable();
+                window.GrowFitUtils.showToast('데이터가 업데이트되었습니다', 'success');
+            }, 1000);
+        }
+
+        // ========== 유틸리티 함수 ==========
+        function getPlanName(plan) {
+            const names = {
+                'enterprise': 'Enterprise',
+                'professional': 'Professional',
+                'starter': 'Starter',
+                'free': 'Free'
+            };
+            return names[plan] || plan;
+        }
+
+        function getStatusName(status) {
+            const names = {
+                'completed': '완료',
+                'pending': '대기 중',
+                'failed': '실패',
+                'refunded': '환불'
+            };
+            return names[status] || status;
+        }
+
+        function getPaymentMethodName(method) {
+            const names = {
+                'card': '💳 신용카드',
+                'bank': '🏦 계좌이체',
+                'paypal': '💰 PayPal'
+            };
+            return names[method] || method;
+        }
+
+        // ========== 매출 예측 ==========
+        function predictRevenue() {
+            const currentMRR = 487000;
+            const growthRate = 0.247;
+
+            const predictions = `
+🔮 매출 예측
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+현재 MRR: $${currentMRR.toLocaleString()}
+월평균 성장률: ${(growthRate * 100).toFixed(1)}%
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+예측 매출:
+
+다음 달:
+- MRR: $${Math.round(currentMRR * (1 + growthRate)).toLocaleString()}
+- 성장: +$${Math.round(currentMRR * growthRate).toLocaleString()}
+
+3개월 후:
+- MRR: $${Math.round(currentMRR * Math.pow(1 + growthRate, 3)).toLocaleString()}
+- ARR: $${Math.round(currentMRR * Math.pow(1 + growthRate, 3) * 12).toLocaleString()}
+
+6개월 후:
+- MRR: $${Math.round(currentMRR * Math.pow(1 + growthRate, 6)).toLocaleString()}
+- ARR: $${Math.round(currentMRR * Math.pow(1 + growthRate, 6) * 12).toLocaleString()}
+
+12개월 후:
+- MRR: $${Math.round(currentMRR * Math.pow(1 + growthRate, 12)).toLocaleString()}
+- ARR: $${Math.round(currentMRR * Math.pow(1 + growthRate, 12) * 12).toLocaleString()}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+주요 가정:
+- 현재 성장률 유지
+- Churn Rate 2.3% 유지
+- 신규 가입 지속
+
+리스크 요인:
+- 시장 경쟁 심화
+- 가격 정책 변화
+- 경제 상황 변동
+
+[상세 모델] [시나리오 분석]
+            `.trim();
+
+            alert(predictions);
+        }
+
+        // ========== 결제 실패 분석 ==========
+        function analyzeFailures() {
+            const failedTxns = transactionsData.filter(t => t.status === 'failed');
+
+            const analysis = `
+⚠️ 결제 실패 분석
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+총 실패 건수: ${failedTxns.length}건
+실패율: ${Math.round(failedTxns.length / transactionsData.length * 100)}%
+손실 금액: $${failedTxns.reduce((sum, t) => sum + Math.abs(t.amount), 0).toLocaleString()}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+주요 실패 원인:
+- 카드 한도 초과: 42%
+- 잔액 부족: 28%
+- 카드 만료: 15%
+- 인증 실패: 10%
+- 기타: 5%
+
+결제 방법별:
+- 신용카드: ${Math.round(failedTxns.filter(t => t.method === 'card').length / failedTxns.length * 100)}%
+- 계좌이체: ${Math.round(failedTxns.filter(t => t.method === 'bank').length / failedTxns.length * 100)}%
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+개선 방안:
+1. 결제 재시도 자동화
+2. 다중 결제 수단 등록 유도
+3. 결제 전 카드 검증 강화
+4. 알림 시스템 개선
+
+예상 효과:
+- 실패율 30% 감소
+- 월 $${Math.round(failedTxns.reduce((sum, t) => sum + Math.abs(t.amount), 0) * 0.3).toLocaleString()} 추가 매출
+
+[상세 분석] [액션 플랜]
+            `.trim();
+
+            alert(analysis);
+        }
+
+        // ========== 환불 관리 ==========
+        function analyzeRefunds() {
+            const refundedTxns = transactionsData.filter(t => t.status === 'refunded');
+
+            const analysis = `
+💸 환불 분석
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+총 환불 건수: ${refundedTxns.length}건
+환불율: ${Math.round(refundedTxns.length / transactionsData.length * 100)}%
+환불 금액: $${Math.abs(refundedTxns.reduce((sum, t) => sum + t.amount, 0)).toLocaleString()}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+주요 환불 사유:
+- 고객 요청: 45%
+- 서비스 불만족: 30%
+- 중복 결제: 15%
+- 기술적 문제: 10%
+
+플랜별 환불율:
+- Enterprise: 1.2%
+- Professional: 2.8%
+- Starter: 4.5%
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+환불 처리 시간:
+- 평균: 2.4일
+- 최소: 1일
+- 최대: 5일
+
+고객 만족도:
+- 환불 프로세스: 4.2/5.0
+- 응대 품질: 4.5/5.0
+
+개선 방안:
+1. 온보딩 프로세스 개선
+2. 고객 지원 강화
+3. 환불 정책 명확화
+4. 자동 환불 시스템 도입
+
+[상세 리포트] [액션 플랜]
+            `.trim();
+
+            alert(analysis);
+        }
+
+        // ========== 수익성 분석 ==========
+        function analyzeProfitability() {
+            const analysis = `
+📈 수익성 분석
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+매출 현황:
+- 총 매출: $487K
+- 순 매출: $473K (환불 제외)
+- 성장률: +24.7%
+
+비용 구조:
+- LLM API 비용: $247K (52%)
+- 인프라 비용: $162K (34%)
+- 인건비: $412K
+- 기타: $89K
+- 총 비용: $910K
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+수익성 지표:
+- 총 이익: -$437K
+- 이익률: -92%
+- 단위 경제학: 개선 필요
+
+플랜별 수익성:
+- Enterprise: 🟢 흑자
+  - 매출: $141K
+  - 비용: $87K
+  - 이익: +$54K
+
+- Professional: 🟡 손익분기점
+  - 매출: $89K
+  - 비용: $91K
+  - 이익: -$2K
+
+- Starter: 🔴 적자
+  - 매출: $23K
+  - 비용: $45K
+  - 이익: -$22K
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+손익분기점:
+- 현재 조직 수: 247개
+- 필요 조직 수: 523개
+- 부족: 276개 (+112%)
+
+목표 달성 시점:
+- 현재 성장률 유지 시: 4개월
+- 가속 성장 시: 2-3개월
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+개선 방안:
+1. Enterprise 고객 집중 공략
+2. API 비용 최적화 (30% 절감)
+3. 가격 정책 재검토
+4. Starter 플랜 수익성 개선
+
+[상세 분석] [실행 계획]
+            `.trim();
+
+            alert(analysis);
+        }
+
+        // ========== 대시보드 업데이트 ==========
+        function updateDashboard() {
+            calculateRevenueMetrics();
+            renderTransactionsTable();
+            
+            window.GrowFitUtils.showToast('대시보드가 업데이트되었습니다', 'success');
+        }
+
+        // ========== 고급 리포트 ==========
+        function generateAdvancedReport() {
+            const options = `
+📊 고급 리포트 생성
+
+리포트 유형:
+
+1. 월간 재무 리포트
+2. 분기별 성장 분석
+3. 플랜별 수익성 분석
+4. 고객 생애 가치 (LTV) 리포트
+5. 이탈 분석 리포트
+6. 경쟁사 벤치마크
+
+번호를 입력하세요:
+            `.trim();
+
+            const choice = prompt(options);
+
+            if (choice && ['1', '2', '3', '4', '5', '6'].includes(choice)) {
+                handleAdvancedReport(choice);
+            }
+        }
+
+        function handleAdvancedReport(type) {
+            window.GrowFitUtils.showToast('리포트를 생성하는 중...', 'info');
+
+            setTimeout(() => {
+                const reportNames = {
+                    '1': '월간 재무 리포트',
+                    '2': '분기별 성장 분석',
+                    '3': '플랜별 수익성 분석',
+                    '4': 'LTV 리포트',
+                    '5': '이탈 분석 리포트',
+                    '6': '경쟁사 벤치마크'
+                };
+
+                window.GrowFitUtils.showToast(`${reportNames[type]}가 생성되었습니다`, 'success');
+            }, 2000);
+        }
+
+        // ========== 알림 설정 ==========
+        function setupAlerts() {
+            const alerts = `
+🔔 매출 알림 설정
+
+알림 유형:
+
+1. 결제 실패 즉시 알림
+2. 일일 매출 리포트
+3. 목표 달성 알림
+4. 이상 거래 감지
+5. 환불 요청 알림
+
+설정하시겠습니까?
+            `.trim();
+
+            if (confirm(alerts)) {
+                window.GrowFitUtils.showToast('알림이 설정되었습니다', 'success');
+            }
+        }
+
+        // ========== 키보드 단축키 ==========
+        document.addEventListener('keydown', function(e) {
+            // Ctrl/Cmd + R: 새로고침
+            if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+                e.preventDefault();
+                refreshRevenue();
+            }
+
+            // Ctrl/Cmd + E: 내보내기
+            if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+                e.preventDefault();
+                exportRevenue();
+            }
+
+            // Ctrl/Cmd + N: 청구서 생성
+            if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+                e.preventDefault();
+                generateInvoice();
+            }
+
+            // Ctrl/Cmd + A: 분석
+            if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+                e.preventDefault();
+                showRevenueAnalytics();
+            }
+
+            // Esc: 모달 닫기
+            if (e.key === 'Escape') {
+                closeTransactionDetailModal();
+            }
+        });
+
+        // ========== 모달 외부 클릭 시 닫기 ==========
+        document.getElementById('transactionDetailModal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeTransactionDetailModal();
+            }
+        });
+
+        // ========== 실시간 매출 업데이트 ==========
+        function startRevenueTracking() {
+            // 실제로는 WebSocket으로 실시간 업데이트
+            setInterval(() => {
+                // 매출 지표 업데이트 시뮬레이션
+                console.log('실시간 매출 업데이트...');
+            }, 60000); // 1분마다
+        }
+
+        // ========== 성능 모니터링 ==========
+        function logPerformance() {
+            if (window.performance) {
+                const perfData = window.performance.timing;
+                const pageLoadTime = perfData.loadEventEnd - perfData.navigationStart;
+                
+                console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+                console.log('📊 페이지 성능 메트릭');
+                console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+                console.log('페이지 로드 시간:', pageLoadTime + 'ms');
+                console.log('DOM 준비 시간:', (perfData.domContentLoadedEventEnd - perfData.navigationStart) + 'ms');
+                console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            }
+        }
+
+        // 페이지 로드 완료 후 성능 측정
+        window.addEventListener('load', function() {
+            setTimeout(logPerformance, 0);
+        });
+
+        // ========== 초기화 완료 ==========
+        console.log('✅ Revenue & Billing 완전히 로드됨');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('💰 총 거래:', transactionsData.length);
+        console.log('✅ 완료:', transactionsData.filter(t => t.status === 'completed').length);
+        console.log('⏳ 대기:', transactionsData.filter(t => t.status === 'pending').length);
+        console.log('❌ 실패:', transactionsData.filter(t => t.status === 'failed').length);
+        console.log('💸 환불:', transactionsData.filter(t => t.status === 'refunded').length);
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('📈 MRR: $487K (+24.7%)');
+        console.log('📊 ARR: $5.84M (+28.3%)');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('단축키: Ctrl+R(새로고침), Ctrl+E(내보내기), Ctrl+N(청구서), Ctrl+A(분석)');
+
+        // 실시간 추적 시작
+        // startRevenueTracking();
+    </script>
+</body>
+</html>

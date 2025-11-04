@@ -1,0 +1,3430 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 실습 - GrowFit Employee</title>
+
+    <!-- 공통 CSS -->
+    <link rel="stylesheet" href="../common/variables.css">
+    <link rel="stylesheet" href="../common/layout.css">
+    <link rel="stylesheet" href="../common/components.css">
+
+    <style>
+        /* ========== Practice MSP 전용 스타일 ========== */
+        :root {
+            --employee-primary: #10b981;
+            --employee-primary-light: #34d399;
+            --employee-primary-dark: #059669;
+            --employee-secondary: #06b6d4;
+            --employee-accent: #f59e0b;
+
+            /* 모델별 색상 */
+            --gpt-color: #10a37f;
+            --claude-color: #d97757;
+            --gemini-color: #4285f4;
+        }
+
+        /* ========== LLM 선택 패널 ========== */
+        .model-selector {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            margin-bottom: var(--space-4);
+        }
+
+        .model-selector__header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--space-3);
+        }
+
+        .model-selector__title {
+            font-size: var(--text-base);
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .model-selector__count {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            background: var(--surface);
+            padding: var(--space-1) var(--space-3);
+            border-radius: var(--radius-full);
+        }
+
+        .model-selector__grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-3);
+        }
+
+        .model-checkbox {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .model-checkbox__input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .model-checkbox__label {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-4);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-md);
+            background: white;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .model-checkbox__input:checked + .model-checkbox__label {
+            border-color: var(--employee-primary);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .model-checkbox__checkmark {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-base);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s;
+            font-size: 12px;
+        }
+
+        .model-checkbox__input:checked + .model-checkbox__label .model-checkbox__checkmark {
+            background: var(--employee-primary);
+            border-color: var(--employee-primary);
+            color: white;
+        }
+
+        .model-checkbox__icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .model-checkbox__icon--gpt {
+            background: rgba(16, 163, 127, 0.1);
+            color: var(--gpt-color);
+        }
+
+        .model-checkbox__icon--claude {
+            background: rgba(217, 119, 87, 0.1);
+            color: var(--claude-color);
+        }
+
+        .model-checkbox__icon--gemini {
+            background: rgba(66, 133, 244, 0.1);
+            color: var(--gemini-color);
+        }
+
+        .model-checkbox__info {
+            flex: 1;
+        }
+
+        .model-checkbox__name {
+            font-size: var(--text-sm);
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-1);
+        }
+
+        .model-checkbox__desc {
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+        }
+
+        /* 실습 모드 전환 */
+        .mode-switcher {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-3);
+            margin-bottom: var(--space-3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .mode-tabs {
+            display: flex;
+            gap: var(--space-2);
+            background: var(--surface);
+            padding: var(--space-1);
+            border-radius: var(--radius-md);
+        }
+
+        .mode-tab {
+            padding: var(--space-2) var(--space-4);
+            border: none;
+            border-radius: var(--radius-md);
+            background: transparent;
+            font-size: var(--text-sm);
+            font-weight: var(--font-medium);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .mode-tab:hover {
+            color: var(--text-primary);
+            background: var(--background);
+        }
+
+        .mode-tab--active {
+            background: white;
+            color: var(--employee-primary);
+            font-weight: var(--font-semibold);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .mode-tab__icon {
+            font-size: 16px;
+        }
+
+        /* 선택된 모델 표시 */
+        .selected-models {
+            display: flex;
+            gap: var(--space-1);
+        }
+
+        .selected-model {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .selected-model--gpt {
+            background: rgba(16, 163, 127, 0.1);
+            border: 2px solid var(--gpt-color);
+        }
+
+        .selected-model--claude {
+            background: rgba(217, 119, 87, 0.1);
+            border: 2px solid var(--claude-color);
+        }
+
+        .selected-model--gemini {
+            background: rgba(66, 133, 244, 0.1);
+            border: 2px solid var(--gemini-color);
+        }
+
+        .selected-model:hover {
+            transform: scale(1.05);
+        }
+
+        .selected-model--inactive {
+            opacity: 0.3;
+            border-style: dashed;
+        }
+
+        /* 아이콘 버튼 */
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 16px;
+        }
+
+        .btn-icon:hover {
+            background: var(--surface);
+            border-color: var(--employee-primary);
+        }
+
+        .btn-icon:active {
+            transform: scale(0.95);
+        }
+
+        /* 옵션 메뉴 (드롭다운) */
+        .options-menu {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            padding: var(--space-3);
+            min-width: 320px;
+            z-index: var(--z-dropdown);
+            display: none;
+        }
+
+        .options-menu--open {
+            display: block;
+            animation: slideDown 0.2s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .options-section {
+            margin-bottom: var(--space-4);
+        }
+
+        .options-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .options-section__title {
+            font-size: var(--text-xs);
+            font-weight: var(--font-semibold);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-2);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-1);
+        }
+
+        .option-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .option-item:hover {
+            background: var(--surface);
+        }
+
+        .option-item__checkbox {
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .option-item--checked .option-item__checkbox {
+            background: var(--employee-primary);
+            border-color: var(--employee-primary);
+            color: white;
+        }
+
+        .option-item__icon {
+            font-size: 18px;
+        }
+
+        .option-item__content {
+            flex: 1;
+        }
+
+        .option-item__name {
+            font-size: var(--text-sm);
+            font-weight: var(--font-medium);
+            color: var(--text-primary);
+        }
+
+        .option-item__desc {
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+        }
+
+        /* ========== 선택 모달 ========== */
+        .selector-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: var(--z-modal);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .selector-modal--open {
+            opacity: 1;
+        }
+
+        .selector-modal__overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .selector-modal__content {
+            position: relative;
+            background: white;
+            border-radius: var(--radius-lg);
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow-xl);
+            animation: modalSlideUp 0.2s ease-out;
+        }
+
+        @keyframes modalSlideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .selector-modal__header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--space-4);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .selector-modal__title {
+            font-size: var(--text-lg);
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+        }
+
+        .selector-modal__close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: transparent;
+            border-radius: var(--radius-md);
+            font-size: 20px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .selector-modal__close:hover {
+            background: var(--surface);
+            color: var(--text-primary);
+        }
+
+        .selector-modal__body {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--space-4);
+        }
+
+        /* 선택자 검색 */
+        .selector-search {
+            margin-bottom: var(--space-3);
+        }
+
+        .selector-search input {
+            width: 100%;
+            padding: var(--space-3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+            transition: all 0.2s;
+        }
+
+        .selector-search input:focus {
+            outline: none;
+            border-color: var(--employee-primary);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        /* 선택자 리스트 */
+        .selector-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-1);
+        }
+
+        .selector-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-3);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .selector-item:hover {
+            background: var(--surface);
+        }
+
+        .selector-item__icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            background: var(--surface);
+            border-radius: var(--radius-md);
+            flex-shrink: 0;
+        }
+
+        .selector-item__content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .selector-item__name {
+            font-size: var(--text-sm);
+            font-weight: var(--font-medium);
+            color: var(--text-primary);
+            margin-bottom: var(--space-1);
+        }
+
+        .selector-item__desc {
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+        }
+
+        .selector-divider {
+            height: 1px;
+            background: var(--border);
+            margin: var(--space-2) 0;
+        }
+
+        /* 컨텍스트 바 - 삭제됨, 옵션 메뉴로 통합 */
+
+        /* ========== 단일 모드 전용 스타일 ========== */
+        
+        /* 왼쪽 패널: 모델 설정 */
+        .model-settings-panel {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-4);
+            overflow-y: auto;
+        }
+
+        .settings-section {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+        }
+
+        .settings-section__title {
+            font-size: var(--text-sm);
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+        }
+
+        .form-label {
+            font-size: var(--text-sm);
+            font-weight: var(--font-medium);
+            color: var(--text-secondary);
+        }
+
+        .form-select {
+            width: 100%;
+            padding: var(--space-2) var(--space-3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+            color: var(--text-primary);
+            background: var(--background);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: var(--employee-primary);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .model-info {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: var(--space-3);
+        }
+
+        .model-info__header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            margin-bottom: var(--space-2);
+        }
+
+        .model-info__title {
+            font-size: var(--text-sm);
+            font-weight: var(--font-semibold);
+        }
+
+        .model-info__content {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+        }
+
+        .model-info__item {
+            display: flex;
+            justify-content: space-between;
+            font-size: var(--text-sm);
+        }
+
+        .model-info__label {
+            color: var(--text-secondary);
+        }
+
+        .model-info__value {
+            font-weight: var(--font-medium);
+        }
+
+        /* 중앙 패널: 채팅 */
+        .chat-panel {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--space-4);
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+        }
+
+        .chat-welcome {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .chat-welcome__icon {
+            font-size: 48px;
+            margin-bottom: var(--space-4);
+        }
+
+        .chat-welcome__title {
+            font-size: var(--text-xl);
+            font-weight: var(--font-bold);
+            margin-bottom: var(--space-2);
+            color: var(--text-primary);
+        }
+
+        .chat-welcome__description {
+            font-size: var(--text-sm);
+        }
+
+        .message {
+            display: flex;
+            gap: var(--space-3);
+            max-width: 100%;
+        }
+
+        .message--user {
+            flex-direction: row-reverse;
+        }
+
+        .message__avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-full);
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: var(--font-semibold);
+            font-size: var(--text-sm);
+        }
+
+        .message--user .message__avatar {
+            background: var(--employee-primary);
+            color: white;
+        }
+
+        .message--ai .message__avatar {
+            background: var(--gray-200);
+            color: var(--gray-600);
+        }
+
+        .message__content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+        }
+
+        .message__header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .message__name {
+            font-size: var(--text-sm);
+            font-weight: var(--font-semibold);
+        }
+
+        .message__time {
+            font-size: var(--text-xs);
+            color: var(--text-tertiary);
+        }
+
+        .message__body {
+            background: var(--surface);
+            padding: var(--space-3);
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+            line-height: 1.6;
+        }
+
+        .message--user .message__body {
+            background: var(--employee-primary);
+            color: white;
+        }
+
+        /* 채팅 입력 */
+        .chat-input {
+            border-top: 1px solid var(--border);
+            padding: var(--space-4);
+            background: var(--background);
+        }
+
+        .chat-input__field {
+            width: 100%;
+            min-height: 60px;
+            max-height: 200px;
+            padding: var(--space-3);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+            font-family: inherit;
+            resize: vertical;
+            transition: all 0.2s;
+        }
+
+        .chat-input__field:focus {
+            outline: none;
+            border-color: var(--employee-primary);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .chat-input__actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: var(--space-3);
+        }
+
+        .chat-input__tools {
+            display: flex;
+            gap: var(--space-2);
+        }
+
+        .tool-btn {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            background: white;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tool-btn:hover {
+            border-color: var(--employee-primary);
+            color: var(--employee-primary);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        /* 오른쪽 패널: 대화 히스토리 */
+        .history-panel {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .history-panel__header {
+            padding: var(--space-4);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-panel__title {
+            font-size: var(--text-base);
+            font-weight: var(--font-semibold);
+        }
+
+        .history-panel__list {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--space-3);
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+        }
+
+        .history-item {
+            padding: var(--space-3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .history-item:hover {
+            border-color: var(--employee-primary);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .history-item--active {
+            border-color: var(--employee-primary);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .history-item__title {
+            font-size: var(--text-sm);
+            font-weight: var(--font-medium);
+            margin-bottom: var(--space-1);
+            color: var(--text-primary);
+        }
+
+        .history-item__preview {
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .history-item__meta {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            margin-top: var(--space-2);
+            font-size: var(--text-xs);
+            color: var(--text-tertiary);
+        }
+
+        .history__empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: var(--space-8) var(--space-4);
+            text-align: center;
+        }
+
+        .history__empty-icon {
+            font-size: 32px;
+            margin-bottom: var(--space-3);
+            opacity: 0.5;
+        }
+
+        .history__empty-text {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+        }
+
+                /* 단일 모드 레이아웃 */
+        .single-mode-container {
+            display: grid;
+            grid-template-columns: 280px 1fr 320px;
+            gap: var(--space-4);
+            height: calc(100vh - var(--header-height) - 180px);
+        }
+
+        /* 병렬 모드 레이아웃 */
+        .parallel-mode-container {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+            height: calc(100vh - var(--header-height) - 140px);
+        }
+
+        /* 프롬프트 입력 영역 (병렬 모드) */
+        .parallel-input-section {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-3);
+            position: relative;
+        }
+
+        .parallel-input-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-3);
+        }
+
+        .parallel-input-title {
+            font-size: var(--text-base);
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+        }
+
+        .parallel-input-wrapper {
+            display: flex;
+            gap: var(--space-2);
+            align-items: end;
+        }
+
+        .parallel-input {
+            flex: 1;
+            min-height: 48px;
+            max-height: 200px;
+            padding: var(--space-3);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-lg);
+            font-size: var(--text-sm);
+            color: var(--text-primary);
+            resize: vertical;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .parallel-input:focus {
+            outline: none;
+            border-color: var(--employee-primary);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .parallel-send-btn {
+            width: 48px;
+            height: 48px;
+            background: var(--employee-primary);
+            border: none;
+            border-radius: var(--radius-full);
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .parallel-send-btn:hover {
+            background: var(--employee-primary-dark);
+            transform: scale(1.05);
+        }
+
+        .parallel-send-btn:active {
+            transform: scale(0.95);
+        }
+
+        .parallel-send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* 3분할 응답 영역 */
+        .parallel-responses {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-3);
+            overflow: hidden;
+            min-height: 600px;
+        }
+
+        .response-panel {
+            background: var(--background);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-lg);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: all 0.2s;
+            min-height: 600px;
+        }
+
+        .response-panel:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .response-panel--gpt {
+            border-color: var(--gpt-color);
+        }
+
+        .response-panel--claude {
+            border-color: var(--claude-color);
+        }
+
+        .response-panel--gemini {
+            border-color: var(--gemini-color);
+        }
+
+        /* 응답 패널 헤더 */
+        .response-header {
+            padding: var(--space-2) var(--space-3);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .response-header--gpt {
+            background: linear-gradient(135deg, rgba(16, 163, 127, 0.1), rgba(16, 163, 127, 0.05));
+        }
+
+        .response-header--claude {
+            background: linear-gradient(135deg, rgba(217, 119, 87, 0.1), rgba(217, 119, 87, 0.05));
+        }
+
+        .response-header--gemini {
+            background: linear-gradient(135deg, rgba(66, 133, 244, 0.1), rgba(66, 133, 244, 0.05));
+        }
+
+        .response-model-info {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .response-model-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: white;
+        }
+
+        .response-model-icon--gpt {
+            background: var(--gpt-color);
+        }
+
+        .response-model-icon--claude {
+            background: var(--claude-color);
+        }
+
+        .response-model-icon--gemini {
+            background: var(--gemini-color);
+        }
+
+        .response-model-name {
+            font-size: var(--text-sm);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+        }
+
+        .response-model-version {
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+        }
+
+        .response-metrics {
+            display: flex;
+            gap: var(--space-3);
+            align-items: center;
+        }
+
+        .response-metric {
+            display: flex;
+            align-items: center;
+            gap: var(--space-1);
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+        }
+
+        .response-metric__icon {
+            font-size: 14px;
+        }
+
+        .response-metric__value {
+            font-weight: var(--font-semibold);
+        }
+
+        /* 응답 콘텐츠 */
+        .response-content {
+            flex: 1;
+            padding: var(--space-4);
+            overflow-y: auto;
+            font-size: var(--text-sm);
+            line-height: 1.7;
+            color: var(--text-primary);
+            min-height: 500px;
+        }
+
+        .response-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .response-content::-webkit-scrollbar-thumb {
+            background: var(--gray-300);
+            border-radius: var(--radius-full);
+        }
+
+        .response-content::-webkit-scrollbar-thumb:hover {
+            background: var(--gray-400);
+        }
+
+        .response-content::-webkit-scrollbar-track {
+            background: var(--gray-100);
+        }
+
+        /* 로딩 상태 */
+        .response-loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-secondary);
+            min-height: 300px;
+        }
+
+        .response-loading__spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--gray-200);
+            border-top-color: var(--employee-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: var(--space-3);
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .response-loading__text {
+            font-size: var(--text-sm);
+        }
+
+        /* 빈 상태 */
+        .response-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-secondary);
+            text-align: center;
+            padding: var(--space-6);
+            min-height: 300px;
+        }
+
+        .response-empty__icon {
+            font-size: 48px;
+            margin-bottom: var(--space-3);
+            opacity: 0.5;
+        }
+
+        .response-empty__text {
+            font-size: var(--text-sm);
+        }
+
+        /* 응답 액션 */
+        .response-actions {
+            padding: var(--space-2) var(--space-3);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .response-rating {
+            display: flex;
+            gap: var(--space-2);
+        }
+
+        .rating-btn {
+            width: 32px;
+            height: 32px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .rating-btn:hover {
+            border-color: var(--employee-primary);
+            background: var(--surface);
+        }
+
+        .rating-btn--active {
+            background: var(--employee-primary);
+            border-color: var(--employee-primary);
+            color: white;
+        }
+
+        .response-action-btns {
+            display: flex;
+            gap: var(--space-2);
+        }
+
+        /* 코드 블록 */
+        .code-block {
+            background: #1e1e1e;
+            border-radius: var(--radius-md);
+            padding: var(--space-3);
+            margin: var(--space-3) 0;
+            position: relative;
+        }
+
+        .code-block__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-2);
+            padding-bottom: var(--space-2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .code-block__lang {
+            font-size: var(--text-xs);
+            color: #888;
+        }
+
+        .code-block__copy {
+            padding: 4px 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: var(--radius-sm);
+            color: white;
+            font-size: var(--text-xs);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .code-block__copy:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .code-block pre {
+            margin: 0;
+            color: #d4d4d4;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: var(--text-sm);
+            line-height: 1.5;
+            overflow-x: auto;
+        }
+
+        /* 반응형 */
+        @media (max-width: 1400px) {
+            .parallel-responses {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .response-panel {
+                min-height: 500px;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .model-selector__grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .parallel-responses {
+                grid-template-columns: 1fr;
+            }
+            
+            .response-panel {
+                min-height: 400px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mode-switcher {
+                padding: var(--space-2);
+            }
+            
+            .mode-tab {
+                padding: var(--space-2) var(--space-3);
+                font-size: var(--text-xs);
+            }
+            
+            .mode-tab span:not(.mode-tab__icon) {
+                display: none;
+            }
+
+            .parallel-input-wrapper {
+                flex-direction: column;
+            }
+
+            .parallel-send-btn {
+                width: 100%;
+                border-radius: var(--radius-md);
+                height: 48px;
+            }
+            
+            .parallel-input-header > div:first-child {
+                flex-wrap: wrap;
+            }
+            
+            .selected-models {
+                order: -1;
+                width: 100%;
+                justify-content: center;
+                margin-bottom: var(--space-2);
+            }
+            
+            .options-menu {
+                left: var(--space-2);
+                right: var(--space-2);
+                min-width: auto;
+            }
+
+            .model-selector__grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header__left">
+                <button id="menuToggle" class="header__icon-button hidden-desktop">
+                    <span>☰</span>
+                </button>
+                <a href="dashboard.html" class="header__logo">
+                    <span class="header__logo-icon">🌱</span>
+                    <span>GrowFit</span>
+                </a>
+            </div>
+
+            <div class="header__right">
+                <button id="notificationBtn" class="header__icon-button">
+                    <span>🔔</span>
+                    <span class="header__badge">3</span>
+                </button>
+
+                <div id="profileBtn" class="header__profile">
+                    <div class="header__avatar" style="background: linear-gradient(135deg, #10b981, #06b6d4);">김</div>
+                    <span class="hidden-mobile">김직원</span>
+                    <span class="hidden-mobile">▼</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="container">
+            <!-- Sidebar -->
+            <aside class="sidebar sidebar--open">
+                <div class="sidebar__user">
+                    <div class="sidebar__user-info">
+                        <div class="sidebar__user-avatar"
+                            style="background: linear-gradient(135deg, #10b981, #06b6d4);">김</div>
+                        <div class="sidebar__user-details">
+                            <div class="sidebar__user-name">김직원</div>
+                            <div class="sidebar__user-role">AI 실습생</div>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="sidebar__nav">
+                    <ul class="sidebar__menu">
+                        <li class="sidebar__menu-item">
+                            <a href="dashboard.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">🏠</span>
+                                <span>대시보드</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="practice.html" class="sidebar__menu-link sidebar__menu-link--active">
+                                <span class="sidebar__menu-icon">💬</span>
+                                <span>AI 실습</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="my-projects.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">📁</span>
+                                <span>내 프로젝트</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="my-agents.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">🤖</span>
+                                <span>내 에이전트</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="my-documents.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">📚</span>
+                                <span>내 문서</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="history.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">📊</span>
+                                <span>내 기록</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="profile.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">⚙️</span>
+                                <span>설정</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <div class="sidebar__footer">
+                    <div
+                        style="padding: var(--space-3); background: var(--surface); border-radius: var(--radius-md); font-size: var(--text-xs);">
+                        <div style="color: var(--text-secondary); margin-bottom: var(--space-1);">이번 주 실습</div>
+                        <div style="font-weight: var(--font-bold); color: var(--employee-primary);">3시간 24분</div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main">
+                <!-- 모드 전환 바 -->
+<div class="mode-switcher">
+                    <div class="mode-tabs">
+                        <button class="mode-tab" id="singleModeTab" onclick="switchMode('single')">
+                            <span class="mode-tab__icon">🎯</span>
+                            <span>단일 모델</span>
+                        </button>
+                        <button class="mode-tab mode-tab--active" id="parallelModeTab" onclick="switchMode('parallel')">
+                            <span class="mode-tab__icon">🔀</span>
+                            <span>병렬 비교</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 병렬 비교 모드 (기본) -->
+                <div id="parallelMode" class="parallel-mode-container">
+                    <!-- 프롬프트 입력 영역 -->
+                    <div class="parallel-input-section">
+                        <div class="parallel-input-header">
+                            <div style="display: flex; align-items: center; gap: var(--space-3);">
+                                <!-- 선택된 모델 표시 -->
+                                <div class="selected-models">
+                                    <div class="selected-model selected-model--gpt" data-model="gpt" onclick="toggleModelByIcon('gpt')" title="GPT-4 (클릭하여 토글)">
+                                        <span>🤖</span>
+                                    </div>
+                                    <div class="selected-model selected-model--claude" data-model="claude" onclick="toggleModelByIcon('claude')" title="Claude (클릭하여 토글)">
+                                        <span>🧠</span>
+                                    </div>
+                                    <div class="selected-model selected-model--gemini" data-model="gemini" onclick="toggleModelByIcon('gemini')" title="Gemini (클릭하여 토글)">
+                                        <span>✨</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- 추가 옵션 버튼 -->
+                                <button class="btn-icon" onclick="toggleOptionsMenu()" title="컨텍스트 설정">
+                                    <span>⚙️</span>
+                                </button>
+                                <button class="btn-icon" onclick="toggleAttachMenu()" title="파일 첨부">
+                                    <span>📎</span>
+                                </button>
+                            </div>
+                            
+                            <div style="display: flex; gap: var(--space-2);">
+                                <button class="btn btn--sm btn--outline" onclick="clearParallelInput()">
+                                    초기화
+                                </button>
+                                <button class="btn btn--sm btn--outline" onclick="savePrompt()">
+                                    저장
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="parallel-input-wrapper">
+                            <textarea 
+                                id="parallelInput" 
+                                class="parallel-input" 
+                                placeholder="질문을 입력하세요...&#10;&#10;예: Python 리스트 정렬 방법 알려줘"></textarea>
+                            <button id="parallelSendBtn" class="parallel-send-btn" onclick="sendParallelPrompt()">
+                                <span>🚀</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 3분할 응답 영역 -->
+                    <div class="parallel-responses">
+                        <!-- GPT-4 패널 -->
+                        <div class="response-panel response-panel--gpt">
+                            <div class="response-header response-header--gpt">
+                                <div class="response-model-info">
+                                    <div class="response-model-icon response-model-icon--gpt">🤖</div>
+                                    <div>
+                                        <div class="response-model-name">GPT-4 Turbo</div>
+                                        <div class="response-model-version">OpenAI</div>
+                                    </div>
+                                </div>
+                                <div class="response-metrics">
+                                    <div class="response-metric">
+                                        <span class="response-metric__icon">⏱️</span>
+                                        <span class="response-metric__value" id="gptTime">-</span>
+                                    </div>
+                                    <div class="response-metric">
+                                        <span class="response-metric__icon">🎫</span>
+                                        <span class="response-metric__value" id="gptTokens">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="response-content" id="gptContent">
+                                <div class="response-empty">
+                                    <div class="response-empty__icon">🤖</div>
+                                    <div class="response-empty__text">
+                                        GPT-4의 답변이 여기에 표시됩니다.<br>
+                                        <strong>강점:</strong> 복잡한 추론, 코드 생성, 창의적 글쓰기
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="response-actions">
+                                <div class="response-rating">
+                                    <button class="rating-btn" onclick="rateResponse('gpt', 'like')" title="좋아요">
+                                        👍
+                                    </button>
+                                    <button class="rating-btn" onclick="rateResponse('gpt', 'dislike')" title="별로예요">
+                                        👎
+                                    </button>
+                                    <button class="rating-btn" onclick="rateResponse('gpt', 'star')" title="최고!">
+                                        ⭐
+                                    </button>
+                                </div>
+                                <div class="response-action-btns">
+                                    <button class="btn btn--sm btn--outline" onclick="copyResponse('gpt')">
+                                        📋 복사
+                                    </button>
+                                    <button class="btn btn--sm btn--outline" onclick="regenerateResponse('gpt')">
+                                        🔄 재생성
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Claude 패널 -->
+                        <div class="response-panel response-panel--claude">
+                            <div class="response-header response-header--claude">
+                                <div class="response-model-info">
+                                    <div class="response-model-icon response-model-icon--claude">🧠</div>
+                                    <div>
+                                        <div class="response-model-name">Claude 3.7 Sonnet</div>
+                                        <div class="response-model-version">Anthropic</div>
+                                    </div>
+                                </div>
+                                <div class="response-metrics">
+                                    <div class="response-metric">
+                                        <span class="response-metric__icon">⏱️</span>
+                                        <span class="response-metric__value" id="claudeTime">-</span>
+                                    </div>
+                                    <div class="response-metric">
+                                        <span class="response-metric__icon">🎫</span>
+                                        <span class="response-metric__value" id="claudeTokens">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="response-content" id="claudeContent">
+                                <div class="response-empty">
+                                    <div class="response-empty__icon">🧠</div>
+                                    <div class="response-empty__text">
+                                        Claude의 답변이 여기에 표시됩니다.<br>
+                                        <strong>강점:</strong> 긴 문서 이해, 자연스러운 대화, 상세한 설명
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="response-actions">
+                                <div class="response-rating">
+                                    <button class="rating-btn" onclick="rateResponse('claude', 'like')" title="좋아요">
+                                        👍
+                                    </button>
+                                    <button class="rating-btn" onclick="rateResponse('claude', 'dislike')" title="별로예요">
+                                        👎
+                                    </button>
+                                    <button class="rating-btn" onclick="rateResponse('claude', 'star')" title="최고!">
+                                        ⭐
+                                    </button>
+                                </div>
+                                <div class="response-action-btns">
+                                    <button class="btn btn--sm btn--outline" onclick="copyResponse('claude')">
+                                        📋 복사
+                                    </button>
+                                    <button class="btn btn--sm btn--outline" onclick="regenerateResponse('claude')">
+                                        🔄 재생성
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Gemini 패널 -->
+                        <div class="response-panel response-panel--gemini">
+                            <div class="response-header response-header--gemini">
+                                <div class="response-model-info">
+                                    <div class="response-model-icon response-model-icon--gemini">✨</div>
+                                    <div>
+                                        <div class="response-model-name">Gemini Pro</div>
+                                        <div class="response-model-version">Google</div>
+                                    </div>
+                                </div>
+                                <div class="response-metrics">
+                                    <div class="response-metric">
+                                        <span class="response-metric__icon">⏱️</span>
+                                        <span class="response-metric__value" id="geminiTime">-</span>
+                                    </div>
+                                    <div class="response-metric">
+                                        <span class="response-metric__icon">🎫</span>
+                                        <span class="response-metric__value" id="geminiTokens">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="response-content" id="geminiContent">
+                                <div class="response-empty">
+                                    <div class="response-empty__icon">✨</div>
+                                    <div class="response-empty__text">
+                                        Gemini의 답변이 여기에 표시됩니다.<br>
+                                        <strong>강점:</strong> 빠른 응답, 멀티모달, 최신 정보
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="response-actions">
+                                <div class="response-rating">
+                                    <button class="rating-btn" onclick="rateResponse('gemini', 'like')" title="좋아요">
+                                        👍
+                                    </button>
+                                    <button class="rating-btn" onclick="rateResponse('gemini', 'dislike')" title="별로예요">
+                                        👎
+                                    </button>
+                                    <button class="rating-btn" onclick="rateResponse('gemini', 'star')" title="최고!">
+                                        ⭐
+                                    </button>
+                                </div>
+                                <div class="response-action-btns">
+                                    <button class="btn btn--sm btn--outline" onclick="copyResponse('gemini')">
+                                        📋 복사
+                                    </button>
+                                    <button class="btn btn--sm btn--outline" onclick="regenerateResponse('gemini')">
+                                        🔄 재생성
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 비교 분석 버튼 -->
+                    <div style="text-align: center; margin-top: var(--space-4);">
+                        <button class="btn btn--primary" style="background: var(--employee-primary);" onclick="showComparison()">
+                            📊 상세 비교 분석 보기
+                        </button>
+                        <button class="btn btn--outline" style="margin-left: var(--space-2);" onclick="saveAllResponses()">
+                            💾 3개 응답 모두 저장
+                        </button>
+                        <button class="btn btn--outline" style="margin-left: var(--space-2);" onclick="exportComparison()">
+                            📤 비교 리포트 내보내기
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 단일 모델 모드 (숨김) -->
+                <div id="singleMode" class="single-mode-container" style="display: none;">
+                    <!-- 왼쪽: 모델 설정 -->
+                    <div class="model-settings-panel">
+                        <div class="settings-section">
+                            <div class="settings-section__title">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <circle cx="12" cy="12" r="3" stroke-width="2" />
+                                    <path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m5.08 5.08l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m5.08-5.08l4.24-4.24" stroke-width="2" />
+                                </svg>
+                                <span>모델 설정</span>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">LLM 선택</label>
+                                <select class="form-select" id="modelSelect">
+                                    <option value="gpt-4">GPT-4</option>
+                                    <option value="claude">Claude 3.5 Sonnet</option>
+                                    <option value="gemini">Gemini Pro</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Temperature</label>
+                                <select class="form-select">
+                                    <option>0.7 (균형)</option>
+                                    <option>0.3 (정확)</option>
+                                    <option>1.0 (창의적)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Max Tokens</label>
+                                <select class="form-select">
+                                    <option>2048</option>
+                                    <option>4096</option>
+                                    <option>8192</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="model-info">
+                            <div class="model-info__header">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <circle cx="12" cy="12" r="10" stroke-width="2" />
+                                    <path d="M12 16v-4M12 8h.01" stroke-width="2" stroke-linecap="round" />
+                                </svg>
+                                <span class="model-info__title">모델 정보</span>
+                            </div>
+                            <div class="model-info__content">
+                                <div class="model-info__item">
+                                    <span class="model-info__label">버전</span>
+                                    <span class="model-info__value">GPT-4 Turbo</span>
+                                </div>
+                                <div class="model-info__item">
+                                    <span class="model-info__label">컨텍스트</span>
+                                    <span class="model-info__value">128K tokens</span>
+                                </div>
+                                <div class="model-info__item">
+                                    <span class="model-info__label">지식 기준</span>
+                                    <span class="model-info__value">2024년 4월</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="btn btn--outline" style="width: 100%;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path d="M5 12h14M12 5l7 7-7 7" stroke-width="2" stroke-linecap="round" />
+                            </svg>
+                            <span>고급 설정</span>
+                        </button>
+                    </div>
+
+                    <!-- 중앙: 채팅 영역 -->
+                    <div class="chat-panel">
+                        <div class="chat-messages" id="chatMessages">
+                            <div class="chat-welcome">
+                                <div class="chat-welcome__icon">💬</div>
+                                <h3 class="chat-welcome__title">AI 실습을 시작하세요</h3>
+                                <p class="chat-welcome__description">
+                                    선택한 모델과 대화를 시작할 수 있습니다.<br>
+                                    프롬프트를 입력하고 Enter를 눌러보세요.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="chat-input">
+                            <textarea 
+                                class="chat-input__field" 
+                                id="chatInput"
+                                placeholder="메시지를 입력하세요... (Shift+Enter: 줄바꿈, Enter: 전송)"
+                            ></textarea>
+                            <div class="chat-input__actions">
+                                <div class="chat-input__tools">
+                                    <button class="tool-btn" title="파일 첨부">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" stroke-width="2" stroke-linecap="round" />
+                                        </svg>
+                                    </button>
+                                    <button class="tool-btn" title="이미지 추가">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                            <rect x="3" y="3" width="18" height="18" rx="2" stroke-width="2" />
+                                            <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" />
+                                            <path d="M21 15l-5-5L5 21" stroke-width="2" stroke-linecap="round" />
+                                        </svg>
+                                    </button>
+                                    <button class="tool-btn" title="음성 입력">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" stroke-width="2" />
+                                            <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8" stroke-width="2" stroke-linecap="round" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                <button class="btn btn--primary" onclick="sendMessage()">
+                                    <span>전송</span>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke-width="2" stroke-linecap="round" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 오른쪽: 대화 히스토리 -->
+                    <div class="history-panel">
+                        <div class="history-panel__header">
+                            <h3 class="history-panel__title">대화 히스토리</h3>
+                            <button class="btn btn--sm btn--outline">새 대화</button>
+                        </div>
+                        <div class="history-panel__list" id="historyList">
+                            <div class="history__empty">
+                                <div class="history__empty-icon">📝</div>
+                                <p class="history__empty-text">아직 저장된 대화가 없습니다</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                </div>
+
+                <!-- 비교 분석 모달 (숨김) -->
+                <div id="comparisonModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; padding: var(--space-6); overflow-y: auto;">
+                    <div style="max-width: 1200px; margin: 0 auto; background: white; border-radius: var(--radius-xl); padding: var(--space-6);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-6);">
+                            <h2 style="font-size: var(--text-2xl); font-weight: var(--font-bold);">📊 3개 모델 비교 분석</h2>
+                            <button class="btn btn--outline" onclick="closeComparison()">✕ 닫기</button>
+                        </div>
+
+                        <!-- 비교 테이블 -->
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="background: var(--surface); border-bottom: 2px solid var(--border);">
+                                        <th style="padding: var(--space-3); text-align: left;">항목</th>
+                                        <th style="padding: var(--space-3); text-align: center;">🤖 GPT-4</th>
+                                        <th style="padding: var(--space-3); text-align: center;">🧠 Claude</th>
+                                        <th style="padding: var(--space-3); text-align: center;">✨ Gemini</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr style="border-bottom: 1px solid var(--border);">
+                                        <td style="padding: var(--space-3); font-weight: var(--font-semibold);">응답 시간</td>
+                                        <td style="padding: var(--space-3); text-align: center;" id="compGptTime">2.3초</td>
+                                        <td style="padding: var(--space-3); text-align: center;" id="compClaudeTime">1.8초</td>
+                                        <td style="padding: var(--space-3); text-align: center;" id="compGeminiTime">3.1초</td>
+                                    </tr>
+                                    <tr style="border-bottom: 1px solid var(--border);">
+                                        <td style="padding: var(--space-3); font-weight: var(--font-semibold);">토큰 사용</td>
+                                        <td style="padding: var(--space-3); text-align: center;" id="compGptTokens">450</td>
+                                        <td style="padding: var(--space-3); text-align: center;" id="compClaudeTokens">380</td>
+                                        <td style="padding: var(--space-3); text-align: center;" id="compGeminiTokens">520</td>
+                                    </tr>
+                                    <tr style="border-bottom: 1px solid var(--border);">
+                                        <td style="padding: var(--space-3); font-weight: var(--font-semibold);">사용자 평가</td>
+                                        <td style="padding: var(--space-3); text-align: center;" id="compGptRating">⭐⭐⭐⭐</td>
+                                        <td style="padding: var(--space-3); text-align: center;" id="compClaudeRating">⭐⭐⭐⭐⭐</td>
+                                        <td style="padding: var(--space-3); text-align: center;" id="compGeminiRating">⭐⭐⭐</td>
+                                    </tr>
+                                    <tr style="border-bottom: 1px solid var(--border);">
+                                        <td style="padding: var(--space-3); font-weight: var(--font-semibold);">응답 길이</td>
+                                        <td style="padding: var(--space-3); text-align: center;">중간</td>
+                                        <td style="padding: var(--space-3); text-align: center;">긴 편</td>
+                                        <td style="padding: var(--space-3); text-align: center;">짧은 편</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: var(--space-3); font-weight: var(--font-semibold);">추천 상황</td>
+                                        <td style="padding: var(--space-3); font-size: var(--text-xs);">복잡한 추론, 코드 생성</td>
+                                        <td style="padding: var(--space-3); font-size: var(--text-xs);">긴 문서 분석, 상세 설명</td>
+                                        <td style="padding: var(--space-3); font-size: var(--text-xs);">빠른 답변, 최신 정보</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- AI 추천 -->
+                        <div style="margin-top: var(--space-6); padding: var(--space-4); background: var(--surface); border-radius: var(--radius-lg); border-left: 4px solid var(--employee-primary);">
+                            <h3 style="font-size: var(--text-lg); font-weight: var(--font-bold); margin-bottom: var(--space-2);">
+                                💡 이번 질문에 가장 적합한 모델
+                            </h3>
+                            <p style="font-size: var(--text-sm); color: var(--text-secondary); margin-bottom: var(--space-3);">
+                                응답 품질, 속도, 비용을 종합적으로 고려한 추천입니다.
+                            </p>
+                            <div style="display: flex; gap: var(--space-3); align-items: center;">
+                                <div style="font-size: 32px;">🧠</div>
+                                <div>
+                                    <div style="font-size: var(--text-lg); font-weight: var(--font-bold); color: var(--claude-color);">
+                                        Claude 3.7 Sonnet 추천!
+                                    </div>
+                                    <div style="font-size: var(--text-sm); color: var(--text-secondary);">
+                                        가장 빠른 응답 시간과 높은 사용자 평가를 받았습니다.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- 공통 스크립트 -->
+    <script src="../common/layout.js"></script>
+    <script src="../common/utils.js"></script>
+
+    <!-- 페이지 전용 스크립트 -->
+    <script>
+        // ========== Practice MSP 전용 로직 ==========
+
+        // 전역 변수
+        let currentMode = 'parallel'; // 'single' or 'parallel'
+        let isGenerating = false;
+        let selectedModels = ['gpt', 'claude', 'gemini']; // 선택된 모델 목록
+        let currentContext = {
+            project: null,
+            agent: null,
+            document: null
+        };
+
+        // 응답 데이터 저장
+        let responses = {
+            gpt: null,
+            claude: null,
+            gemini: null
+        };
+
+        // 성능 메트릭
+        let metrics = {
+            gpt: { time: 0, tokens: 0, rating: null },
+            claude: { time: 0, tokens: 0, rating: null },
+            gemini: { time: 0, tokens: 0, rating: null }
+        };
+
+        // ========== 모델 선택 업데이트 (레거시 - 제거 예정) ==========
+        function updateModelSelection() {
+            // 새로운 UI에서는 toggleModel() 사용
+            updateResponsePanels();
+        }
+
+        // ========== 응답 패널 업데이트 ==========
+        function updateResponsePanels() {
+            const responsesContainer = document.querySelector('.parallel-responses');
+            
+            // 그리드 열 개수 업데이트
+            if (selectedModels.length === 1) {
+                responsesContainer.style.gridTemplateColumns = '1fr';
+            } else if (selectedModels.length === 2) {
+                responsesContainer.style.gridTemplateColumns = 'repeat(2, 1fr)';
+            } else {
+                responsesContainer.style.gridTemplateColumns = 'repeat(3, 1fr)';
+            }
+
+            // 패널 표시/숨김
+            document.querySelector('.response-panel--gpt').style.display = 
+                selectedModels.includes('gpt') ? 'flex' : 'none';
+            document.querySelector('.response-panel--claude').style.display = 
+                selectedModels.includes('claude') ? 'flex' : 'none';
+            document.querySelector('.response-panel--gemini').style.display = 
+                selectedModels.includes('gemini') ? 'flex' : 'none';
+        }
+
+        // ========== 초기화 ==========
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Practice 페이지 초기화');
+            
+            initializePractice();
+            setupEventListeners();
+            createOptionsMenu();
+        });
+
+        // ========== 옵션 메뉴 생성 ==========
+        function createOptionsMenu() {
+            const inputSection = document.querySelector('.parallel-input-section');
+            const menu = document.createElement('div');
+            menu.id = 'optionsMenu';
+            menu.className = 'options-menu';
+            menu.innerHTML = `
+                <div class="options-section">
+                    <div class="options-section__title">컨텍스트 선택</div>
+                    <div class="options-list">
+                        <div class="option-item" onclick="openProjectSelector()">
+                            <div class="option-item__icon">📁</div>
+                            <div class="option-item__content">
+                                <div class="option-item__name">프로젝트</div>
+                                <div class="option-item__desc" id="selectedProject">선택 안함</div>
+                            </div>
+                        </div>
+                        <div class="option-item" onclick="openAgentSelector()">
+                            <div class="option-item__icon">🤖</div>
+                            <div class="option-item__content">
+                                <div class="option-item__name">에이전트</div>
+                                <div class="option-item__desc" id="selectedAgent">선택 안함</div>
+                            </div>
+                        </div>
+                        <div class="option-item" onclick="openDocumentSelector()">
+                            <div class="option-item__icon">📄</div>
+                            <div class="option-item__content">
+                                <div class="option-item__name">문서 (RAG)</div>
+                                <div class="option-item__desc" id="selectedDocument">선택 안함</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            inputSection.appendChild(menu);
+        }
+
+        // ========== 옵션 메뉴 토글 ==========
+        function toggleOptionsMenu() {
+            const menu = document.getElementById('optionsMenu');
+            if (menu.classList.contains('options-menu--open')) {
+                menu.classList.remove('options-menu--open');
+            } else {
+                menu.classList.add('options-menu--open');
+                // 첨부 메뉴가 열려있으면 닫기
+                const attachMenu = document.getElementById('attachMenu');
+                if (attachMenu) {
+                    attachMenu.classList.remove('options-menu--open');
+                }
+            }
+        }
+
+        // ========== 첨부 메뉴 토글 ==========
+        function toggleAttachMenu() {
+            let menu = document.getElementById('attachMenu');
+            if (!menu) {
+                // 첨부 메뉴 생성
+                const inputSection = document.querySelector('.parallel-input-section');
+                menu = document.createElement('div');
+                menu.id = 'attachMenu';
+                menu.className = 'options-menu';
+                menu.innerHTML = `
+                    <div class="options-section">
+                        <div class="options-section__title">파일 첨부</div>
+                        <div class="options-list">
+                            <div class="option-item" onclick="uploadFile('image')">
+                                <div class="option-item__icon">🖼️</div>
+                                <div class="option-item__content">
+                                    <div class="option-item__name">이미지</div>
+                                    <div class="option-item__desc">PNG, JPG, GIF (최대 10MB)</div>
+                                </div>
+                            </div>
+                            <div class="option-item" onclick="uploadFile('document')">
+                                <div class="option-item__icon">📄</div>
+                                <div class="option-item__content">
+                                    <div class="option-item__name">문서</div>
+                                    <div class="option-item__desc">PDF, DOCX, TXT</div>
+                                </div>
+                            </div>
+                            <div class="option-item" onclick="uploadFile('code')">
+                                <div class="option-item__icon">💻</div>
+                                <div class="option-item__content">
+                                    <div class="option-item__name">코드</div>
+                                    <div class="option-item__desc">Python, JavaScript, Java 등</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                inputSection.appendChild(menu);
+            }
+            
+            if (menu.classList.contains('options-menu--open')) {
+                menu.classList.remove('options-menu--open');
+            } else {
+                menu.classList.add('options-menu--open');
+                // 옵션 메뉴가 열려있으면 닫기
+                const optionsMenu = document.getElementById('optionsMenu');
+                if (optionsMenu) {
+                    optionsMenu.classList.remove('options-menu--open');
+                }
+            }
+        }
+
+        // ========== 모델 토글 (아이콘 클릭) ==========
+        function toggleModelByIcon(model) {
+            const index = selectedModels.indexOf(model);
+            
+            if (index > -1) {
+                // 모델 제거 (최소 1개는 유지)
+                if (selectedModels.length > 1) {
+                    selectedModels.splice(index, 1);
+                    updateModelUI();
+                }
+            } else {
+                // 모델 추가
+                selectedModels.push(model);
+                updateModelUI();
+            }
+        }
+
+        // ========== 모델 UI 업데이트 ==========
+        function updateModelUI() {
+            // 선택된 모델 아이콘 업데이트
+            document.querySelectorAll('.selected-model').forEach(el => {
+                const model = el.dataset.model;
+                if (selectedModels.includes(model)) {
+                    el.classList.remove('selected-model--inactive');
+                } else {
+                    el.classList.add('selected-model--inactive');
+                }
+            });
+            
+            // 응답 패널 업데이트
+            updateResponsePanels();
+        }
+
+        // ========== 프로젝트 선택 모달 ==========
+        function openProjectSelector() {
+            const modal = createModal('프로젝트 선택', `
+                <div class="selector-list">
+                    <div class="selector-item" onclick="selectProject('none')">
+                        <div class="selector-item__icon">⭕</div>
+                        <div class="selector-item__content">
+                            <div class="selector-item__name">선택 안함</div>
+                            <div class="selector-item__desc">프로젝트 없이 진행</div>
+                        </div>
+                    </div>
+                    <div class="selector-divider"></div>
+                    <div class="selector-item" onclick="selectProject('python-learning')">
+                        <div class="selector-item__icon">🐍</div>
+                        <div class="selector-item__content">
+                            <div class="selector-item__name">Python 기초 학습</div>
+                            <div class="selector-item__desc">45개 대화 • 2시간 전</div>
+                        </div>
+                    </div>
+                    <div class="selector-item" onclick="selectProject('data-analysis')">
+                        <div class="selector-item__icon">📊</div>
+                        <div class="selector-item__content">
+                            <div class="selector-item__name">데이터 분석 실습</div>
+                            <div class="selector-item__desc">23개 대화 • 어제</div>
+                        </div>
+                    </div>
+                    <div class="selector-item" onclick="selectProject('web-dev')">
+                        <div class="selector-item__icon">🌐</div>
+                        <div class="selector-item__content">
+                            <div class="selector-item__name">웹 개발 프로젝트</div>
+                            <div class="selector-item__desc">67개 대화 • 3일 전</div>
+                        </div>
+                    </div>
+                    <div class="selector-item" onclick="selectProject('ai-study')">
+                        <div class="selector-item__icon">🧠</div>
+                        <div class="selector-item__content">
+                            <div class="selector-item__name">AI/ML 스터디</div>
+                            <div class="selector-item__desc">34개 대화 • 5일 전</div>
+                        </div>
+                    </div>
+                    <div class="selector-item" onclick="selectProject('marketing')">
+                        <div class="selector-item__icon">📱</div>
+                        <div class="selector-item__content">
+                            <div class="selector-item__name">마케팅 자료 제작</div>
+                            <div class="selector-item__desc">18개 대화 • 1주일 전</div>
+                        </div>
+                    </div>
+                </div>
+            `);
+            toggleOptionsMenu(); // 옵션 메뉴 닫기
+        }
+
+        // ========== 에이전트 선택 모달 ==========
+        function openAgentSelector() {
+            const modal = createModal('에이전트 선택', `
+                <div class="selector-list">
+                    <div class="selector-item" onclick="selectAgent('none')">
+                        <div class="selector-item__icon">⭕</div>
+                        <div class="selector-item__content">
+                            <div class="selector-item__name">선택 안함</div>
+                            <div class="selector-item__desc">기본 AI 모델 사용</div>
+                        </div>
+                    </div>
+                    <div class="selector-divider"></div>
+                    <div class="selector-item" onclick="selectAgent('coding-tutor')">
+                        <div class="selector-item__icon">💻</div>
+                        <div class="selector-item__content">
+                            <div class="selector-item__name">코딩 튜터</div>
+                            <div class="selector-item__desc">시니어 개발자 • 사용 23회</div>
+                        </div>
+                    </div>
+                    <div class="selector-item" onclick="selectAgent('content-writer')">
+                        <div class="selector-item__icon">✍️</div>
+                        <div class="selector-item__content">
+                            <div class="selector-item__name">콘텐츠 작가</div>
+                            <div class="selector-item__desc">블로그/SNS 전문 • 사용 15회</div>
+                        </div>
+                    </div>
+                    <div class="selector-item" onclick="selectAgent('data-analyst')">
+                        <div class="selector-item__icon">📊</div>
+                        <div class="selector-item__content">
+                            <div class="selector-item__name">데이터 분석가</div>
+                            <div class="selector-item__desc">통계/시각화 전문 • 사용 18회</div>
+                        </div>
+                    </div>
+                    <div class="selector-item" onclick="selectAgent('english-teacher')">
+                        <div class="selector-item__icon">🌍</div>
+                        <div class="selector-item__content">
+                            <div class="selector-item__name">영어 선생님</div>
+                            <div class="selector-item__desc">비즈니스 영어 • 사용 31회</div>
+                        </div>
+                    </div>
+                    <div class="selector-item" onclick="selectAgent('research-assistant')">
+                        <div class="selector-item__icon">🔬</div>
+                        <div class="selector-item__content">
+                            <div class="selector-item__name">연구 조수</div>
+                            <div class="selector-item__desc">논문/자료 조사 • 사용 12회</div>
+                        </div>
+                    </div>
+                </div>
+            `);
+            toggleOptionsMenu();
+        }
+
+        // ========== 문서 선택 모달 ==========
+        function openDocumentSelector() {
+            const modal = createModal('문서 선택 (RAG)', `
+                <div class="selector-search">
+                    <input type="text" placeholder="🔍 문서 검색..." onkeyup="searchDocumentsInModal(this.value)">
+                </div>
+                <div class="selector-list" id="documentSelectorList">
+                    <div class="selector-item" onclick="selectDocument('none')">
+                        <div class="selector-item__icon">⭕</div>
+                        <div class="selector-item__content">
+                            <div class="selector-item__name">선택 안함</div>
+                            <div class="selector-item__desc">문서 없이 진행</div>
+                        </div>
+                    </div>
+                    <div class="selector-divider"></div>
+                    <div class="selector-item" onclick="selectDocument('python-guide')">
+                        <div class="selector-item__icon">📄</div>
+                        <div class="selector-item__content">
+                            <div class="selector-item__name">Python 기초 가이드.pdf</div>
+                            <div class="selector-item__desc">2.3 MB • 2시간 전</div>
+                        </div>
+                    </div>
+                    <div class="selector-item" onclick="selectDocument('pandas-doc')">
+                        <div class="selector-item__icon">📄</div>
+                        <div class="selector-item__content">
+                            <div class="selector-item__name">Pandas 공식 문서.pdf</div>
+                            <div class="selector-item__desc">5.7 MB • 1일 전</div>
+                        </div>
+                    </div>
+                    <div class="selector-item" onclick="selectDocument('api-spec')">
+                        <div class="selector-item__icon">📄</div>
+                        <div class="selector-item__content">
+                            <div class="selector-item__name">REST API 명세서.docx</div>
+                            <div class="selector-item__desc">850 KB • 3일 전</div>
+                        </div>
+                    </div>
+                    <div class="selector-item" onclick="selectDocument('dataset')">
+                        <div class="selector-item__icon">📊</div>
+                        <div class="selector-item__content">
+                            <div class="selector-item__name">고객 데이터셋.xlsx</div>
+                            <div class="selector-item__desc">1.2 MB • 5일 전</div>
+                        </div>
+                    </div>
+                    <div class="selector-item" onclick="selectDocument('company-guide')">
+                        <div class="selector-item__icon">📋</div>
+                        <div class="selector-item__content">
+                            <div class="selector-item__name">회사 가이드라인.pdf</div>
+                            <div class="selector-item__desc">3.4 MB • 1주일 전</div>
+                        </div>
+                    </div>
+                    <div class="selector-item" onclick="selectDocument('code-samples')">
+                        <div class="selector-item__icon">💻</div>
+                        <div class="selector-item__content">
+                            <div class="selector-item__name">코드 샘플 모음.txt</div>
+                            <div class="selector-item__desc">420 KB • 1주일 전</div>
+                        </div>
+                    </div>
+                </div>
+            `);
+            toggleOptionsMenu();
+        }
+
+        // ========== 모달 생성 ==========
+        function createModal(title, content) {
+            // 기존 모달 제거
+            const existingModal = document.getElementById('selectorModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+
+            const modal = document.createElement('div');
+            modal.id = 'selectorModal';
+            modal.className = 'selector-modal';
+            modal.innerHTML = `
+                <div class="selector-modal__overlay" onclick="closeModal()"></div>
+                <div class="selector-modal__content">
+                    <div class="selector-modal__header">
+                        <h3 class="selector-modal__title">${title}</h3>
+                        <button class="selector-modal__close" onclick="closeModal()">✕</button>
+                    </div>
+                    <div class="selector-modal__body">
+                        ${content}
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            // 애니메이션
+            setTimeout(() => modal.classList.add('selector-modal--open'), 10);
+            
+            return modal;
+        }
+
+        // ========== 모달 닫기 ==========
+        function closeModal() {
+            const modal = document.getElementById('selectorModal');
+            if (modal) {
+                modal.classList.remove('selector-modal--open');
+                setTimeout(() => modal.remove(), 200);
+            }
+        }
+
+        // ========== 프로젝트 선택 ==========
+        function selectProject(projectId) {
+            const projects = {
+                'none': '선택 안함',
+                'python-learning': 'Python 기초 학습',
+                'data-analysis': '데이터 분석 실습',
+                'web-dev': '웹 개발 프로젝트',
+                'ai-study': 'AI/ML 스터디',
+                'marketing': '마케팅 자료 제작'
+            };
+            
+            document.getElementById('selectedProject').textContent = projects[projectId] || '선택 안함';
+            currentContext.project = projectId === 'none' ? null : projectId;
+            closeModal();
+            window.GrowFitUtils.showToast(`프로젝트: ${projects[projectId]}`, 'success');
+        }
+
+        // ========== 에이전트 선택 ==========
+        function selectAgent(agentId) {
+            const agents = {
+                'none': '선택 안함',
+                'coding-tutor': '코딩 튜터',
+                'content-writer': '콘텐츠 작가',
+                'data-analyst': '데이터 분석가',
+                'english-teacher': '영어 선생님',
+                'research-assistant': '연구 조수'
+            };
+            
+            document.getElementById('selectedAgent').textContent = agents[agentId] || '선택 안함';
+            currentContext.agent = agentId === 'none' ? null : agentId;
+            closeModal();
+            window.GrowFitUtils.showToast(`에이전트: ${agents[agentId]}`, 'success');
+        }
+
+        // ========== 문서 선택 ==========
+        function selectDocument(docId) {
+            const documents = {
+                'none': '선택 안함',
+                'python-guide': 'Python 기초 가이드.pdf',
+                'pandas-doc': 'Pandas 공식 문서.pdf',
+                'api-spec': 'REST API 명세서.docx',
+                'dataset': '고객 데이터셋.xlsx',
+                'company-guide': '회사 가이드라인.pdf',
+                'code-samples': '코드 샘플 모음.txt'
+            };
+            
+            document.getElementById('selectedDocument').textContent = documents[docId] || '선택 안함';
+            currentContext.document = docId === 'none' ? null : docId;
+            closeModal();
+            window.GrowFitUtils.showToast(`문서: ${documents[docId]}`, 'success');
+        }
+
+        // ========== 문서 검색 (모달 내) ==========
+        function searchDocumentsInModal(query) {
+            const items = document.querySelectorAll('#documentSelectorList .selector-item');
+            items.forEach(item => {
+                const name = item.querySelector('.selector-item__name')?.textContent.toLowerCase() || '';
+                if (name.includes(query.toLowerCase())) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        // ========== 파일 업로드 ==========
+        function uploadFile(type) {
+            window.GrowFitUtils.showToast(`${type} 파일 업로드 기능은 개발 중입니다`, 'info');
+            toggleAttachMenu();
+        }
+
+        // 외부 클릭 시 메뉴 닫기
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.parallel-input-section')) {
+                const optionsMenu = document.getElementById('optionsMenu');
+                const attachMenu = document.getElementById('attachMenu');
+                if (optionsMenu) optionsMenu.classList.remove('options-menu--open');
+                if (attachMenu) attachMenu.classList.remove('options-menu--open');
+            }
+        });
+
+        function initializePractice() {
+            // 프롬프트 입력 자동 높이 조절
+            const parallelInput = document.getElementById('parallelInput');
+            if (parallelInput) {
+                parallelInput.addEventListener('input', autoResizeTextarea);
+            }
+
+            // Enter 키로 전송 (Shift+Enter는 줄바꿈)
+            if (parallelInput) {
+                parallelInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendParallelPrompt();
+                    }
+                });
+            }
+
+            console.log('Practice 초기화 완료');
+        }
+
+        function autoResizeTextarea(e) {
+            const textarea = e.target;
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
+        }
+
+        function setupEventListeners() {
+            // ESC 키로 모달 닫기
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeComparison();
+                }
+            });
+        }
+
+        // ========== 모드 전환 ==========
+        function switchMode(mode) {
+            currentMode = mode;
+
+            const singleTab = document.getElementById('singleModeTab');
+            const parallelTab = document.getElementById('parallelModeTab');
+            const singleMode = document.getElementById('singleMode');
+            const parallelMode = document.getElementById('parallelMode');
+
+            if (mode === 'single') {
+                // 단일 모드 활성화
+                singleTab.classList.add('mode-tab--active');
+                parallelTab.classList.remove('mode-tab--active');
+                singleMode.style.display = 'grid';
+                parallelMode.style.display = 'none';
+
+                window.GrowFitUtils.showToast('단일 모델 모드로 전환했습니다', 'info');
+            } else {
+                // 병렬 모드 활성화
+                parallelTab.classList.add('mode-tab--active');
+                singleTab.classList.remove('mode-tab--active');
+                parallelMode.style.display = 'flex';
+                singleMode.style.display = 'none';
+
+                window.GrowFitUtils.showToast('병렬 비교 모드로 전환했습니다', 'success');
+            }
+        }
+
+        // ========== 컨텍스트 관리 ==========
+        function removeContext(type) {
+            if (confirm(`${currentContext[type]}을(를) 제거하시겠습니까?`)) {
+                delete currentContext[type];
+                window.GrowFitUtils.showToast('컨텍스트가 제거되었습니다', 'info');
+                // 실제로는 UI 업데이트 필요
+                location.reload();
+            }
+        }
+
+        function addContext() {
+            // 실제로는 모달 열어서 선택
+            const options = `
+                1. 📁 프로젝트 선택
+                2. 🤖 에이전트 선택
+                3. 📄 문서 선택
+                
+                번호를 입력하세요:
+            `;
+            
+            const choice = prompt(options);
+            
+            if (choice) {
+                window.GrowFitUtils.showToast('컨텍스트 추가 기능은 개발 중입니다', 'info');
+            }
+        }
+
+        // ========== 병렬 프롬프트 전송 ==========
+        async function sendParallelPrompt() {
+            const input = document.getElementById('parallelInput');
+            const sendBtn = document.getElementById('parallelSendBtn');
+            const prompt = input.value.trim();
+
+            if (!prompt) {
+                window.GrowFitUtils.showToast('질문을 입력해주세요', 'warning');
+                input.focus();
+                return;
+            }
+
+            if (selectedModels.length === 0) {
+                window.GrowFitUtils.showToast('비교할 모델을 선택해주세요', 'warning');
+                return;
+            }
+
+            if (isGenerating) {
+                window.GrowFitUtils.showToast('이미 생성 중입니다', 'warning');
+                return;
+            }
+
+            // 생성 시작
+            isGenerating = true;
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '<span>⏳</span><span>생성 중...</span>';
+
+            // 선택된 응답 패널만 초기화
+            clearSelectedResponses();
+
+            try {
+                // 선택된 모델만 동시 호출
+                const promises = selectedModels.map(model => generateResponse(model, prompt));
+                await Promise.all(promises);
+
+                window.GrowFitUtils.showToast(`${selectedModels.length}개 모델의 응답이 완료되었습니다! 🎉`, 'success');
+
+                // 프로젝트에 자동 저장
+                saveToProject(prompt, responses);
+
+            } catch (error) {
+                console.error('응답 생성 중 오류:', error);
+                window.GrowFitUtils.showToast('응답 생성 중 오류가 발생했습니다', 'error');
+            } finally {
+                isGenerating = false;
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = '<span>🚀</span><span>3개 모델 실행</span>';
+            }
+        }
+
+        // ========== 개별 모델 응답 생성 (시뮬레이션) ==========
+        async function generateResponse(model, prompt) {
+            const contentEl = document.getElementById(`${model}Content`);
+            const timeEl = document.getElementById(`${model}Time`);
+            const tokensEl = document.getElementById(`${model}Tokens`);
+
+            // 로딩 상태 표시
+            contentEl.innerHTML = `
+                <div class="response-loading">
+                    <div class="response-loading__spinner"></div>
+                    <div class="response-loading__text">
+                        ${model === 'gpt' ? 'GPT-4' : model === 'claude' ? 'Claude' : 'Gemini'}가 응답을 생성하고 있습니다...
+                    </div>
+                </div>
+            `;
+
+            // 시작 시간 기록
+            const startTime = Date.now();
+
+            // 실제로는 API 호출
+            // 시뮬레이션: 모델별 다른 응답 시간
+            const delay = model === 'claude' ? 1800 : model === 'gpt' ? 2300 : 3100;
+            await new Promise(resolve => setTimeout(resolve, delay));
+
+            // 응답 시간 계산
+            const responseTime = ((Date.now() - startTime) / 1000).toFixed(1);
+            metrics[model].time = responseTime;
+
+            // 샘플 응답 생성
+            const response = generateSampleResponse(model, prompt);
+            responses[model] = response;
+
+            // 토큰 수 (시뮬레이션)
+            const tokens = model === 'claude' ? 380 : model === 'gpt' ? 450 : 520;
+            metrics[model].tokens = tokens;
+
+            // 응답 표시
+            displayResponse(model, response);
+
+            // 메트릭 업데이트
+            timeEl.textContent = `${responseTime}초`;
+            tokensEl.textContent = `${tokens} tok`;
+
+            // 애니메이션 효과
+            contentEl.style.opacity = '0';
+            setTimeout(() => {
+                contentEl.style.transition = 'opacity 0.3s';
+                contentEl.style.opacity = '1';
+            }, 10);
+        }
+
+        // ========== 샘플 응답 생성 ==========
+        function generateSampleResponse(model, prompt) {
+            // 실제로는 API 응답 사용
+            // 여기서는 모델별 특성을 반영한 샘플 응답 생성
+
+            const responses = {
+                gpt: `
+                    <p>Python에서 리스트를 정렬하는 방법은 크게 두 가지가 있습니다:</p>
+                    
+                    <h4>1. sort() 메서드 (제자리 정렬)</h4>
+                    <p>원본 리스트를 직접 수정합니다.</p>
+                    <div class="code-block">
+                        <div class="code-block__header">
+                            <span class="code-block__lang">python</span>
+                            <button class="code-block__copy" onclick="copyCode(this)">복사</button>
+                        </div>
+                        <pre>numbers = [3, 1, 4, 1, 5, 9, 2, 6]
+numbers.sort()
+print(numbers)  # [1, 1, 2, 3, 4, 5, 6, 9]
+
+# 내림차순 정렬
+numbers.sort(reverse=True)
+print(numbers)  # [9, 6, 5, 4, 3, 2, 1, 1]</pre>
+                    </div>
+
+                    <h4>2. sorted() 함수 (새 리스트 반환)</h4>
+                    <p>원본을 유지하고 정렬된 새 리스트를 반환합니다.</p>
+                    <div class="code-block">
+                        <div class="code-block__header">
+                            <span class="code-block__lang">python</span>
+                            <button class="code-block__copy" onclick="copyCode(this)">복사</button>
+                        </div>
+                        <pre>numbers = [3, 1, 4, 1, 5, 9, 2, 6]
+sorted_numbers = sorted(numbers)
+print(sorted_numbers)  # [1, 1, 2, 3, 4, 5, 6, 9]
+print(numbers)  # [3, 1, 4, 1, 5, 9, 2, 6] (원본 유지)</pre>
+                    </div>
+
+                    <h4>커스텀 정렬</h4>
+                    <p>key 매개변수로 정렬 기준을 지정할 수 있습니다.</p>
+                    <div class="code-block">
+                        <div class="code-block__header">
+                            <span class="code-block__lang">python</span>
+                            <button class="code-block__copy" onclick="copyCode(this)">복사</button>
+                        </div>
+                        <pre>students = [
+    {'name': '철수', 'score': 85},
+    {'name': '영희', 'score': 92},
+    {'name': '민수', 'score': 78}
+]
+
+# 점수 기준 정렬
+students.sort(key=lambda x: x['score'], reverse=True)
+print(students)
+# [{'name': '영희', 'score': 92}, ...]</pre>
+                    </div>
+
+                    <p><strong>선택 가이드:</strong></p>
+                    <ul>
+                        <li><code>sort()</code>: 메모리 효율적, 원본 리스트만 필요한 경우</li>
+                        <li><code>sorted()</code>: 원본 보존 필요, 함수형 프로그래밍 스타일</li>
+                    </ul>
+                `,
+
+                claude: `
+                    <p>좋은 질문이네요! Python 리스트 정렬에 대해 상세히 설명드리겠습니다.</p>
+
+                    <h4>📌 핵심 개념</h4>
+                    <p>Python은 두 가지 정렬 방법을 제공합니다:</p>
+                    <ul>
+                        <li><strong>sort()</strong> - 메서드: 원본 수정</li>
+                        <li><strong>sorted()</strong> - 함수: 새 리스트 생성</li>
+                    </ul>
+
+                    <h4>1️⃣ sort() 메서드</h4>
+                    <p>리스트 객체의 메서드로, 원본 리스트를 직접 변경합니다. 반환값은 None입니다.</p>
+                    
+                    <div class="code-block">
+                        <div class="code-block__header">
+                            <span class="code-block__lang">python</span>
+                            <button class="code-block__copy" onclick="copyCode(this)">복사</button>
+                        </div>
+                        <pre># 기본 사용법
+my_list = [3, 1, 4, 1, 5, 9, 2, 6]
+my_list.sort()  # 원본이 변경됨
+print(my_list)  # [1, 1, 2, 3, 4, 5, 6, 9]
+
+# 내림차순
+my_list.sort(reverse=True)
+print(my_list)  # [9, 6, 5, 4, 3, 2, 1, 1]</pre>
+                    </div>
+
+                    <h4>2️⃣ sorted() 함수</h4>
+                    <p>내장 함수로, 어떤 iterable도 받을 수 있으며 새로운 정렬된 리스트를 반환합니다.</p>
+
+                    <div class="code-block">
+                        <div class="code-block__header">
+                            <span class="code-block__lang">python</span>
+                            <button class="code-block__copy" onclick="copyCode(this)">복사</button>
+                        </div>
+                        <pre># 기본 사용법
+original = [3, 1, 4, 1, 5, 9, 2, 6]
+sorted_list = sorted(original)
+print(sorted_list)  # [1, 1, 2, 3, 4, 5, 6, 9]
+print(original)     # [3, 1, 4, 1, 5, 9, 2, 6] (원본 유지)
+
+# 문자열도 정렬 가능
+sorted("python")  # ['h', 'n', 'o', 'p', 't', 'y']</pre>
+                    </div>
+
+                    <h4>3️⃣ 고급 정렬 - key 매개변수</h4>
+                    <p>정렬 기준을 커스터마이징할 수 있는 강력한 기능입니다.</p>
+
+                    <div class="code-block">
+                        <div class="code-block__header">
+                            <span class="code-block__lang">python</span>
+                            <button class="code-block__copy" onclick="copyCode(this)">복사</button>
+                        </div>
+                        <pre># 문자열 길이 기준 정렬
+words = ['python', 'java', 'c', 'javascript']
+sorted_words = sorted(words, key=len)
+print(sorted_words)  # ['c', 'java', 'python', 'javascript']
+
+# 튜플의 두 번째 요소 기준
+pairs = [(1, 'one'), (3, 'three'), (2, 'two')]
+sorted(pairs, key=lambda x: x[1])
+# [(1, 'one'), (3, 'three'), (2, 'two')]
+
+# 객체 정렬
+class Student:
+    def __init__(self, name, grade):
+        self.name = name
+        self.grade = grade
+
+students = [Student('Alice', 85), Student('Bob', 92)]
+sorted(students, key=lambda s: s.grade, reverse=True)</pre>
+                    </div>
+
+                    <h4>💡 실전 팁</h4>
+                    <ol>
+                        <li><strong>메모리 고려</strong>: 대용량 데이터는 sort() 사용</li>
+                        <li><strong>원본 보존</strong>: 원본이 필요하면 sorted() 사용</li>
+                        <li><strong>안정 정렬</strong>: Python은 안정 정렬(Timsort) 사용</li>
+                        <li><strong>성능</strong>: O(n log n) 시간 복잡도</li>
+                    </ol>
+
+                    <p>추가로 궁금한 점이 있으시면 말씀해주세요! 😊</p>
+                `,
+
+                gemini: `
+                    <p>Python 리스트 정렬 방법을 알려드리겠습니다.</p>
+
+                    <h4>주요 방법 2가지</h4>
+
+                    <p><strong>1. sort() - 원본 수정</strong></p>
+                    <div class="code-block">
+                        <div class="code-block__header">
+                            <span class="code-block__lang">python</span>
+                            <button class="code-block__copy" onclick="copyCode(this)">복사</button>
+                        </div>
+                        <pre>numbers = [5, 2, 8, 1, 9]
+numbers.sort()
+print(numbers)  # [1, 2, 5, 8, 9]</pre>
+                    </div>
+
+                    <p><strong>2. sorted() - 새 리스트 생성</strong></p>
+                    <div class="code-block">
+                        <div class="code-block__header">
+                            <span class="code-block__lang">python</span>
+                            <button class="code-block__copy" onclick="copyCode(this)">복사</button>
+                        </div>
+                        <pre>numbers = [5, 2, 8, 1, 9]
+new_numbers = sorted(numbers)
+print(new_numbers)  # [1, 2, 5, 8, 9]
+print(numbers)      # [5, 2, 8, 1, 9]</pre>
+                    </div>
+
+                    <h4>역순 정렬</h4>
+                    <div class="code-block">
+                        <div class="code-block__header">
+                            <span class="code-block__lang">python</span>
+                            <button class="code-block__copy" onclick="copyCode(this)">복사</button>
+                        </div>
+                        <pre>numbers.sort(reverse=True)
+# 또는
+sorted(numbers, reverse=True)</pre>
+                    </div>
+
+                    <h4>커스텀 정렬</h4>
+                    <div class="code-block">
+                        <div class="code-block__header">
+                            <span class="code-block__lang">python</span>
+                            <button class="code-block__copy" onclick="copyCode(this)">복사</button>
+                        </div>
+                        <pre># 절댓값 기준 정렬
+numbers = [-4, -1, 3, -2, 5]
+numbers.sort(key=abs)
+print(numbers)  # [-1, -2, 3, -4, 5]
+
+# 문자열 길이 기준
+words = ['python', 'is', 'awesome']
+words.sort(key=len)
+print(words)  # ['is', 'python', 'awesome']</pre>
+                    </div>
+
+                    <p><strong>요약:</strong></p>
+                    <ul>
+                        <li>sort() = 빠름, 원본 변경</li>
+                        <li>sorted() = 안전, 원본 유지</li>
+                    </ul>
+                `
+            };
+
+            return responses[model];
+        }
+
+        // ========== 응답 표시 ==========
+        function displayResponse(model, htmlContent) {
+            const contentEl = document.getElementById(`${model}Content`);
+            contentEl.innerHTML = htmlContent;
+
+            // 코드 복사 버튼 활성화
+            contentEl.querySelectorAll('.code-block__copy').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    copyCode(this);
+                });
+            });
+        }
+
+        // ========== 응답 초기화 ==========
+        function clearSelectedResponses() {
+            selectedModels.forEach(model => {
+                const contentEl = document.getElementById(`${model}Content`);
+                contentEl.innerHTML = `
+                    <div class="response-empty">
+                        <div class="response-empty__icon">⏳</div>
+                        <div class="response-empty__text">응답 준비 중...</div>
+                    </div>
+                `;
+
+                document.getElementById(`${model}Time`).textContent = '-';
+                document.getElementById(`${model}Tokens`).textContent = '-';
+                
+                responses[model] = null;
+                metrics[model] = { time: 0, tokens: 0, rating: null };
+            });
+        }
+
+        function clearAllResponses() {
+            ['gpt', 'claude', 'gemini'].forEach(model => {
+                const contentEl = document.getElementById(`${model}Content`);
+                contentEl.innerHTML = `
+                    <div class="response-empty">
+                        <div class="response-empty__icon">⏳</div>
+                        <div class="response-empty__text">응답 준비 중...</div>
+                    </div>
+                `;
+
+                document.getElementById(`${model}Time`).textContent = '-';
+                document.getElementById(`${model}Tokens`).textContent = '-';
+            });
+
+            responses = { gpt: null, claude: null, gemini: null };
+            metrics = {
+                gpt: { time: 0, tokens: 0, rating: null },
+                claude: { time: 0, tokens: 0, rating: null },
+                gemini: { time: 0, tokens: 0, rating: null }
+            };
+        }
+
+        // ========== 코드 복사 ==========
+        function copyCode(button) {
+            const codeBlock = button.closest('.code-block');
+            const code = codeBlock.querySelector('pre').textContent;
+
+            navigator.clipboard.writeText(code).then(() => {
+                button.textContent = '✓ 복사됨';
+                button.style.background = 'rgba(16, 185, 129, 0.2)';
+                
+                setTimeout(() => {
+                    button.textContent = '복사';
+                    button.style.background = '';
+                }, 2000);
+            }).catch(err => {
+                console.error('복사 실패:', err);
+                window.GrowFitUtils.showToast('복사에 실패했습니다', 'error');
+            });
+        }
+
+        // ========== 응답 복사 ==========
+        function copyResponse(model) {
+            const content = responses[model];
+            if (!content) {
+                window.GrowFitUtils.showToast('복사할 응답이 없습니다', 'warning');
+                return;
+            }
+
+            // HTML 태그 제거하고 텍스트만 추출
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = content;
+            const text = tempDiv.textContent || tempDiv.innerText || '';
+
+            navigator.clipboard.writeText(text).then(() => {
+                window.GrowFitUtils.showToast(`${model.toUpperCase()} 응답이 복사되었습니다`, 'success');
+            }).catch(err => {
+                console.error('복사 실패:', err);
+                window.GrowFitUtils.showToast('복사에 실패했습니다', 'error');
+            });
+        }
+
+        // ========== 응답 재생성 ==========
+            async function regenerateResponse(model) {
+                const input = document.getElementById('parallelInput');
+                const prompt = input.value.trim();
+
+                if (!prompt) {
+                    window.GrowFitUtils.showToast('프롬프트가 없습니다', 'warning');
+                    return;
+                }
+
+                if (isGenerating) {
+                    window.GrowFitUtils.showToast('이미 생성 중입니다', 'warning');
+                    return;
+                }
+
+                if (confirm(`${model.toUpperCase()} 모델의 응답을 재생성하시겠습니까?`)) {
+                    try {
+                        isGenerating = true;
+                        await generateResponse(model, prompt);
+                        window.GrowFitUtils.showToast(`${model.toUpperCase()} 응답이 재생성되었습니다`, 'success');
+                    } catch (error) {
+                        console.error('재생성 오류:', error);
+                        window.GrowFitUtils.showToast('재생성에 실패했습니다', 'error');
+                    } finally {
+                        isGenerating = false;
+                    }
+                }
+            }
+
+            // ========== 응답 평가 ==========
+            function rateResponse(model, rating) {
+                metrics[model].rating = rating;
+
+                // 해당 모델의 평가 버튼 상태 업데이트
+                const panel = document.querySelector(`.response-panel--${model}`);
+                const ratingBtns = panel.querySelectorAll('.rating-btn');
+
+                ratingBtns.forEach(btn => {
+                    btn.classList.remove('rating-btn--active');
+                });
+
+                // 클릭한 버튼 활성화
+                event.target.classList.add('rating-btn--active');
+
+                const ratingText = {
+                    'like': '좋아요',
+                    'dislike': '별로예요',
+                    'star': '최고!'
+                };
+
+                window.GrowFitUtils.showToast(
+                    `${model.toUpperCase()} 응답에 "${ratingText[rating]}"를 선택했습니다`,
+                    'success'
+                );
+
+                // 서버에 평가 저장 (실제로는 API 호출)
+                console.log(`평가 저장: ${model} - ${rating}`);
+            }
+
+            // ========== 프롬프트 입력 초기화 ==========
+            function clearParallelInput() {
+                if (confirm('입력한 내용을 초기화하시겠습니까?')) {
+                    document.getElementById('parallelInput').value = '';
+                    document.getElementById('parallelInput').style.height = '60px';
+                    window.GrowFitUtils.showToast('입력이 초기화되었습니다', 'info');
+                }
+            }
+
+            // ========== 프롬프트 저장 ==========
+            function savePrompt() {
+                const input = document.getElementById('parallelInput');
+                const prompt = input.value.trim();
+
+                if (!prompt) {
+                    window.GrowFitUtils.showToast('저장할 프롬프트가 없습니다', 'warning');
+                    return;
+                }
+
+                const title = prompt.substring(0, 50) + (prompt.length > 50 ? '...' : '');
+
+                if (confirm(`"${title}"\n\n이 프롬프트를 템플릿으로 저장하시겠습니까?`)) {
+                    // 실제로는 서버에 저장
+                    console.log('프롬프트 저장:', prompt);
+                    window.GrowFitUtils.showToast('프롬프트가 템플릿으로 저장되었습니다', 'success');
+                }
+            }
+
+            // ========== 프로젝트에 저장 ==========
+            function saveToProject(prompt, responses) {
+                // 실제로는 API 호출하여 프로젝트에 저장
+                const data = {
+                    project: currentContext.project,
+                    agent: currentContext.agent,
+                    document: currentContext.document,
+                    prompt: prompt,
+                    responses: responses,
+                    metrics: metrics,
+                    timestamp: new Date().toISOString()
+                };
+
+                console.log('프로젝트 저장:', data);
+
+                // 저장 성공 표시
+                setTimeout(() => {
+                    const notification = document.createElement('div');
+                    notification.style.cssText = `
+                    position: fixed;
+                    bottom: 80px;
+                    right: 20px;
+                    background: white;
+                    border: 1px solid var(--border);
+                    border-radius: var(--radius-lg);
+                    padding: var(--space-3);
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                    display: flex;
+                    align-items: center;
+                    gap: var(--space-2);
+                    z-index: 1000;
+                    animation: slideIn 0.3s;
+                `;
+                    notification.innerHTML = `
+                    <span style="font-size: 20px;">💾</span>
+                    <span style="font-size: var(--text-sm);">
+                        <strong>${currentContext.project}</strong>에 자동 저장되었습니다
+                    </span>
+                `;
+
+                    document.body.appendChild(notification);
+
+                    setTimeout(() => {
+                        notification.style.animation = 'slideOut 0.3s';
+                        setTimeout(() => notification.remove(), 300);
+                    }, 3000);
+                }, 2000);
+            }
+
+            // ========== 모든 응답 저장 ==========
+            function saveAllResponses() {
+                if (!responses.gpt && !responses.claude && !responses.gemini) {
+                    window.GrowFitUtils.showToast('저장할 응답이 없습니다', 'warning');
+                    return;
+                }
+
+                const input = document.getElementById('parallelInput');
+                const prompt = input.value.trim();
+
+                if (confirm('3개 모델의 응답을 모두 저장하시겠습니까?')) {
+                    saveToProject(prompt, responses);
+                    window.GrowFitUtils.showToast('모든 응답이 저장되었습니다', 'success');
+                }
+            }
+
+            // ========== 비교 분석 표시 ==========
+            function showComparison() {
+                if (!responses.gpt && !responses.claude && !responses.gemini) {
+                    window.GrowFitUtils.showToast('비교할 응답이 없습니다', 'warning');
+                    return;
+                }
+
+                const modal = document.getElementById('comparisonModal');
+                modal.style.display = 'block';
+
+                // 비교 데이터 업데이트
+                document.getElementById('compGptTime').textContent = `${metrics.gpt.time}초`;
+                document.getElementById('compClaudeTime').textContent = `${metrics.claude.time}초`;
+                document.getElementById('compGeminiTime').textContent = `${metrics.gemini.time}초`;
+
+                document.getElementById('compGptTokens').textContent = metrics.gpt.tokens;
+                document.getElementById('compClaudeTokens').textContent = metrics.claude.tokens;
+                document.getElementById('compGeminiTokens').textContent = metrics.gemini.tokens;
+
+                // 평가 표시
+                const ratingToStars = (rating) => {
+                    if (rating === 'star') return '⭐⭐⭐⭐⭐';
+                    if (rating === 'like') return '⭐⭐⭐⭐';
+                    if (rating === 'dislike') return '⭐⭐';
+                    return '미평가';
+                };
+
+                document.getElementById('compGptRating').textContent = ratingToStars(metrics.gpt.rating);
+                document.getElementById('compClaudeRating').textContent = ratingToStars(metrics.claude.rating);
+                document.getElementById('compGeminiRating').textContent = ratingToStars(metrics.gemini.rating);
+
+                // 모달 외부 클릭 시 닫기
+                modal.addEventListener('click', function (e) {
+                    if (e.target === modal) {
+                        closeComparison();
+                    }
+                });
+            }
+
+            // ========== 비교 분석 닫기 ==========
+            function closeComparison() {
+                const modal = document.getElementById('comparisonModal');
+                modal.style.display = 'none';
+            }
+
+            // ========== 비교 리포트 내보내기 ==========
+            function exportComparison() {
+                if (!responses.gpt && !responses.claude && !responses.gemini) {
+                    window.GrowFitUtils.showToast('내보낼 데이터가 없습니다', 'warning');
+                    return;
+                }
+
+                const input = document.getElementById('parallelInput');
+                const prompt = input.value.trim();
+
+                // 리포트 생성 (실제로는 PDF 또는 Excel로 내보내기)
+                const report = {
+                    prompt: prompt,
+                    context: currentContext,
+                    responses: responses,
+                    metrics: metrics,
+                    timestamp: new Date().toISOString()
+                };
+
+                console.log('비교 리포트:', report);
+
+                // 시뮬레이션: JSON 다운로드
+                const dataStr = JSON.stringify(report, null, 2);
+                const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(dataBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `AI비교_${new Date().getTime()}.json`;
+                link.click();
+                URL.revokeObjectURL(url);
+
+                window.GrowFitUtils.showToast('비교 리포트가 다운로드되었습니다', 'success');
+            }
+
+            // ========== 샘플 프롬프트 로드 ==========
+            function loadSamplePrompt(type) {
+                const samples = {
+                    'code': 'Python으로 리스트를 정렬하는 방법을 알려줘. 예제 코드와 함께 설명해주면 좋겠어.',
+                    'writing': '우리 회사의 신제품 런칭 소셜미디어 포스트를 작성해줘. 톤은 밝고 친근하게, 이모지도 적절히 사용해줘.',
+                    'analysis': '첨부한 데이터를 분석하고, 주요 트렌드와 인사이트를 정리해줘. 시각화 추천도 해줘.',
+                    'translation': '다음 한국어 텍스트를 영어, 일본어, 중국어로 번역해줘. 각 언어의 문화적 뉘앙스를 고려해줘.'
+                };
+
+                const prompt = samples[type];
+                if (prompt) {
+                    document.getElementById('parallelInput').value = prompt;
+                    autoResizeTextarea({ target: document.getElementById('parallelInput') });
+                    window.GrowFitUtils.showToast('샘플 프롬프트가 로드되었습니다', 'success');
+                }
+            }
+
+            // ========== 키보드 단축키 ==========
+            document.addEventListener('keydown', function (e) {
+                // Ctrl/Cmd + Enter: 전송
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    if (currentMode === 'parallel') {
+                        sendParallelPrompt();
+                    }
+                }
+
+                // Ctrl/Cmd + K: 입력 초기화
+                if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                    e.preventDefault();
+                    clearParallelInput();
+                }
+
+                // Ctrl/Cmd + S: 프롬프트 저장
+                if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                    e.preventDefault();
+                    savePrompt();
+                }
+
+                // Ctrl/Cmd + M: 모드 전환
+                if ((e.ctrlKey || e.metaKey) && e.key === 'm') {
+                    e.preventDefault();
+                    switchMode(currentMode === 'single' ? 'parallel' : 'single');
+                }
+            });
+
+            // ========== 응답 하이라이트 비교 ==========
+            function highlightDifferences() {
+                // 3개 응답의 차이점을 시각적으로 표시
+                // 실제로는 텍스트 diff 알고리즘 사용
+                window.GrowFitUtils.showToast('차이점 하이라이트 기능은 개발 중입니다', 'info');
+            }
+
+            // ========== 최적 응답 선택 ==========
+            function selectBestResponse(model) {
+                if (confirm(`${model.toUpperCase()} 모델의 응답을 최종 선택하시겠습니까?`)) {
+                    // 선택된 응답을 프로젝트에 저장
+                    const selectedResponse = {
+                        model: model,
+                        response: responses[model],
+                        metrics: metrics[model]
+                    };
+
+                    console.log('최적 응답 선택:', selectedResponse);
+                    window.GrowFitUtils.showToast(
+                        `${model.toUpperCase()} 모델의 응답이 선택되었습니다`,
+                        'success'
+                    );
+
+                    // 선택된 패널 강조
+                    document.querySelectorAll('.response-panel').forEach(panel => {
+                        panel.style.borderWidth = '2px';
+                    });
+
+                    const selectedPanel = document.querySelector(`.response-panel--${model}`);
+                    selectedPanel.style.borderWidth = '4px';
+                    selectedPanel.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.15)';
+                }
+            }
+
+            // ========== 통계 추적 ==========
+            function trackUsage() {
+                // 실제로는 분석 서버로 전송
+                const usageData = {
+                    mode: currentMode,
+                    models: Object.keys(responses).filter(k => responses[k]),
+                    totalTime: Object.values(metrics).reduce((sum, m) => sum + parseFloat(m.time || 0), 0),
+                    totalTokens: Object.values(metrics).reduce((sum, m) => sum + (m.tokens || 0), 0),
+                    timestamp: new Date().toISOString()
+                };
+
+                console.log('사용 통계:', usageData);
+            }
+
+            // ========== 자동 저장 ==========
+            let autoSaveTimer;
+            function enableAutoSave() {
+                const input = document.getElementById('parallelInput');
+
+                input.addEventListener('input', function () {
+                    clearTimeout(autoSaveTimer);
+
+                    autoSaveTimer = setTimeout(() => {
+                        const content = input.value.trim();
+                        if (content) {
+                            localStorage.setItem('practice_draft', content);
+                            console.log('자동 저장됨');
+                        }
+                    }, 2000); // 2초 후 자동 저장
+                });
+            }
+
+            // ========== 임시 저장 복원 ==========
+            function restoreDraft() {
+                const draft = localStorage.getItem('practice_draft');
+                if (draft) {
+                    const input = document.getElementById('parallelInput');
+                    if (confirm('이전에 작성 중이던 내용을 복원하시겠습니까?')) {
+                        input.value = draft;
+                        autoResizeTextarea({ target: input });
+                        localStorage.removeItem('practice_draft');
+                    }
+                }
+            }
+
+            // 페이지 로드 시 임시 저장 복원
+            window.addEventListener('load', function () {
+                restoreDraft();
+                enableAutoSave();
+            });
+
+            // ========== 파일 업로드 (이미지, 문서) ==========
+            function uploadFile() {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'image/*,.pdf,.doc,.docx,.txt';
+
+                input.onchange = function (e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        // 파일 크기 체크 (10MB)
+                        if (file.size > 10 * 1024 * 1024) {
+                            window.GrowFitUtils.showToast('파일 크기는 10MB 이하여야 합니다', 'error');
+                            return;
+                        }
+
+                        // 실제로는 서버로 업로드 후 처리
+                        console.log('파일 업로드:', file.name);
+                        window.GrowFitUtils.showToast(`${file.name}이(가) 업로드되었습니다`, 'success');
+
+                        // 파일 정보를 프롬프트에 추가
+                        const textarea = document.getElementById('parallelInput');
+                        textarea.value += `\n\n[첨부: ${file.name}]`;
+                    }
+                };
+
+                input.click();
+            }
+
+            // ========== 음성 입력 ==========
+            function startVoiceInput() {
+                if (!('webkitSpeechRecognition' in window)) {
+                    window.GrowFitUtils.showToast('이 브라우저는 음성 인식을 지원하지 않습니다', 'error');
+                    return;
+                }
+
+                const recognition = new webkitSpeechRecognition();
+                recognition.lang = 'ko-KR';
+                recognition.continuous = false;
+                recognition.interimResults = false;
+
+                recognition.onstart = function () {
+                    window.GrowFitUtils.showToast('음성 인식 시작... 🎤', 'info');
+                };
+
+                recognition.onresult = function (event) {
+                    const transcript = event.results[0][0].transcript;
+                    const textarea = document.getElementById('parallelInput');
+                    textarea.value += (textarea.value ? ' ' : '') + transcript;
+                    autoResizeTextarea({ target: textarea });
+                    window.GrowFitUtils.showToast('음성이 텍스트로 변환되었습니다', 'success');
+                };
+
+                recognition.onerror = function (event) {
+                    console.error('음성 인식 오류:', event.error);
+                    window.GrowFitUtils.showToast('음성 인식에 실패했습니다', 'error');
+                };
+
+                recognition.start();
+            }
+
+            // ========== 페이지 언로드 시 경고 ==========
+            window.addEventListener('beforeunload', function (e) {
+                if (isGenerating) {
+                    e.preventDefault();
+                    e.returnValue = '';
+                    return '응답 생성이 진행 중입니다. 페이지를 나가시겠습니까?';
+                }
+            });
+
+            // ========== 반응형 처리 ==========
+            function handleResize() {
+                const width = window.innerWidth;
+
+                if (width <= 1400) {
+                    // 태블릿: 세로 배치
+                    console.log('태블릿 레이아웃');
+                } else {
+                    // 데스크톱: 가로 배치
+                    console.log('데스크톱 레이아웃');
+                }
+            }
+
+            window.addEventListener('resize', handleResize);
+            handleResize();
+
+            // ========== 디버깅 ==========
+            if (window.location.hostname === 'localhost') {
+                console.log('🚀 Practice 페이지 디버그 모드');
+                console.log('현재 모드:', currentMode);
+                console.log('컨텍스트:', currentContext);
+            }
+
+            console.log('Practice MSP 페이지 스크립트 로드 완료');
+        </script>
+
+    <!-- 애니메이션 스타일 -->
+    <style>
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
+        /* 코드 하이라이팅 (간단한 버전) */
+        .code-block pre {
+            tab-size: 4;
+        }
+
+        /* 프린트 스타일 */
+        @media print {
+            .header,
+            .sidebar,
+            .mode-switcher,
+            .context-bar,
+            .parallel-input-section,
+            .response-actions {
+                display: none !important;
+            }
+
+            .parallel-responses {
+                display: block !important;
+            }
+
+            .response-panel {
+                page-break-inside: avoid;
+                margin-bottom: 20px;
+                border: 1px solid #000 !important;
+            }
+        }
+    </style>
+</body>
+</html>

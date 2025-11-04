@@ -1,0 +1,2496 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>시스템 모니터링 - GrowFit Platform Admin</title>
+
+    <!-- 공통 CSS -->
+    <link rel="stylesheet" href="../common/variables.css">
+    <link rel="stylesheet" href="../common/layout.css">
+    <link rel="stylesheet" href="../common/components.css">
+
+    <style>
+        /* ========== System Monitoring 전용 스타일 ========== */
+        :root {
+            --status-healthy: #10b981;
+            --status-warning: #f59e0b;
+            --status-critical: #ef4444;
+            --status-info: #3b82f6;
+            --platform-primary: #6366f1;
+            --platform-purple: #8b5cf6;
+        }
+
+        /* 페이지 헤더 */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-6);
+        }
+
+        .page-header__left h1 {
+            font-size: var(--text-3xl);
+            font-weight: var(--font-bold);
+            background: linear-gradient(135deg, var(--platform-primary), var(--platform-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: var(--space-1);
+        }
+
+        .page-header__left p {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+        }
+
+        .page-header__actions {
+            display: flex;
+            gap: var(--space-2);
+        }
+
+        /* 시스템 상태 배너 */
+        .status-banner {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(52, 211, 153, 0.1));
+            border: 2px solid var(--status-healthy);
+            border-radius: var(--radius-xl);
+            padding: var(--space-5);
+            margin-bottom: var(--space-6);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-banner--warning {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(251, 191, 36, 0.1));
+            border-color: var(--status-warning);
+        }
+
+        .status-banner--critical {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(248, 113, 113, 0.1));
+            border-color: var(--status-critical);
+        }
+
+        .status-banner__left {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+        }
+
+        .status-banner__icon {
+            width: 64px;
+            height: 64px;
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            background: white;
+            border: 2px solid var(--status-healthy);
+        }
+
+        .status-banner__icon--warning {
+            border-color: var(--status-warning);
+        }
+
+        .status-banner__icon--critical {
+            border-color: var(--status-critical);
+        }
+
+        .status-banner__title {
+            font-size: var(--text-2xl);
+            font-weight: var(--font-bold);
+            color: var(--status-healthy);
+            margin-bottom: var(--space-1);
+        }
+
+        .status-banner__title--warning {
+            color: var(--status-warning);
+        }
+
+        .status-banner__title--critical {
+            color: var(--status-critical);
+        }
+
+        .status-banner__subtitle {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+        }
+
+        .status-banner__right {
+            text-align: right;
+        }
+
+        .status-banner__uptime {
+            font-size: var(--text-3xl);
+            font-weight: var(--font-bold);
+            color: var(--status-healthy);
+            margin-bottom: var(--space-1);
+        }
+
+        .status-banner__uptime--warning {
+            color: var(--status-warning);
+        }
+
+        .status-banner__uptime--critical {
+            color: var(--status-critical);
+        }
+
+        .status-banner__label {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+        }
+
+        /* 메트릭 그리드 */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--space-4);
+            margin-bottom: var(--space-6);
+        }
+
+        .metric-card {
+            background: var(--background);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: var(--space-4);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(99, 102, 241, 0.15);
+            border-color: var(--platform-primary);
+        }
+
+        .metric-card__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-3);
+        }
+
+        .metric-card__label {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            font-weight: var(--font-medium);
+        }
+
+        .metric-card__status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--status-healthy);
+            animation: pulse 2s infinite;
+        }
+
+        .metric-card__status--warning {
+            background: var(--status-warning);
+        }
+
+        .metric-card__status--critical {
+            background: var(--status-critical);
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .metric-card__value {
+            font-size: var(--text-3xl);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-2);
+        }
+
+        .metric-card__chart {
+            height: 60px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(139, 92, 246, 0.05));
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: var(--text-xs);
+            color: var(--text-tertiary);
+            border: 1px dashed var(--border);
+        }
+
+        /* 서비스 상태 카드 */
+        .service-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-4);
+            margin-bottom: var(--space-6);
+        }
+
+        .service-card {
+            background: var(--background);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: var(--space-5);
+            transition: all 0.3s;
+        }
+
+        .service-card:hover {
+            border-color: var(--platform-primary);
+            box-shadow: 0 8px 16px rgba(99, 102, 241, 0.1);
+        }
+
+        .service-card__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-4);
+        }
+
+        .service-card__title {
+            font-size: var(--text-lg);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+        }
+
+        .service-card__badge {
+            padding: 4px 12px;
+            border-radius: var(--radius-full);
+            font-size: var(--text-xs);
+            font-weight: var(--font-bold);
+        }
+
+        .service-card__badge--healthy {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--status-healthy);
+        }
+
+        .service-card__badge--warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--status-warning);
+        }
+
+        .service-card__badge--critical {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--status-critical);
+        }
+
+        .service-card__metrics {
+            display: grid;
+            gap: var(--space-3);
+        }
+
+        .service-metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-2);
+            background: var(--surface);
+            border-radius: var(--radius-md);
+        }
+
+        .service-metric__label {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+        }
+
+        .service-metric__value {
+            font-size: var(--text-sm);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+        }
+
+        /* 로그 뷰어 */
+        .log-viewer {
+            background: var(--background);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: var(--space-5);
+            margin-bottom: var(--space-6);
+        }
+
+        .log-viewer__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-4);
+        }
+
+        .log-viewer__title {
+            font-size: var(--text-lg);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+        }
+
+        .log-viewer__controls {
+            display: flex;
+            gap: var(--space-2);
+        }
+
+        .log-console {
+            background: #1e1e1e;
+            border-radius: var(--radius-md);
+            padding: var(--space-4);
+            font-family: 'Courier New', monospace;
+            font-size: var(--text-sm);
+            color: #d4d4d4;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .log-console::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .log-console::-webkit-scrollbar-track {
+            background: #2d2d2d;
+        }
+
+        .log-console::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 4px;
+        }
+
+        .log-entry {
+            padding: var(--space-1) 0;
+            border-bottom: 1px solid #2d2d2d;
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .log-entry__time {
+            color: #858585;
+        }
+
+        .log-entry__level {
+            font-weight: var(--font-bold);
+            margin: 0 var(--space-2);
+        }
+
+        .log-entry__level--info {
+            color: #4fc3f7;
+        }
+
+        .log-entry__level--warning {
+            color: #ffb74d;
+        }
+
+        .log-entry__level--error {
+            color: #e57373;
+        }
+
+        .log-entry__level--success {
+            color: #81c784;
+        }
+
+        .log-entry__message {
+            color: #d4d4d4;
+        }
+
+        /* 알림 카드 */
+        .alert-card {
+            background: var(--background);
+            border: 2px solid var(--border);
+            border-left: 4px solid var(--status-info);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            margin-bottom: var(--space-3);
+            display: flex;
+            gap: var(--space-3);
+            transition: all 0.2s;
+        }
+
+        .alert-card:hover {
+            background: var(--surface);
+        }
+
+        .alert-card--warning {
+            border-left-color: var(--status-warning);
+        }
+
+        .alert-card--critical {
+            border-left-color: var(--status-critical);
+        }
+
+        .alert-card__icon {
+            font-size: 24px;
+        }
+
+        .alert-card__content {
+            flex: 1;
+        }
+
+        .alert-card__title {
+            font-size: var(--text-base);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-1);
+        }
+
+        .alert-card__description {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-2);
+        }
+
+        .alert-card__meta {
+            font-size: var(--text-xs);
+            color: var(--text-tertiary);
+        }
+
+        .alert-card__actions {
+            display: flex;
+            gap: var(--space-2);
+        }
+
+        /* 인프라 맵 */
+        .infra-map {
+            background: var(--background);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: var(--space-5);
+            margin-bottom: var(--space-6);
+        }
+
+        .infra-map__header {
+            margin-bottom: var(--space-4);
+        }
+
+        .infra-map__title {
+            font-size: var(--text-lg);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-1);
+        }
+
+        .infra-map__subtitle {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+        }
+
+        .infra-map__grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-3);
+        }
+
+        .infra-node {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            text-align: center;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .infra-node:hover {
+            border-color: var(--platform-primary);
+            transform: scale(1.05);
+        }
+
+        .infra-node__icon {
+            font-size: 32px;
+            margin-bottom: var(--space-2);
+        }
+
+        .infra-node__name {
+            font-size: var(--text-sm);
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-1);
+        }
+
+        .infra-node__status {
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+        }
+
+        .infra-node__indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--status-healthy);
+            margin: var(--space-2) auto 0;
+        }
+
+        .infra-node__indicator--warning {
+            background: var(--status-warning);
+        }
+
+        .infra-node__indicator--critical {
+            background: var(--status-critical);
+        }
+
+        /* 타임라인 */
+        .timeline {
+            background: var(--background);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: var(--space-5);
+        }
+
+        .timeline__header {
+            margin-bottom: var(--space-4);
+        }
+
+        .timeline__title {
+            font-size: var(--text-lg);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: var(--space-3);
+            padding: var(--space-3) 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .timeline-item:last-child {
+            border-bottom: none;
+        }
+
+        .timeline-item__icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--platform-primary);
+            flex-shrink: 0;
+        }
+
+        .timeline-item__content {
+            flex: 1;
+        }
+
+        .timeline-item__title {
+            font-size: var(--text-base);
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-1);
+        }
+
+        .timeline-item__description {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-1);
+        }
+
+        .timeline-item__time {
+            font-size: var(--text-xs);
+            color: var(--text-tertiary);
+        }
+
+        /* 반응형 */
+        @media (max-width: 1400px) {
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .service-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .status-banner {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .status-banner__right {
+                text-align: center;
+                margin-top: var(--space-3);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .service-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header__left">
+                <button id="menuToggle" class="header__icon-button hidden-desktop">
+                    <span>☰</span>
+                </button>
+                <a href="platform-dashboard.html" class="header__logo">
+                    <span class="header__logo-icon">🚀</span>
+                    <span>GrowFit Platform</span>
+                </a>
+            </div>
+
+            <div class="header__right">
+                <button class="header__icon-button" title="새로고침" onclick="refreshMonitoring()">
+                    <span>🔄</span>
+                </button>
+
+                <button id="notificationBtn" class="header__icon-button">
+                    <span>🔔</span>
+                    <span class="header__badge">3</span>
+                </button>
+
+                <div id="profileBtn" class="header__profile">
+                    <div class="header__avatar" style="background: linear-gradient(135deg, #6366f1, #ec4899);">플</div>
+                    <span class="hidden-mobile">플랫폼 관리자</span>
+                    <span class="hidden-mobile">▼</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="container">
+            <!-- Sidebar -->
+            <aside class="sidebar sidebar--open">
+                <div class="sidebar__user">
+                    <div class="sidebar__user-info">
+                        <div class="sidebar__user-avatar"
+                            style="background: linear-gradient(135deg, #6366f1, #ec4899);">플</div>
+                        <div class="sidebar__user-details">
+                            <div class="sidebar__user-name">플랫폼 관리자</div>
+                            <div class="sidebar__user-role">Platform Admin</div>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="sidebar__nav">
+                    <ul class="sidebar__menu">
+                        <li class="sidebar__menu-item">
+                            <a href="platform-dashboard.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">🏠</span>
+                                <span>플랫폼 대시보드</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="organization-management.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">🏢</span>
+                                <span>조직 관리</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="user-management.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">👥</span>
+                                <span>전체 사용자</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="revenue-billing.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">💰</span>
+                                <span>매출/과금</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="analytics-reports.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">📊</span>
+                                <span>분석 & 리포트</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="system-monitoring.html" class="sidebar__menu-link sidebar__menu-link--active">
+                                <span class="sidebar__menu-icon">🔧</span>
+                                <span>시스템 모니터링</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="platform-settings.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">⚙️</span>
+                                <span>시스템 설정</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <div class="sidebar__footer">
+                    <div
+                        style="padding: var(--space-3); background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(52, 211, 153, 0.1)); border-radius: var(--radius-md); font-size: var(--text-xs); border: 1px solid var(--status-healthy);">
+                        <div style="color: var(--text-secondary); margin-bottom: var(--space-1);">시스템 상태</div>
+                        <div
+                            style="font-weight: var(--font-bold); color: var(--status-healthy); font-size: var(--text-sm);">
+                            🟢 정상</div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main">
+                <!-- 페이지 헤더 -->
+                <div class="page-header">
+                    <div class="page-header__left">
+                        <h1>🔧 시스템 모니터링</h1>
+                        <p>실시간 시스템 상태 및 성능을 모니터링하세요</p>
+                    </div>
+                    <div class="page-header__actions">
+                        <button class="btn btn--outline" onclick="exportLogs()">
+                            📥 로그 내보내기
+                        </button>
+                        <button class="btn btn--outline" onclick="showAlertSettings()">
+                            🔔 알림 설정
+                        </button>
+                        <button class="btn btn--primary" onclick="runDiagnostics()">
+                            🔍 진단 실행
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 시스템 상태 배너 -->
+                <div class="status-banner" id="statusBanner">
+                    <div class="status-banner__left">
+                        <div class="status-banner__icon">
+                            ✅
+                        </div>
+                        <div>
+                            <div class="status-banner__title">모든 시스템 정상</div>
+                            <div class="status-banner__subtitle">마지막 업데이트: 방금 전</div>
+                        </div>
+                    </div>
+                    <div class="status-banner__right">
+                        <div class="status-banner__uptime">99.9%</div>
+                        <div class="status-banner__label">30일 가동률</div>
+                    </div>
+                </div>
+
+                <!-- 핵심 메트릭 -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-card__header">
+                            <div class="metric-card__label">⚡ 응답 시간</div>
+                            <div class="metric-card__status"></div>
+                        </div>
+                        <div class="metric-card__value">0.12s</div>
+                        <div class="metric-card__chart">
+                            📊 실시간 차트
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-card__header">
+                            <div class="metric-card__label">💻 CPU 사용률</div>
+                            <div class="metric-card__status"></div>
+                        </div>
+                        <div class="metric-card__value">67%</div>
+                        <div class="metric-card__chart">
+                            📊 실시간 차트
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-card__header">
+                            <div class="metric-card__label">🧠 메모리</div>
+                            <div class="metric-card__status metric-card__status--warning"></div>
+                        </div>
+                        <div class="metric-card__value">73%</div>
+                        <div class="metric-card__chart">
+                            📊 실시간 차트
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-card__header">
+                            <div class="metric-card__label">🌐 네트워크</div>
+                            <div class="metric-card__status"></div>
+                        </div>
+                        <div class="metric-card__value">45%</div>
+                        <div class="metric-card__chart">
+                            📊 실시간 차트
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 서비스 상태 -->
+                <div style="margin-bottom: var(--space-4);">
+                    <h2 style="font-size: var(--text-xl); font-weight: var(--font-bold); color: var(--text-primary); margin-bottom: var(--space-4);">
+                        🔌 서비스 상태
+                    </h2>
+                </div>
+
+                <div class="service-grid">
+                    <!-- API Gateway -->
+                    <div class="service-card">
+                        <div class="service-card__header">
+                            <div class="service-card__title">🚪 API Gateway</div>
+                            <div class="service-card__badge service-card__badge--healthy">정상</div>
+                        </div>
+                        <div class="service-card__metrics">
+                            <div class="service-metric">
+                                <div class="service-metric__label">요청/초</div>
+                                <div class="service-metric__value">234</div>
+                            </div>
+                            <div class="service-metric">
+                                <div class="service-metric__label">평균 지연시간</div>
+                                <div class="service-metric__value">0.08s</div>
+                            </div>
+                            <div class="service-metric">
+                                <div class="service-metric__label">에러율</div>
+                                <div class="service-metric__value">0.2%</div>
+                            </div>
+                            <div class="service-metric">
+                                <div class="service-metric__label">가동률</div>
+                                <div class="service-metric__value">99.9%</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 데이터베이스 -->
+                    <div class="service-card">
+                        <div class="service-card__header">
+                            <div class="service-card__title">🗄️ 데이터베이스</div>
+                            <div class="service-card__badge service-card__badge--healthy">정상</div>
+                        </div>
+                        <div class="service-card__metrics">
+                            <div class="service-metric">
+                                <div class="service-metric__label">쿼리/초</div>
+                                <div class="service-metric__value">892</div>
+                            </div>
+                            <div class="service-metric">
+                                <div class="service-metric__label">응답 시간</div>
+                                <div class="service-metric__value">0.03s</div>
+                            </div>
+                            <div class="service-metric">
+                                <div class="service-metric__label">연결 수</div>
+                                <div class="service-metric__value">47/100</div>
+                            </div>
+                            <div class="service-metric">
+                                <div class="service-metric__label">스토리지</div>
+                                <div class="service-metric__value">56%</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- LLM 서비스 -->
+                    <div class="service-card">
+                        <div class="service-card__header">
+                            <div class="service-card__title">🤖 LLM 서비스</div>
+                            <div class="service-card__badge service-card__badge--healthy">정상</div>
+                        </div>
+                        <div class="service-card__metrics">
+                            <div class="service-metric">
+                                <div class="service-metric__label">OpenAI</div>
+                                <div class="service-metric__value">99.9%</div>
+                            </div>
+                            <div class="service-metric">
+                                <div class="service-metric__label">Claude</div>
+                                <div class="service-metric__value">99.7%</div>
+                            </div>
+                            <div class="service-metric">
+                                <div class="service-metric__label">Gemini</div>
+                                <div class="service-metric__value">99.8%</div>
+                            </div>
+                            <div class="service-metric">
+                                <div class="service-metric__label">평균 지연</div>
+                                <div class="service-metric__value">0.97s</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 캐시 서비스 -->
+                    <div class="service-card">
+                        <div class="service-card__header">
+                            <div class="service-card__title">⚡ 캐시</div>
+                            <div class="service-card__badge service-card__badge--healthy">정상</div>
+                        </div>
+                        <div class="service-card__metrics">
+                            <div class="service-metric">
+                                <div class="service-metric__label">히트율</div>
+                                <div class="service-metric__value">94.3%</div>
+                            </div>
+                            <div class="service-metric">
+                                <div class="service-metric__label">메모리 사용</div>
+                                <div class="service-metric__value">4.2GB</div>
+                            </div>
+                            <div class="service-metric">
+                                <div class="service-metric__label">키 개수</div>
+                                <div class="service-metric__value">128K</div>
+                            </div>
+                            <div class="service-metric">
+                                <div class="service-metric__label">응답 시간</div>
+                                <div class="service-metric__value">0.001s</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 파일 스토리지 -->
+                    <div class="service-card">
+                        <div class="service-card__header">
+                            <div class="service-card__title">📦 파일 스토리지</div>
+                            <div class="service-card__badge service-card__badge--warning">주의</div>
+                        </div>
+                        <div class="service-card__metrics">
+                            <div class="service-metric">
+                                <div class="service-metric__label">사용량</div>
+                                <div class="service-metric__value">1.8TB</div>
+                            </div>
+                            <div class="service-metric">
+                                <div class="service-metric__label">사용률</div>
+                                <div class="service-metric__value">72%</div>
+                            </div>
+                            <div class="service-metric">
+                                <div class="service-metric__label">파일 수</div>
+                                <div class="service-metric__value">2.4M</div>
+                            </div>
+                            <div class="service-metric">
+                                <div class="service-metric__label">대역폭</div>
+                                <div class="service-metric__value">234MB/s</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 메시지 큐 -->
+                    <div class="service-card">
+                        <div class="service-card__header">
+                            <div class="service-card__title">📬 메시지 큐</div>
+                            <div class="service-card__badge service-card__badge--healthy">정상</div>
+                        </div>
+                        <div class="service-card__metrics">
+                            <div class="service-metric">
+                                <div class="service-metric__label">대기 메시지</div>
+                                <div class="service-metric__value">23</div>
+                            </div>
+                            <div class="service-metric">
+                                <div class="service-metric__label">처리율</div>
+                                <div class="service-metric__value">147/s</div>
+                            </div>
+                            <div class="service-metric">
+                                <div class="service-metric__label">평균 지연</div>
+                                <div class="service-metric__value">0.05s</div>
+                            </div>
+                            <div class="service-metric">
+                                <div class="service-metric__label">큐 개수</div>
+                                <div class="service-metric__value">12</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 인프라 맵 -->
+                <div class="infra-map">
+                    <div class="infra-map__header">
+                        <div class="infra-map__title">🗺️ 인프라 구조</div>
+                        <div class="infra-map__subtitle">서버 및 서비스 토폴로지</div>
+                    </div>
+                    <div class="infra-map__grid">
+                        <div class="infra-node" onclick="viewNodeDetails('lb')">
+                            <div class="infra-node__icon">⚖️</div>
+                            <div class="infra-node__name">Load Balancer</div>
+                            <div class="infra-node__status">2 인스턴스</div>
+                            <div class="infra-node__indicator"></div>
+                        </div>
+
+                        <div class="infra-node" onclick="viewNodeDetails('app')">
+                            <div class="infra-node__icon">🖥️</div>
+                            <div class="infra-node__name">App Server</div>
+                            <div class="infra-node__status">8 인스턴스</div>
+                            <div class="infra-node__indicator"></div>
+                        </div>
+
+                        <div class="infra-node" onclick="viewNodeDetails('api')">
+                            <div class="infra-node__icon">🔌</div>
+                            <div class="infra-node__name">API Server</div>
+                            <div class="infra-node__status">12 인스턴스</div>
+                            <div class="infra-node__indicator"></div>
+                        </div>
+
+                        <div class="infra-node" onclick="viewNodeDetails('db')">
+                            <div class="infra-node__icon">🗄️</div>
+                            <div class="infra-node__name">Database</div>
+                            <div class="infra-node__status">3 인스턴스</div>
+                            <div class="infra-node__indicator"></div>
+                        </div>
+
+                        <div class="infra-node" onclick="viewNodeDetails('cache')">
+                            <div class="infra-node__icon">⚡</div>
+                            <div class="infra-node__name">Cache</div>
+                            <div class="infra-node__status">4 인스턴스</div>
+                            <div class="infra-node__indicator"></div>
+                        </div>
+
+                        <div class="infra-node" onclick="viewNodeDetails('storage')">
+                            <div class="infra-node__icon">📦</div>
+                            <div class="infra-node__name">Storage</div>
+                            <div class="infra-node__status">72% 사용</div>
+                            <div class="infra-node__indicator infra-node__indicator--warning"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 알림 & 로그 -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-bottom: var(--space-6);">
+                    <!-- 활성 알림 -->
+                    <div>
+                        <h2 style="font-size: var(--text-xl); font-weight: var(--font-bold); color: var(--text-primary); margin-bottom: var(--space-4);">
+                            🔔 활성 알림
+                        </h2>
+                        <div style="display: grid; gap: var(--space-3);">
+                            <div class="alert-card alert-card--warning">
+                                <div class="alert-card__icon">⚠️</div>
+                                <div class="alert-card__content">
+                                    <div class="alert-card__title">메모리 사용률 높음</div>
+                                    <div class="alert-card__description">
+                                        메모리 사용률이 73%에 도달했습니다. 임계값: 70%
+                                    </div>
+                                    <div class="alert-card__meta">5분 전 • App Server #3</div>
+                                </div>
+                                <div class="alert-card__actions">
+                                    <button class="btn btn--sm btn--outline" onclick="resolveAlert('alert-1')">확인</button>
+                                </div>
+                            </div>
+
+                            <div class="alert-card alert-card--warning">
+                                <div class="alert-card__icon">⚠️</div>
+                                <div class="alert-card__content">
+                                    <div class="alert-card__title">스토리지 용량 주의</div>
+                                    <div class="alert-card__description">
+                                        파일 스토리지 사용률이 72%입니다. 확장을 고려하세요.
+                                    </div>
+                                    <div class="alert-card__meta">12분 전 • File Storage</div>
+                                </div>
+                                <div class="alert-card__actions">
+                                    <button class="btn btn--sm btn--outline" onclick="resolveAlert('alert-2')">확인</button>
+                                </div>
+                            </div>
+
+                            <div class="alert-card">
+                                <div class="alert-card__icon">ℹ️</div>
+                                <div class="alert-card__content">
+                                    <div class="alert-card__title">자동 스케일링 실행</div>
+                                    <div class="alert-card__description">
+                                        트래픽 증가로 API 서버 인스턴스 2개 추가됨
+                                    </div>
+                                    <div class="alert-card__meta">18분 전 • Auto Scaler</div>
+                                </div>
+                                <div class="alert-card__actions">
+                                    <button class="btn btn--sm btn--outline" onclick="resolveAlert('alert-3')">확인</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 최근 이벤트 -->
+                    <div class="timeline">
+                        <div class="timeline__header">
+                            <div class="timeline__title">📋 최근 이벤트</div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-item__icon">🔄</div>
+                            <div class="timeline-item__content">
+                                <div class="timeline-item__title">배포 완료</div>
+                                <div class="timeline-item__description">
+                                    v2.4.1 배포가 성공적으로 완료되었습니다
+                                </div>
+                                <div class="timeline-item__time">15분 전</div>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-item__icon">⚡</div>
+                            <div class="timeline-item__content">
+                                <div class="timeline-item__title">캐시 플러시</div>
+                                <div class="timeline-item__description">
+                                    Redis 캐시가 자동으로 플러시되었습니다
+                                </div>
+                                <div class="timeline-item__time">32분 전</div>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-item__icon">🔒</div>
+                            <div class="timeline-item__content">
+                                <div class="timeline-item__title">SSL 인증서 갱신</div>
+                                <div class="timeline-item__description">
+                                    모든 도메인의 SSL 인증서가 갱신되었습니다
+                                </div>
+                                <div class="timeline-item__time">2시간 전</div>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-item__icon">🗄️</div>
+                            <div class="timeline-item__content">
+                                <div class="timeline-item__title">데이터베이스 백업</div>
+                                <div class="timeline-item__description">
+                                    일일 자동 백업이 완료되었습니다 (2.4GB)
+                                </div>
+                                <div class="timeline-item__time">4시간 전</div>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-item__icon">📊</div>
+                            <div class="timeline-item__content">
+                                <div class="timeline-item__title">보고서 생성</div>
+                                <div class="timeline-item__description">
+                                    일일 시스템 성능 보고서가 생성되었습니다
+                                </div>
+                                <div class="timeline-item__time">6시간 전</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 로그 뷰어 -->
+                <div class="log-viewer">
+                    <div class="log-viewer__header">
+                        <div class="log-viewer__title">📜 실시간 로그</div>
+                        <div class="log-viewer__controls">
+                            <select class="filter-select" style="width: 150px;" onchange="filterLogs(this.value)">
+                                <option value="all">전체</option>
+                                <option value="info">INFO</option>
+                                <option value="warning">WARNING</option>
+                                <option value="error">ERROR</option>
+                            </select>
+                            <button class="btn btn--sm btn--outline" onclick="clearLogs()">
+                                🗑️ 지우기
+                            </button>
+                            <button class="btn btn--sm btn--outline" onclick="pauseLogs()">
+                                ⏸️ 일시정지
+                            </button>
+                        </div>
+                    </div>
+                    <div class="log-console" id="logConsole">
+                        <div class="log-entry">
+                            <span class="log-entry__time">14:23:45</span>
+                            <span class="log-entry__level log-entry__level--info">[INFO]</span>
+                            <span class="log-entry__message">API Gateway: Request processed successfully - /api/v1/chat/completions</span>
+                        </div>
+                        <div class="log-entry">
+                            <span class="log-entry__time">14:23:44</span>
+                            <span class="log-entry__level log-entry__level--success">[SUCCESS]</span>
+                            <span class="log-entry__message">Database: Query executed in 0.032s - SELECT * FROM users WHERE org_id = 247</span>
+                        </div>
+                        <div class="log-entry">
+                            <span class="log-entry__time">14:23:42</span>
+                            <span class="log-entry__level log-entry__level--info">[INFO]</span>
+                            <span class="log-entry__message">Cache: Hit rate 94.3% - Key: user_session_abc123</span>
+                        </div>
+                        <div class="log-entry">
+                            <span class="log-entry__time">14:23:40</span>
+                            <span class="log-entry__level log-entry__level--warning">[WARNING]</span>
+                            <span class="log-entry__message">App Server: Memory usage at 73% - Consider scaling</span>
+                        </div>
+                        <div class="log-entry">
+                            <span class="log-entry__time">14:23:38</span>
+                            <span class="log-entry__level log-entry__level--info">[INFO]</span>
+                            <span class="log-entry__message">Load Balancer: Distributing traffic across 8 instances</span>
+                        </div>
+                        <div class="log-entry">
+                            <span class="log-entry__time">14:23:35</span>
+                            <span class="log-entry__level log-entry__level--success">[SUCCESS]</span>
+                            <span class="log-entry__message">LLM Service: OpenAI API call completed - 0.85s response time</span>
+                        </div>
+                        <div class="log-entry">
+                            <span class="log-entry__time">14:23:32</span>
+                            <span class="log-entry__level log-entry__level--info">[INFO]</span>
+                            <span class="log-entry__message">Message Queue: 23 messages in queue, processing rate 147/s</span>
+                        </div>
+                        <div class="log-entry">
+                            <span class="log-entry__time">14:23:30</span>
+                            <span class="log-entry__level log-entry__level--info">[INFO]</span>
+                            <span class="log-entry__message">Auto Scaler: Added 2 API server instances due to increased load</span>
+                        </div>
+                        <div class="log-entry">
+                            <span class="log-entry__time">14:23:28</span>
+                            <span class="log-entry__level log-entry__level--warning">[WARNING]</span>
+                            <span class="log-entry__message">File Storage: Usage at 72% (1.8TB / 2.5TB) - Consider expansion</span>
+                        </div>
+                        <div class="log-entry">
+                            <span class="log-entry__time">14:23:25</span>
+                            <span class="log-entry__level log-entry__level--info">[INFO]</span>
+                            <span class="log-entry__message">Health Check: All services operational - Status: GREEN</span>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- 공통 스크립트 -->
+    <script src="../common/layout.js"></script>
+    <script src="../common/utils.js"></script>
+
+    <!-- 페이지 전용 스크립트 -->
+    <script>
+        // ========== System Monitoring 전용 로직 ==========
+
+        // 전역 변수
+        let monitoringInterval = null;
+        let logsPaused = false;
+        let logsFilter = 'all';
+        let systemStatus = 'healthy';
+
+        // ========== 초기화 ==========
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('System Monitoring 페이지 초기화');
+            
+            initializeMonitoring();
+            startRealTimeMonitoring();
+        });
+
+        function initializeMonitoring() {
+            // 실시간 모니터링 시작
+            updateSystemMetrics();
+            
+            // 로그 자동 스크롤
+            const logConsole = document.getElementById('logConsole');
+            if (logConsole) {
+                logConsole.scrollTop = logConsole.scrollHeight;
+            }
+        }
+
+        function startRealTimeMonitoring() {
+            // 5초마다 메트릭 업데이트
+            monitoringInterval = setInterval(() => {
+                if (!logsPaused) {
+                    updateSystemMetrics();
+                    addRandomLog();
+                }
+            }, 5000);
+        }
+
+        // ========== 시스템 메트릭 업데이트 ==========
+        function updateSystemMetrics() {
+            // 실제로는 서버에서 데이터 가져옴
+            const metrics = {
+                responseTime: (Math.random() * 0.2 + 0.05).toFixed(2),
+                cpu: Math.floor(Math.random() * 20 + 60),
+                memory: Math.floor(Math.random() * 10 + 70),
+                network: Math.floor(Math.random() * 30 + 30)
+            };
+
+            console.log('메트릭 업데이트:', metrics);
+            
+            // 메모리가 80% 이상이면 경고
+            if (metrics.memory >= 80) {
+                updateSystemStatus('warning');
+            } else {
+                updateSystemStatus('healthy');
+            }
+        }
+
+        function updateSystemStatus(status) {
+            systemStatus = status;
+            const banner = document.getElementById('statusBanner');
+            
+            if (!banner) return;
+
+            if (status === 'warning') {
+                banner.className = 'status-banner status-banner--warning';
+                banner.querySelector('.status-banner__icon').textContent = '⚠️';
+                banner.querySelector('.status-banner__title').textContent = '일부 시스템 주의 필요';
+                banner.querySelector('.status-banner__title').className = 'status-banner__title status-banner__title--warning';
+                banner.querySelector('.status-banner__uptime').className = 'status-banner__uptime status-banner__uptime--warning';
+            } else if (status === 'critical') {
+                banner.className = 'status-banner status-banner--critical';
+                banner.querySelector('.status-banner__icon').textContent = '🚨';
+                banner.querySelector('.status-banner__title').textContent = '긴급: 시스템 문제 발생';
+                banner.querySelector('.status-banner__title').className = 'status-banner__title status-banner__title--critical';
+                banner.querySelector('.status-banner__uptime').className = 'status-banner__uptime status-banner__uptime--critical';
+            } else {
+                banner.className = 'status-banner';
+                banner.querySelector('.status-banner__icon').textContent = '✅';
+                banner.querySelector('.status-banner__title').textContent = '모든 시스템 정상';
+                banner.querySelector('.status-banner__title').className = 'status-banner__title';
+                banner.querySelector('.status-banner__uptime').className = 'status-banner__uptime';
+            }
+        }
+
+        // ========== 로그 관리 ==========
+        function addRandomLog() {
+            const logConsole = document.getElementById('logConsole');
+            if (!logConsole || logsPaused) return;
+
+            const logTypes = [
+                { level: 'info', message: 'API Gateway: Request processed successfully - /api/v1/users/list' },
+                { level: 'success', message: 'Database: Query executed in 0.028s - SELECT * FROM organizations' },
+                { level: 'info', message: 'Cache: Hit rate 94.8% - Key: session_xyz789' },
+                { level: 'success', message: 'LLM Service: Claude API call completed - 1.12s response time' },
+                { level: 'info', message: 'Load Balancer: Distributing traffic across 8 instances' },
+                { level: 'info', message: 'Message Queue: Processing 147 messages per second' }
+            ];
+
+            const log = logTypes[Math.floor(Math.random() * logTypes.length)];
+            const now = new Date();
+            const timeStr = now.toTimeString().split(' ')[0];
+
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.innerHTML = `
+                <span class="log-entry__time">${timeStr}</span>
+                <span class="log-entry__level log-entry__level--${log.level}">[${log.level.toUpperCase()}]</span>
+                <span class="log-entry__message">${log.message}</span>
+            `;
+
+            // 필터 적용
+            if (logsFilter === 'all' || logsFilter === log.level) {
+                logConsole.appendChild(logEntry);
+
+                // 최대 100개 로그만 유지
+                while (logConsole.children.length > 100) {
+                    logConsole.removeChild(logConsole.firstChild);
+                }
+
+                // 자동 스크롤
+                logConsole.scrollTop = logConsole.scrollHeight;
+            }
+        }
+
+        function filterLogs(filter) {
+            logsFilter = filter;
+            const logConsole = document.getElementById('logConsole');
+            if (!logConsole) return;
+
+            const allEntries = logConsole.querySelectorAll('.log-entry');
+            
+            allEntries.forEach(entry => {
+                const levelElement = entry.querySelector('.log-entry__level');
+                const level = levelElement.textContent.toLowerCase().replace(/[\[\]]/g, '');
+
+                if (filter === 'all' || level === filter) {
+                    entry.style.display = 'block';
+                } else {
+                    entry.style.display = 'none';
+                }
+            });
+
+            window.GrowFitUtils.showToast(`${filter.toUpperCase()} 로그로 필터링됨`, 'info');
+        }
+
+        function clearLogs() {
+            if (confirm('모든 로그를 지우시겠습니까?')) {
+                const logConsole = document.getElementById('logConsole');
+                if (logConsole) {
+                    logConsole.innerHTML = '';
+                    window.GrowFitUtils.showToast('로그가 지워졌습니다', 'success');
+                }
+            }
+        }
+
+        function pauseLogs() {
+            logsPaused = !logsPaused;
+            const button = event.target;
+            
+            if (logsPaused) {
+                button.textContent = '▶️ 재개';
+                window.GrowFitUtils.showToast('로그 업데이트가 일시중지되었습니다', 'info');
+            } else {
+                button.textContent = '⏸️ 일시정지';
+                window.GrowFitUtils.showToast('로그 업데이트가 재개되었습니다', 'info');
+            }
+        }
+
+        function exportLogs() {
+            const formats = `
+📥 로그 내보내기
+
+형식 선택:
+
+1. TXT (텍스트 파일)
+2. JSON (구조화된 데이터)
+3. CSV (엑셀 호환)
+
+번호를 입력하세요:
+            `.trim();
+
+            const choice = prompt(formats);
+
+            if (choice && ['1', '2', '3'].includes(choice)) {
+                handleLogExport(choice);
+            }
+        }
+
+        function handleLogExport(format) {
+            const formatMap = {
+                '1': 'system_logs.txt',
+                '2': 'system_logs.json',
+                '3': 'system_logs.csv'
+            };
+
+            window.GrowFitUtils.showToast('로그를 내보내는 중...', 'info');
+
+            setTimeout(() => {
+                const filename = formatMap[format];
+                window.GrowFitUtils.showToast(`${filename}이(가) 다운로드되었습니다`, 'success');
+            }, 1500);
+        }
+
+        // ========== 알림 관리 ==========
+        function resolveAlert(alertId) {
+            if (confirm('이 알림을 확인 처리하시겠습니까?')) {
+                const alertCard = event.target.closest('.alert-card');
+                if (alertCard) {
+                    alertCard.style.transition = 'all 0.3s';
+                    alertCard.style.opacity = '0';
+                    alertCard.style.transform = 'translateX(-20px)';
+                    
+                    setTimeout(() => {
+                        alertCard.remove();
+                        window.GrowFitUtils.showToast('알림이 확인 처리되었습니다', 'success');
+                    }, 300);
+                }
+            }
+        }
+
+        function showAlertSettings() {
+            const settings = `
+🔔 알림 설정
+
+알림 임계값 설정:
+
+1. CPU 사용률: 80% 이상
+2. 메모리: 75% 이상
+3. 디스크: 85% 이상
+4. 응답 시간: 1초 이상
+5. 에러율: 1% 이상
+
+알림 채널:
+☑️ 이메일
+☑️ Slack
+☐ SMS
+☑️ 웹훅
+
+알림 빈도:
+- 즉시 알림
+- 5분 간격 요약
+- 시간별 리포트
+
+[저장] [취소]
+            `.trim();
+
+            alert(settings);
+        }
+
+        // ========== 노드 상세 정보 ==========
+        function viewNodeDetails(nodeType) {
+            const nodeDetails = {
+                'lb': {
+                    name: 'Load Balancer',
+                    icon: '⚖️',
+                    instances: 2,
+                    status: 'healthy',
+                    metrics: [
+                        { label: '요청/초', value: '234' },
+                        { label: '연결 수', value: '1,247' },
+                        { label: '평균 지연', value: '0.08s' },
+                        { label: 'SSL 종료율', value: '100%' }
+                    ]
+                },
+                'app': {
+                    name: 'App Server',
+                    icon: '🖥️',
+                    instances: 8,
+                    status: 'healthy',
+                    metrics: [
+                        { label: 'CPU 평균', value: '67%' },
+                        { label: '메모리 평균', value: '73%' },
+                        { label: '활성 세션', value: '1,892' },
+                        { label: '처리량', value: '147 req/s' }
+                    ]
+                },
+                'api': {
+                    name: 'API Server',
+                    icon: '🔌',
+                    instances: 12,
+                    status: 'healthy',
+                    metrics: [
+                        { label: 'CPU 평균', value: '62%' },
+                        { label: '메모리 평균', value: '68%' },
+                        { label: 'API 호출/초', value: '892' },
+                        { label: '에러율', value: '0.3%' }
+                    ]
+                },
+                'db': {
+                    name: 'Database',
+                    icon: '🗄️',
+                    instances: 3,
+                    status: 'healthy',
+                    metrics: [
+                        { label: '쿼리/초', value: '892' },
+                        { label: '응답 시간', value: '0.03s' },
+                        { label: '연결 수', value: '47/100' },
+                        { label: '복제 지연', value: '0.01s' }
+                    ]
+                },
+                'cache': {
+                    name: 'Cache',
+                    icon: '⚡',
+                    instances: 4,
+                    status: 'healthy',
+                    metrics: [
+                        { label: '히트율', value: '94.3%' },
+                        { label: '메모리 사용', value: '4.2GB' },
+                        { label: '키 개수', value: '128K' },
+                        { label: '응답 시간', value: '0.001s' }
+                    ]
+                },
+                'storage': {
+                    name: 'Storage',
+                    icon: '📦',
+                    instances: 1,
+                    status: 'warning',
+                    metrics: [
+                        { label: '사용량', value: '1.8TB' },
+                        { label: '사용률', value: '72%' },
+                        { label: '파일 수', value: '2.4M' },
+                        { label: '대역폭', value: '234MB/s' }
+                    ]
+                }
+            };
+
+            const node = nodeDetails[nodeType];
+            if (!node) return;
+
+            const metricsHtml = node.metrics.map(m => 
+                `• ${m.label}: ${m.value}`
+            ).join('\n');
+
+            const details = `
+${node.icon} ${node.name}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+인스턴스: ${node.instances}개
+상태: ${node.status === 'healthy' ? '✅ 정상' : '⚠️ 주의'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+메트릭:
+${metricsHtml}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[상세 보기] [로그 보기] [재시작]
+            `.trim();
+
+            alert(details);
+        }
+
+        // ========== 진단 실행 ==========
+        function runDiagnostics() {
+            if (confirm('시스템 진단을 실행하시겠습니까? 약 2분이 소요됩니다.')) {
+                window.GrowFitUtils.showToast('시스템 진단을 시작합니다...', 'info');
+                
+                setTimeout(() => {
+                    showDiagnosticsResult();
+                }, 3000);
+            }
+        }
+
+        function showDiagnosticsResult() {
+            const result = `
+🔍 시스템 진단 결과
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+전체 상태: ✅ 양호
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+컴포넌트 점검:
+
+✅ API Gateway: 정상
+   - 응답 시간: 0.08s
+   - 에러율: 0.2%
+
+✅ 데이터베이스: 정상
+   - 연결: 정상
+   - 복제: 정상
+   - 백업: 최신
+
+⚠️ 메모리: 주의
+   - 사용률: 73%
+   - 권장: 스케일 업 고려
+
+⚠️ 스토리지: 주의
+   - 사용률: 72%
+   - 권장: 용량 확장 계획
+
+✅ 네트워크: 정상
+   - 대역폭: 충분
+   - 지연시간: 정상
+
+✅ 보안: 정상
+   - SSL: 유효
+   - 방화벽: 활성
+   - DDoS 방어: 활성
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+권장 사항:
+
+1. 메모리 증설 고려 (73% → 60%)
+2. 스토리지 확장 계획 수립
+3. 캐시 전략 최적화
+4. 자동 스케일링 임계값 조정
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+다음 진단 예정: 24시간 후
+
+[리포트 다운로드] [액션 플랜 생성]
+            `.trim();
+
+            alert(result);
+            window.GrowFitUtils.showToast('진단이 완료되었습니다', 'success');
+        }
+
+        // ========== 새로고침 ==========
+        function refreshMonitoring() {
+            window.GrowFitUtils.showToast('모니터링 데이터를 새로고침하는 중...', 'info');
+            
+            updateSystemMetrics();
+            
+            setTimeout(() => {
+                window.GrowFitUtils.showToast('데이터가 업데이트되었습니다', 'success');
+            }, 1000);
+        }
+
+        // ========== 서비스 제어 ==========
+        function restartService(serviceName) {
+            if (confirm(`${serviceName} 서비스를 재시작하시겠습니까?\n\n약간의 다운타임이 발생할 수 있습니다.`)) {
+                window.GrowFitUtils.showToast(`${serviceName}를 재시작하는 중...`, 'info');
+                
+                setTimeout(() => {
+                    window.GrowFitUtils.showToast(`${serviceName}가 재시작되었습니다`, 'success');
+                }, 3000);
+            }
+        }
+
+        function scaleService(serviceName) {
+            const action = prompt(`${serviceName} 스케일링:\n\n1. Scale Up (인스턴스 추가)\n2. Scale Down (인스턴스 제거)\n\n번호를 입력하세요:`);
+            
+            if (action === '1') {
+                const count = prompt('추가할 인스턴스 수:');
+                if (count && parseInt(count) > 0) {
+                    window.GrowFitUtils.showToast(`${count}개 인스턴스를 추가하는 중...`, 'info');
+                    setTimeout(() => {
+                        window.GrowFitUtils.showToast('스케일링이 완료되었습니다', 'success');
+                    }, 2000);
+                }
+            } else if (action === '2') {
+                const count = prompt('제거할 인스턴스 수:');
+                if (count && parseInt(count) > 0) {
+                    window.GrowFitUtils.showToast(`${count}개 인스턴스를 제거하는 중...`, 'info');
+                    setTimeout(() => {
+                        window.GrowFitUtils.showToast('스케일링이 완료되었습니다', 'success');
+                    }, 2000);
+                }
+            }
+        }
+
+        // ========== 성능 최적화 ==========
+        function optimizePerformance() {
+            const options = `
+⚡ 성능 최적화
+
+실행 가능한 최적화:
+
+1. 캐시 워밍 (예상 개선: 15%)
+2. 데이터베이스 인덱스 최적화 (예상 개선: 10%)
+3. 정적 에셋 압축 (예상 개선: 8%)
+4. API 응답 캐싱 (예상 개선: 20%)
+5. 전체 최적화 실행
+
+번호를 입력하세요:
+            `.trim();
+
+            const choice = prompt(options);
+
+            if (choice && ['1', '2', '3', '4', '5'].includes(choice)) {
+                handleOptimization(choice);
+            }
+        }
+
+        function handleOptimization(type) {
+            const optimizations = {
+                '1': '캐시 워밍',
+                '2': '데이터베이스 인덱스 최적화',
+                '3': '정적 에셋 압축',
+                '4': 'API 응답 캐싱',
+                '5': '전체 최적화'
+            };
+
+            const name = optimizations[type];
+            window.GrowFitUtils.showToast(`${name}을(를) 실행하는 중...`, 'info');
+
+            setTimeout(() => {
+                window.GrowFitUtils.showToast(`${name}이(가) 완료되었습니다`, 'success');
+            }, 3000);
+        }
+
+        // ========== 백업 & 복구 ==========
+        function createBackup() {
+            const options = `
+💾 백업 생성
+
+백업 유형:
+
+1. 전체 백업 (데이터베이스 + 파일)
+2. 데이터베이스만
+3. 파일만
+4. 설정 파일만
+
+번호를 입력하세요:
+            `.trim();
+
+            const choice = prompt(options);
+
+            if (choice && ['1', '2', '3', '4'].includes(choice)) {
+                handleBackup(choice);
+            }
+        }
+
+        function handleBackup(type) {
+            const backupTypes = {
+                '1': '전체 백업',
+                '2': '데이터베이스 백업',
+                '3': '파일 백업',
+                '4': '설정 파일 백업'
+            };
+
+            const name = backupTypes[type];
+            window.GrowFitUtils.showToast(`${name}을(를) 생성하는 중...`, 'info');
+
+            setTimeout(() => {
+                const size = type === '1' ? '4.2GB' : type === '2' ? '2.4GB' : type === '3' ? '1.8GB' : '12MB';
+                window.GrowFitUtils.showToast(`${name}이(가) 완료되었습니다 (${size})`, 'success');
+            }, 4000);
+        }
+
+        function restoreBackup() {
+            const backups = `
+🔄 백업 복원
+
+사용 가능한 백업:
+
+1. 2024-10-09 14:00 (전체) - 4.2GB
+2. 2024-10-09 06:00 (전체) - 4.1GB
+3. 2024-10-08 14:00 (전체) - 4.0GB
+4. 2024-10-08 06:00 (전체) - 3.9GB
+
+⚠️ 경고: 복원 시 현재 데이터가 덮어씌워집니다.
+
+복원할 백업 번호를 입력하세요:
+            `.trim();
+
+            const choice = prompt(backups);
+
+            if (choice && ['1', '2', '3', '4'].includes(choice)) {
+                if (confirm('정말 복원하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+                    window.GrowFitUtils.showToast('백업을 복원하는 중...', 'info');
+                    
+                    setTimeout(() => {
+                        window.GrowFitUtils.showToast('백업 복원이 완료되었습니다', 'success');
+                    }, 5000);
+                }
+            }
+        }
+
+        // ========== 보안 점검 ==========
+        function runSecurityScan() {
+            if (confirm('보안 스캔을 실행하시겠습니까? 약 3분이 소요됩니다.')) {
+                window.GrowFitUtils.showToast('보안 스캔을 시작합니다...', 'info');
+                
+                setTimeout(() => {
+                    showSecurityScanResult();
+                }, 4000);
+            }
+        }
+
+        function showSecurityScanResult() {
+            const result = `
+🔒 보안 스캔 결과
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+전체 보안 점수: 95/100 (우수)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+점검 항목:
+
+✅ SSL/TLS 인증서: 유효 (만료 89일 남음)
+✅ 방화벽 규칙: 적절히 설정됨
+✅ API 인증: 안전
+✅ 데이터 암호화: 활성화
+✅ 접근 제어: 정상
+⚠️ 패스워드 정책: 개선 필요
+✅ 로그 모니터링: 활성화
+✅ DDoS 방어: 활성화
+✅ 취약점 패치: 최신
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+발견된 이슈:
+
+⚠️ 중간 (1개):
+- 일부 사용자의 비밀번호 강도 미흡
+
+ℹ️ 낮음 (3개):
+- 사용하지 않는 API 키 존재
+- 일부 로그 보존 기간 짧음
+- 2FA 미사용 계정 존재
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+권장 조치:
+
+1. 비밀번호 정책 강화 (대소문자+숫자+특수문자)
+2. 사용하지 않는 API 키 제거
+3. 로그 보존 기간 90일로 연장
+4. 2FA 의무화 검토
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+다음 스캔 예정: 7일 후
+
+[상세 리포트] [조치 사항 적용]
+            `.trim();
+
+            alert(result);
+            window.GrowFitUtils.showToast('보안 스캔이 완료되었습니다', 'success');
+        }
+
+        // ========== 네트워크 진단 ==========
+        function diagnoseNetwork() {
+            window.GrowFitUtils.showToast('네트워크 진단을 시작합니다...', 'info');
+            
+            setTimeout(() => {
+                const result = `
+🌐 네트워크 진단 결과
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+전체 상태: ✅ 정상
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+지연시간 테스트:
+- Load Balancer → App Server: 0.8ms
+- App Server → Database: 1.2ms
+- App Server → Cache: 0.3ms
+- External API (OpenAI): 45ms
+- External API (Claude): 52ms
+
+대역폭:
+- 인바운드: 234 MB/s (용량의 45%)
+- 아웃바운드: 189 MB/s (용량의 37%)
+
+연결 상태:
+- 활성 연결: 1,247개
+- 대기 연결: 23개
+- 시간 초과: 0개
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+모든 네트워크 경로가 정상입니다.
+
+[트레이스 라우트] [패킷 캡처]
+                `.trim();
+
+                alert(result);
+                window.GrowFitUtils.showToast('네트워크 진단이 완료되었습니다', 'success');
+            }, 2000);
+        }
+
+        // ========== 인시던트 관리 ==========
+        function viewIncidentHistory() {
+            const history = `
+🚨 인시던트 히스토리 (최근 30일)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+총 인시던트: 3건
+평균 해결 시간: 2.4시간
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+#3 - 해결됨
+날짜: 2024-10-05 14:23
+심각도: P3 (낮음)
+제목: 캐시 서버 응답 지연
+상태: ✅ 해결됨
+해결 시간: 1.2시간
+
+설명:
+- Redis 캐시 서버에서 간헐적 지연 발생
+- 메모리 단편화로 인한 성능 저하
+- 캐시 플러시 및 재시작으로 해결
+
+조치:
+- 캐시 서버 재시작
+- 메모리 정리
+- 모니터링 강화
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+#2 - 해결됨
+날짜: 2024-09-28 09:15
+심각도: P2 (중간)
+제목: API 응답 시간 증가
+상태: ✅ 해결됨
+해결 시간: 3.1시간
+
+설명:
+- 트래픽 급증으로 API 서버 부하 증가
+- 응답 시간이 평소의 3배로 증가
+- 자동 스케일링 트리거
+
+조치:
+- API 서버 인스턴스 4개 추가
+- 데이터베이스 쿼리 최적화
+- 캐싱 전략 개선
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+#1 - 해결됨
+날짜: 2024-09-15 16:42
+심각도: P2 (중간)
+제목: 데이터베이스 연결 풀 고갈
+상태: ✅ 해결됨
+해결 시간: 2.8시간
+
+설명:
+- 연결 풀이 최대치 도달
+- 새로운 연결 요청 실패
+- 일부 API 호출 타임아웃
+
+조치:
+- 연결 풀 크기 증가 (50 → 100)
+- 연결 타임아웃 설정 조정
+- 연결 누수 패치 적용
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[상세 리포트] [트렌드 분석]
+            `.trim();
+
+            alert(history);
+        }
+
+        function createIncident() {
+            const form = `
+🚨 새 인시던트 생성
+
+심각도:
+1. P1 - 긴급 (서비스 중단)
+2. P2 - 높음 (주요 기능 영향)
+3. P3 - 중간 (일부 기능 영향)
+4. P4 - 낮음 (경미한 문제)
+
+심각도를 선택하세요:
+            `.trim();
+
+            const severity = prompt(form);
+
+            if (severity && ['1', '2', '3', '4'].includes(severity)) {
+                const title = prompt('인시던트 제목:');
+                if (title) {
+                    window.GrowFitUtils.showToast('인시던트가 생성되었습니다', 'success');
+                }
+            }
+        }
+
+        // ========== 자동화 작업 ==========
+        function manageAutomation() {
+            const automation = `
+🤖 자동화 작업 관리
+
+활성 자동화:
+
+✅ 자동 스케일링
+   • CPU > 80% 시 인스턴스 추가
+   • CPU < 40% 시 인스턴스 제거
+   • 상태: 활성
+
+✅ 자동 백업
+   • 매일 06:00 전체 백업
+   • 보존 기간: 30일
+   • 상태: 활성
+
+✅ 로그 로테이션
+   • 매일 자정 로그 아카이빙
+   • 보존 기간: 90일
+   • 상태: 활성
+
+✅ SSL 인증서 갱신
+   • 만료 30일 전 자동 갱신
+   • 다음 갱신: 2025-01-08
+   • 상태: 활성
+
+✅ 헬스 체크
+   • 30초마다 서비스 상태 확인
+   • 3회 실패 시 알림
+   • 상태: 활성
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[새 자동화 추가] [설정 수정]
+            `.trim();
+
+            alert(automation);
+        }
+
+        function addAutomation() {
+            const options = `
+➕ 자동화 작업 추가
+
+자동화 유형:
+
+1. 스케일링 규칙
+2. 백업 스케줄
+3. 알림 규칙
+4. 정리 작업
+5. 모니터링 규칙
+
+번호를 입력하세요:
+            `.trim();
+
+            const choice = prompt(options);
+
+            if (choice && ['1', '2', '3', '4', '5'].includes(choice)) {
+                window.GrowFitUtils.showToast('자동화 작업 설정 마법사를 시작합니다...', 'info');
+            }
+        }
+
+        // ========== 용량 계획 ==========
+        function showCapacityPlanning() {
+            const planning = `
+📊 용량 계획
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+현재 리소스 사용률:
+
+CPU: 67% (평균)
+메모리: 73% (평균)
+스토리지: 72% (1.8TB / 2.5TB)
+네트워크: 45% (평균)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+성장 예측 (현재 추세 기준):
+
+1개월 후:
+- CPU: 72% (↑5%p)
+- 메모리: 79% (↑6%p)
+- 스토리지: 78% (↑6%p)
+
+3개월 후:
+- CPU: 82% (↑15%p) ⚠️
+- 메모리: 91% (↑18%p) ⚠️
+- 스토리지: 90% (↑18%p) ⚠️
+
+6개월 후:
+- CPU: 94% (↑27%p) 🚨
+- 메모리: 105% (↑32%p) 🚨
+- 스토리지: 104% (↑32%p) 🚨
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+권장 조치:
+
+즉시 (1개월 내):
+- 메모리 증설 (현재 → +30%)
+- 스토리지 확장 (2.5TB → 4TB)
+
+단기 (3개월 내):
+- API 서버 인스턴스 추가
+- 데이터베이스 성능 최적화
+- 캐싱 전략 강화
+
+중기 (6개월 내):
+- 인프라 전체 업그레이드
+- 아키텍처 리팩토링 검토
+- 멀티 리전 구성 검토
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+예상 비용:
+
+즉시 조치: $2,400/월 추가
+단기 조치: $4,800/월 추가
+중기 조치: $12,000/월 추가
+
+총 예상: $19,200/월 (현재 대비 +85%)
+
+[상세 분석] [예산 계획]
+            `.trim();
+
+            alert(planning);
+        }
+
+        // ========== 비용 분석 ==========
+        function analyzeCosts() {
+            const analysis = `
+💰 인프라 비용 분석
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+이번 달 총 비용: $22,450
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+비용 구성:
+
+컴퓨팅 (45%): $10,102
+- App Server: $4,200
+- API Server: $3,800
+- Database: $1,802
+- Cache: $300
+
+스토리지 (18%): $4,041
+- 파일 스토리지: $2,800
+- 데이터베이스 스토리지: $841
+- 백업: $400
+
+네트워크 (12%): $2,694
+- 대역폭: $1,800
+- CDN: $694
+- Load Balancer: $200
+
+외부 서비스 (25%): $5,613
+- LLM API (OpenAI): $2,400
+- LLM API (Claude): $1,800
+- LLM API (Gemini): $1,013
+- 기타 API: $400
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+비용 추이:
+
+지난 달: $18,200 (↑23.3%)
+3개월 평균: $16,800
+YoY 성장: +127%
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+최적화 기회:
+
+1. Reserved Instance 활용
+   • 예상 절감: $1,800/월 (18%)
+
+2. 캐싱 전략 개선
+   • LLM API 호출 20% 감소
+   • 예상 절감: $1,100/월 (11%)
+
+3. 스토리지 정리
+   • 미사용 데이터 제거
+   • 예상 절감: $600/월 (6%)
+
+4. 네트워크 최적화
+   • CDN 설정 최적화
+   • 예상 절감: $300/월 (3%)
+
+총 절감 가능: $3,800/월 (17%)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[상세 리포트] [최적화 실행]
+            `.trim();
+
+            alert(analysis);
+        }
+
+        // ========== 성능 벤치마크 ==========
+        function runBenchmark() {
+            if (confirm('성능 벤치마크를 실행하시겠습니까?\n\n시스템에 일시적인 부하가 발생할 수 있습니다.')) {
+                window.GrowFitUtils.showToast('벤치마크를 시작합니다...', 'info');
+                
+                setTimeout(() => {
+                    showBenchmarkResult();
+                }, 5000);
+            }
+        }
+
+        function showBenchmarkResult() {
+            const result = `
+⚡ 성능 벤치마크 결과
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+API 성능:
+
+GET /api/v1/users
+- 평균: 45ms
+- P50: 42ms
+- P95: 78ms
+- P99: 124ms
+- 처리량: 2,400 req/s
+
+POST /api/v1/chat
+- 평균: 1,240ms
+- P50: 1,180ms
+- P95: 2,100ms
+- P99: 3,450ms
+- 처리량: 180 req/s
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+데이터베이스:
+
+SELECT 쿼리
+- 평균: 12ms
+- P95: 28ms
+- 처리량: 4,200 query/s
+
+INSERT 쿼리
+- 평균: 18ms
+- P95: 42ms
+- 처리량: 2,800 query/s
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+캐시:
+
+Redis GET
+- 평균: 0.8ms
+- P95: 1.4ms
+- 처리량: 28,000 ops/s
+
+Redis SET
+- 평균: 1.2ms
+- P95: 2.1ms
+- 처리량: 18,000 ops/s
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+전체 평가: ⭐⭐⭐⭐☆ (4.2/5.0)
+
+강점:
+- 캐시 성능 우수
+- 데이터베이스 응답 빠름
+- API 처리량 양호
+
+개선점:
+- P99 레이턴시 개선 필요
+- 동시 접속 처리 최적화
+- 메모리 사용 효율화
+
+[상세 리포트] [비교 분석]
+            `.trim();
+
+            alert(result);
+            window.GrowFitUtils.showToast('벤치마크가 완료되었습니다', 'success');
+        }
+
+        // ========== 헬스 체크 ==========
+        function performHealthCheck() {
+            window.GrowFitUtils.showToast('헬스 체크를 수행하는 중...', 'info');
+            
+            setTimeout(() => {
+                const health = `
+🏥 헬스 체크 결과
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+전체 상태: ✅ 건강
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+서비스 상태:
+
+✅ API Gateway (2/2)
+   • 응답: 정상
+   • 레이턴시: 0.08s
+
+✅ App Server (8/8)
+   • 응답: 정상
+   • 평균 부하: 67%
+
+✅ API Server (12/12)
+   • 응답: 정상
+   • 평균 부하: 62%
+
+✅ Database (3/3)
+   • Primary: 정상
+   • Replica 1: 정상
+   • Replica 2: 정상
+   • 복제 지연: 0.01s
+
+✅ Cache (4/4)
+   • 연결: 정상
+   • 메모리: 4.2GB/8GB
+
+✅ Storage
+   • 읽기: 정상
+   • 쓰기: 정상
+   • 사용률: 72%
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+모든 서비스가 정상 작동 중입니다.
+
+마지막 체크: 방금 전
+다음 체크: 30초 후
+
+[자동 체크 설정] [알림 설정]
+                `.trim();
+
+                alert(health);
+                window.GrowFitUtils.showToast('헬스 체크가 완료되었습니다', 'success');
+            }, 2000);
+        }
+
+        // ========== 리소스 사용 추세 ==========
+        function showResourceTrends() {
+            const trends = `
+📈 리소스 사용 추세 (최근 30일)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CPU 사용률:
+- 평균: 65%
+- 최대: 89% (10/05 14:23)
+- 최소: 42% (10/01 03:15)
+- 추세: ↑ 증가 (+8%p)
+
+메모리:
+- 평균: 70%
+- 최대: 87% (10/08 16:42)
+- 최소: 58% (10/02 05:30)
+- 추세: ↑ 증가 (+10%p)
+
+네트워크:
+- 평균: 42%
+- 최대: 78% (10/05 13:00)
+- 최소: 18% (10/03 02:00)
+- 추세: ↑ 증가 (+5%p)
+
+스토리지:
+- 평균 증가: +2.3GB/일
+- 월간 증가: +70GB
+- 예상 고갈: 4개월 후
+- 추세: ↑↑ 급증
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+트래픽 패턴:
+
+피크 시간:
+- 평일 14:00-16:00
+- 평균 트래픽의 2.4배
+
+최저 시간:
+- 매일 02:00-05:00
+- 평균 트래픽의 0.3배
+
+주간 패턴:
+- 월요일: 가장 높음 (+15%)
+- 주말: 가장 낮음 (-30%)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+예측 및 권장사항:
+
+1개월 후:
+- CPU: 73% (주의 필요)
+- 메모리: 80% (조치 권장)
+- 스토리지: 78% (모니터링)
+
+권장 조치:
+1. 메모리 증설 계획
+2. 스토리지 확장 준비
+3. 자동 스케일링 임계값 조정
+4. 비용 최적화 검토
+
+[상세 분석] [예측 모델]
+            `.trim();
+
+            alert(trends);
+        }
+
+        // ========== 키보드 단축키 ==========
+        document.addEventListener('keydown', function(e) {
+            // Ctrl/Cmd + R: 새로고침
+            if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+                e.preventDefault();
+                refreshMonitoring();
+            }
+
+            // Ctrl/Cmd + D: 진단 실행
+            if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+                e.preventDefault();
+                runDiagnostics();
+            }
+
+            // Ctrl/Cmd + L: 로그 지우기
+            if ((e.ctrlKey || e.metaKey) && e.key === 'l') {
+                e.preventDefault();
+                clearLogs();
+            }
+
+            // Ctrl/Cmd + P: 일시정지/재개
+            if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+                e.preventDefault();
+                pauseLogs();
+            }
+
+            // Ctrl/Cmd + B: 백업 생성
+            if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+                e.preventDefault();
+                createBackup();
+            }
+        });
+
+        // ========== 페이지 이탈 시 정리 ==========
+        window.addEventListener('beforeunload', function() {
+            if (monitoringInterval) {
+                clearInterval(monitoringInterval);
+            }
+        });
+
+        // ========== 성능 모니터링 ==========
+        function logPerformance() {
+            if (window.performance) {
+                const perfData = window.performance.timing;
+                const pageLoadTime = perfData.loadEventEnd - perfData.navigationStart;
+                
+                console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+                console.log('🔧 페이지 성능 메트릭');
+                console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+                console.log('페이지 로드 시간:', pageLoadTime + 'ms');
+                console.log('DOM 준비 시간:', (perfData.domContentLoadedEventEnd - perfData.navigationStart) + 'ms');
+                console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            }
+        }
+
+        // 페이지 로드 완료 후 성능 측정
+        window.addEventListener('load', function() {
+            setTimeout(logPerformance, 0);
+        });
+
+        // ========== 초기화 완료 ==========
+        console.log('✅ System Monitoring 완전히 로드됨');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('🔧 시스템 상태:', systemStatus);
+        console.log('⚡ 응답 시간: 0.12s');
+        console.log('💻 CPU: 67%');
+        console.log('🧠 메모리: 73%');
+        console.log('🌐 네트워크: 45%');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('단축키: Ctrl+R(새로고침), Ctrl+D(진단), Ctrl+L(로그지우기), Ctrl+P(일시정지), Ctrl+B(백업)');
+    </script>
+</body>
+</html>

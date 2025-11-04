@@ -1,0 +1,2674 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>시스템 설정 - GrowFit Platform Admin</title>
+
+    <!-- 공통 CSS -->
+    <link rel="stylesheet" href="../common/variables.css">
+    <link rel="stylesheet" href="../common/layout.css">
+    <link rel="stylesheet" href="../common/components.css">
+
+    <style>
+        /* ========== Platform Settings 전용 스타일 ========== */
+        :root {
+            --platform-primary: #6366f1;
+            --platform-purple: #8b5cf6;
+            --platform-blue: #3b82f6;
+            --platform-success: #10b981;
+            --platform-warning: #f59e0b;
+            --platform-danger: #ef4444;
+        }
+
+        /* 페이지 헤더 */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-6);
+        }
+
+        .page-header__left h1 {
+            font-size: var(--text-3xl);
+            font-weight: var(--font-bold);
+            background: linear-gradient(135deg, var(--platform-primary), var(--platform-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: var(--space-1);
+        }
+
+        .page-header__left p {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+        }
+
+        .page-header__actions {
+            display: flex;
+            gap: var(--space-2);
+        }
+
+        /* 설정 레이아웃 */
+        .settings-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: var(--space-6);
+        }
+
+        /* 설정 사이드바 */
+        .settings-sidebar {
+            background: var(--background);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: var(--space-4);
+            height: fit-content;
+            position: sticky;
+            top: var(--space-6);
+        }
+
+        .settings-nav {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-1);
+        }
+
+        .settings-nav__item {
+            padding: var(--space-3) var(--space-4);
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+            font-weight: var(--font-medium);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            border: 2px solid transparent;
+        }
+
+        .settings-nav__item:hover {
+            background: var(--surface);
+            color: var(--text-primary);
+        }
+
+        .settings-nav__item--active {
+            background: linear-gradient(135deg, var(--platform-primary), var(--platform-purple));
+            color: white;
+            border-color: transparent;
+        }
+
+        .settings-nav__icon {
+            font-size: 18px;
+        }
+
+        /* 설정 섹션 */
+        .settings-section {
+            display: none;
+        }
+
+        .settings-section--active {
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .settings-card {
+            background: var(--background);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: var(--space-5);
+            margin-bottom: var(--space-4);
+        }
+
+        .settings-card__header {
+            margin-bottom: var(--space-4);
+            padding-bottom: var(--space-4);
+            border-bottom: 2px solid var(--border);
+        }
+
+        .settings-card__title {
+            font-size: var(--text-xl);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-1);
+        }
+
+        .settings-card__description {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+        }
+
+        /* 설정 그룹 */
+        .setting-group {
+            margin-bottom: var(--space-4);
+            padding-bottom: var(--space-4);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .setting-group:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .setting-group__label {
+            font-size: var(--text-base);
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-1);
+        }
+
+        .setting-group__description {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-3);
+        }
+
+        /* 설정 항목 */
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-3);
+            background: var(--surface);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-2);
+        }
+
+        .setting-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .setting-item__info {
+            flex: 1;
+        }
+
+        .setting-item__label {
+            font-size: var(--text-sm);
+            font-weight: var(--font-medium);
+            color: var(--text-primary);
+            margin-bottom: var(--space-1);
+        }
+
+        .setting-item__description {
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+        }
+
+        .setting-item__control {
+            margin-left: var(--space-4);
+        }
+
+        /* 폼 요소 */
+        .form-group {
+            margin-bottom: var(--space-4);
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-label {
+            display: block;
+            font-size: var(--text-sm);
+            font-weight: var(--font-medium);
+            color: var(--text-primary);
+            margin-bottom: var(--space-2);
+        }
+
+        .form-label--required::after {
+            content: '*';
+            color: var(--platform-danger);
+            margin-left: var(--space-1);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: var(--space-3);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+            transition: all 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--platform-primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .form-input:disabled {
+            background: var(--surface);
+            color: var(--text-tertiary);
+            cursor: not-allowed;
+        }
+
+        .form-textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: var(--space-3);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+            font-family: inherit;
+            resize: vertical;
+            transition: all 0.2s;
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--platform-primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .form-select {
+            width: 100%;
+            padding: var(--space-3);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: var(--platform-primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .form-help {
+            font-size: var(--text-xs);
+            color: var(--text-tertiary);
+            margin-top: var(--space-1);
+        }
+
+        /* 토글 스위치 */
+        .toggle-switch {
+            position: relative;
+            width: 48px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--gray-300);
+            transition: 0.3s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        .toggle-switch input:checked+.toggle-slider {
+            background: linear-gradient(135deg, var(--platform-primary), var(--platform-purple));
+        }
+
+        .toggle-switch input:checked+.toggle-slider:before {
+            transform: translateX(24px);
+        }
+
+        /* 경고 박스 */
+        .warning-box {
+            background: rgba(245, 158, 11, 0.1);
+            border: 2px solid var(--platform-warning);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            margin-bottom: var(--space-4);
+            display: flex;
+            gap: var(--space-3);
+        }
+
+        .warning-box__icon {
+            font-size: 24px;
+            color: var(--platform-warning);
+        }
+
+        .warning-box__content {
+            flex: 1;
+        }
+
+        .warning-box__title {
+            font-size: var(--text-base);
+            font-weight: var(--font-bold);
+            color: var(--platform-warning);
+            margin-bottom: var(--space-1);
+        }
+
+        .warning-box__description {
+            font-size: var(--text-sm);
+            color: var(--text-primary);
+        }
+
+        /* 성공 박스 */
+        .success-box {
+            background: rgba(16, 185, 129, 0.1);
+            border: 2px solid var(--platform-success);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            margin-bottom: var(--space-4);
+            display: flex;
+            gap: var(--space-3);
+        }
+
+        .success-box__icon {
+            font-size: 24px;
+            color: var(--platform-success);
+        }
+
+        .success-box__content {
+            flex: 1;
+        }
+
+        .success-box__title {
+            font-size: var(--text-base);
+            font-weight: var(--font-bold);
+            color: var(--platform-success);
+            margin-bottom: var(--space-1);
+        }
+
+        .success-box__description {
+            font-size: var(--text-sm);
+            color: var(--text-primary);
+        }
+
+        /* 위험 박스 */
+        .danger-box {
+            background: rgba(239, 68, 68, 0.1);
+            border: 2px solid var(--platform-danger);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            margin-bottom: var(--space-4);
+            display: flex;
+            gap: var(--space-3);
+        }
+
+        .danger-box__icon {
+            font-size: 24px;
+            color: var(--platform-danger);
+        }
+
+        .danger-box__content {
+            flex: 1;
+        }
+
+        .danger-box__title {
+            font-size: var(--text-base);
+            font-weight: var(--font-bold);
+            color: var(--platform-danger);
+            margin-bottom: var(--space-1);
+        }
+
+        .danger-box__description {
+            font-size: var(--text-sm);
+            color: var(--text-primary);
+        }
+
+        /* 코드 블록 */
+        .code-block {
+            background: #1e1e1e;
+            border-radius: var(--radius-md);
+            padding: var(--space-4);
+            font-family: 'Courier New', monospace;
+            font-size: var(--text-sm);
+            color: #d4d4d4;
+            overflow-x: auto;
+            margin-bottom: var(--space-4);
+        }
+
+        .code-block__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-3);
+            padding-bottom: var(--space-3);
+            border-bottom: 1px solid #2d2d2d;
+        }
+
+        .code-block__title {
+            color: #858585;
+            font-size: var(--text-xs);
+        }
+
+        .code-block__copy {
+            padding: 4px 12px;
+            background: #2d2d2d;
+            border: 1px solid #3d3d3d;
+            border-radius: var(--radius-sm);
+            color: #d4d4d4;
+            font-size: var(--text-xs);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .code-block__copy:hover {
+            background: #3d3d3d;
+        }
+
+        /* 테이블 */
+        .settings-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .settings-table th {
+            padding: var(--space-3);
+            text-align: left;
+            font-size: var(--text-sm);
+            font-weight: var(--font-semibold);
+            color: var(--text-secondary);
+            background: var(--surface);
+            border-bottom: 2px solid var(--border);
+        }
+
+        .settings-table td {
+            padding: var(--space-3);
+            font-size: var(--text-sm);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .settings-table tbody tr {
+            transition: all 0.2s;
+        }
+
+        .settings-table tbody tr:hover {
+            background: var(--surface);
+        }
+
+        /* 배지 */
+        .badge {
+            padding: 4px 12px;
+            border-radius: var(--radius-full);
+            font-size: var(--text-xs);
+            font-weight: var(--font-bold);
+            display: inline-block;
+        }
+
+        .badge--active {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--platform-success);
+        }
+
+        .badge--inactive {
+            background: rgba(107, 114, 128, 0.1);
+            color: var(--text-tertiary);
+        }
+
+        .badge--warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--platform-warning);
+        }
+
+        /* 액션 버튼 그룹 */
+        .action-buttons {
+            display: flex;
+            gap: var(--space-2);
+            justify-content: flex-end;
+            padding-top: var(--space-4);
+            border-top: 2px solid var(--border);
+        }
+
+        /* 반응형 */
+        @media (max-width: 1024px) {
+            .settings-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .settings-sidebar {
+                position: static;
+            }
+
+            .settings-nav {
+                flex-direction: row;
+                overflow-x: auto;
+            }
+
+            .settings-nav__item {
+                white-space: nowrap;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .settings-nav {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header__left">
+                <button id="menuToggle" class="header__icon-button hidden-desktop">
+                    <span>☰</span>
+                </button>
+                <a href="platform-dashboard.html" class="header__logo">
+                    <span class="header__logo-icon">🚀</span>
+                    <span>GrowFit Platform</span>
+                </a>
+            </div>
+
+            <div class="header__right">
+                <button class="header__icon-button" title="도움말" onclick="showHelp()">
+                    <span>❓</span>
+                </button>
+
+                <button id="notificationBtn" class="header__icon-button">
+                    <span>🔔</span>
+                    <span class="header__badge">2</span>
+                </button>
+
+                <div id="profileBtn" class="header__profile">
+                    <div class="header__avatar" style="background: linear-gradient(135deg, #6366f1, #ec4899);">플</div>
+                    <span class="hidden-mobile">플랫폼 관리자</span>
+                    <span class="hidden-mobile">▼</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="container">
+            <!-- Sidebar -->
+            <aside class="sidebar sidebar--open">
+                <div class="sidebar__user">
+                    <div class="sidebar__user-info">
+                        <div class="sidebar__user-avatar"
+                            style="background: linear-gradient(135deg, #6366f1, #ec4899);">플</div>
+                        <div class="sidebar__user-details">
+                            <div class="sidebar__user-name">플랫폼 관리자</div>
+                            <div class="sidebar__user-role">Platform Admin</div>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="sidebar__nav">
+                    <ul class="sidebar__menu">
+                        <li class="sidebar__menu-item">
+                            <a href="platform-dashboard.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">🏠</span>
+                                <span>플랫폼 대시보드</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="organization-management.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">🏢</span>
+                                <span>조직 관리</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="user-management.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">👥</span>
+                                <span>전체 사용자</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="revenue-billing.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">💰</span>
+                                <span>매출/과금</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="analytics-reports.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">📊</span>
+                                <span>분석 & 리포트</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="system-monitoring.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">🔧</span>
+                                <span>시스템 모니터링</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="platform-settings.html" class="sidebar__menu-link sidebar__menu-link--active">
+                                <span class="sidebar__menu-icon">⚙️</span>
+                                <span>시스템 설정</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <div class="sidebar__footer">
+                    <div
+                        style="padding: var(--space-3); background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1)); border-radius: var(--radius-md); font-size: var(--text-xs);">
+                        <div style="color: var(--text-secondary); margin-bottom: var(--space-1);">마지막 변경</div>
+                        <div
+                            style="font-weight: var(--font-bold); color: var(--platform-primary); font-size: var(--text-sm);">
+                            2시간 전</div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main">
+                <!-- 페이지 헤더 -->
+                <div class="page-header">
+                    <div class="page-header__left">
+                        <h1>⚙️ 시스템 설정</h1>
+                        <p>플랫폼의 전체 설정을 관리하세요</p>
+                    </div>
+                    <div class="page-header__actions">
+                        <button class="btn btn--outline" onclick="exportSettings()">
+                            📥 설정 내보내기
+                        </button>
+                        <button class="btn btn--outline" onclick="resetSettings()">
+                            🔄 초기화
+                        </button>
+                        <button class="btn btn--primary" onclick="saveAllSettings()">
+                            💾 모두 저장
+                        </button>
+                    </div>
+                </div>
+
+                <div class="settings-layout">
+                    <!-- 설정 사이드바 -->
+                    <div class="settings-sidebar">
+                        <nav class="settings-nav">
+                            <div class="settings-nav__item settings-nav__item--active" onclick="switchSettingsSection('general')">
+                                <span class="settings-nav__icon">🏠</span>
+                                <span>일반</span>
+                            </div>
+                            <div class="settings-nav__item" onclick="switchSettingsSection('security')">
+                                <span class="settings-nav__icon">🔒</span>
+                                <span>보안</span>
+                            </div>
+                            <div class="settings-nav__item" onclick="switchSettingsSection('api')">
+                                <span class="settings-nav__icon">🔌</span>
+                                <span>API</span>
+                            </div>
+                            <div class="settings-nav__item" onclick="switchSettingsSection('llm')">
+                                <span class="settings-nav__icon">🤖</span>
+                                <span>LLM 프로바이더</span>
+                            </div>
+                            <div class="settings-nav__item" onclick="switchSettingsSection('email')">
+                                <span class="settings-nav__icon">📧</span>
+                                <span>이메일</span>
+                            </div>
+                            <div class="settings-nav__item" onclick="switchSettingsSection('integrations')">
+                                <span class="settings-nav__icon">🔗</span>
+                                <span>통합</span>
+                            </div>
+                            <div class="settings-nav__item" onclick="switchSettingsSection('backup')">
+                                <span class="settings-nav__icon">💾</span>
+                                <span>백업</span>
+                            </div>
+                            <div class="settings-nav__item" onclick="switchSettingsSection('advanced')">
+                                <span class="settings-nav__icon">🛠️</span>
+                                <span>고급</span>
+                            </div>
+                        </nav>
+                    </div>
+
+                    <!-- 설정 컨텐츠 -->
+                    <div class="settings-content">
+                        <!-- 일반 설정 -->
+                        <div id="settings-general" class="settings-section settings-section--active">
+                            <div class="settings-card">
+                                <div class="settings-card__header">
+                                    <h2 class="settings-card__title">🏠 일반 설정</h2>
+                                    <p class="settings-card__description">플랫폼의 기본 정보 및 일반 설정을 관리합니다</p>
+                                </div>
+
+                                <div class="setting-group">
+                                    <div class="setting-group__label">플랫폼 정보</div>
+                                    <div class="setting-group__description">플랫폼의 기본 정보를 설정합니다</div>
+
+                                    <div class="form-group">
+                                        <label class="form-label form-label--required">플랫폼 이름</label>
+                                        <input type="text" class="form-input" value="GrowFit Platform" placeholder="플랫폼 이름을 입력하세요">
+                                        <div class="form-help">사용자에게 표시되는 플랫폼 이름입니다</div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">플랫폼 설명</label>
+                                        <textarea class="form-textarea" placeholder="플랫폼 설명을 입력하세요">AI 기반 통합 서비스 플랫폼</textarea>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">회사명</label>
+                                        <input type="text" class="form-input" value="GrowFit Inc." placeholder="회사명을 입력하세요">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">지원 이메일</label>
+                                        <input type="email" class="form-input" value="support@growfit.ai" placeholder="support@example.com">
+                                    </div>
+                                </div>
+
+                                <div class="setting-group">
+                                    <div class="setting-group__label">지역 및 언어</div>
+                                    <div class="setting-group__description">기본 지역 및 언어 설정</div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">기본 언어</label>
+                                        <select class="form-select">
+                                            <option value="ko" selected>한국어</option>
+                                            <option value="en">English</option>
+                                            <option value="ja">日本語</option>
+                                            <option value="zh">中文</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">시간대</label>
+                                        <select class="form-select">
+                                            <option value="Asia/Seoul" selected>Asia/Seoul (KST)</option>
+                                            <option value="America/New_York">America/New_York (EST)</option>
+                                            <option value="Europe/London">Europe/London (GMT)</option>
+                                            <option value="Asia/Tokyo">Asia/Tokyo (JST)</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">날짜 형식</label>
+                                        <select class="form-select">
+                                            <option value="YYYY-MM-DD" selected>YYYY-MM-DD (2024-10-09)</option>
+                                            <option value="MM/DD/YYYY">MM/DD/YYYY (10/09/2024)</option>
+                                            <option value="DD/MM/YYYY">DD/MM/YYYY (09/10/2024)</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="setting-group">
+                                    <div class="setting-group__label">기능 토글</div>
+                                    <div class="setting-group__description">플랫폼 기능을 활성화/비활성화합니다</div>
+
+                                    <div class="setting-item">
+                                        <div class="setting-item__info">
+                                            <div class="setting-item__label">신규 사용자 등록</div>
+                                            <div class="setting-item__description">새로운 사용자의 가입을 허용합니다</div>
+                                        </div>
+                                        <div class="setting-item__control">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" checked>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="setting-item">
+                                        <div class="setting-item__info">
+                                            <div class="setting-item__label">메인터넌스 모드</div>
+                                            <div class="setting-item__description">서비스를 일시적으로 중지합니다</div>
+                                        </div>
+                                        <div class="setting-item__control">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox">
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="setting-item">
+                                        <div class="setting-item__info">
+                                            <div class="setting-item__label">분석 추적</div>
+                                            <div class="setting-item__description">사용자 행동 분석을 수집합니다</div>
+                                        </div>
+                                        <div class="setting-item__control">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" checked>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="action-buttons">
+                                    <button class="btn btn--outline" onclick="cancelChanges()">취소</button>
+                                    <button class="btn btn--primary" onclick="saveGeneralSettings()">저장</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 보안 설정 -->
+                        <div id="settings-security" class="settings-section">
+                            <div class="settings-card">
+                                <div class="settings-card__header">
+                                    <h2 class="settings-card__title">🔒 보안 설정</h2>
+                                    <p class="settings-card__description">플랫폼 보안 정책 및 인증 설정을 관리합니다</p>
+                                </div>
+
+                                <div class="warning-box">
+                                    <div class="warning-box__icon">⚠️</div>
+                                    <div class="warning-box__content">
+                                        <div class="warning-box__title">주의</div>
+                                        <div class="warning-box__description">
+                                            보안 설정 변경 시 모든 사용자에게 영향을 미칩니다. 신중하게 설정하세요.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="setting-group">
+                                    <div class="setting-group__label">비밀번호 정책</div>
+                                    <div class="setting-group__description">사용자 비밀번호 요구사항을 설정합니다</div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">최소 길이</label>
+                                        <input type="number" class="form-input" value="8" min="6" max="32">
+                                        <div class="form-help">6-32자 사이로 설정 가능합니다</div>
+                                    </div>
+
+                                    <div class="setting-item">
+                                        <div class="setting-item__info">
+                                            <div class="setting-item__label">대문자 필수</div>
+                                            <div class="setting-item__description">최소 1개 이상의 대문자 포함</div>
+                                        </div>
+                                        <div class="setting-item__control">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" checked>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="setting-item">
+                                        <div class="setting-item__info">
+                                            <div class="setting-item__label">숫자 필수</div>
+                                            <div class="setting-item__description">최소 1개 이상의 숫자 포함</div>
+                                        </div>
+                                        <div class="setting-item__control">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" checked>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="setting-item">
+                                        <div class="setting-item__info">
+                                            <div class="setting-item__label">특수문자 필수</div>
+                                            <div class="setting-item__description">최소 1개 이상의 특수문자 포함</div>
+                                        </div>
+                                        <div class="setting-item__control">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" checked>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">비밀번호 만료 기간</label>
+                                        <select class="form-select">
+                                            <option value="0">만료 없음</option>
+                                            <option value="30">30일</option>
+                                            <option value="60">60일</option>
+                                            <option value="90" selected>90일</option>
+                                            <option value="180">180일</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="setting-group">
+                                    <div class="setting-group__label">2단계 인증 (2FA)</div>
+                                    <div class="setting-group__description">추가 보안 레이어를 활성화합니다</div>
+
+                                    <div class="setting-item">
+                                        <div class="setting-item__info">
+                                            <div class="setting-item__label">2FA 필수화</div>
+                                            <div class="setting-item__description">모든 사용자에게 2FA를 강제합니다</div>
+                                        </div>
+                                        <div class="setting-item__control">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox">
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">지원 방식</label>
+                                        <div style="display: flex; flex-direction: column; gap: var(--space-2);">
+                                            <label style="display: flex; align-items: center; gap: var(--space-2);">
+                                                <input type="checkbox" checked>
+                                                <span style="font-size: var(--text-sm);">TOTP (Google Authenticator, Authy 등)</span>
+                                            </label>
+                                            <label style="display: flex; align-items: center; gap: var(--space-2);">
+                                                <input type="checkbox" checked>
+                                                <span style="font-size: var(--text-sm);">SMS 인증</span>
+                                            </label>
+                                            <label style="display: flex; align-items: center; gap: var(--space-2);">
+                                                <input type="checkbox">
+                                                <span style="font-size: var(--text-sm);">이메일 인증</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="setting-group">
+                                    <div class="setting-group__label">세션 관리</div>
+                                    <div class="setting-group__description">사용자 세션 및 로그인 설정</div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">세션 타임아웃</label>
+                                        <select class="form-select">
+                                            <option value="30">30분</option>
+                                            <option value="60">1시간</option>
+                                            <option value="120">2시간</option>
+                                            <option value="240" selected>4시간</option>
+                                            <option value="480">8시간</option>
+                                            <option value="1440">24시간</option>
+                                        </select>
+                                        <div class="form-help">비활성 상태에서 자동 로그아웃까지의 시간</div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">동시 로그인 세션 제한</label>
+                                        <input type="number" class="form-input" value="3" min="1" max="10">
+                                        <div class="form-help">한 사용자가 동시에 로그인할 수 있는 기기 수</div>
+                                    </div>
+
+                                    <div class="setting-item">
+                                        <div class="setting-item__info">
+                                            <div class="setting-item__label">로그인 기록 추적</div>
+                                            <div class="setting-item__description">모든 로그인 시도를 기록합니다</div>
+                                        </div>
+                                        <div class="setting-item__control">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" checked>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="setting-group">
+                                    <div class="setting-group__label">IP 화이트리스트</div>
+                                    <div class="setting-group__description">특정 IP 주소만 접근을 허용합니다</div>
+
+                                    <div class="setting-item">
+                                        <div class="setting-item__info">
+                                            <div class="setting-item__label">IP 제한 활성화</div>
+                                            <div class="setting-item__description">화이트리스트에 등록된 IP만 접근 가능</div>
+                                        </div>
+                                        <div class="setting-item__control">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox">
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">허용 IP 목록</label>
+                                        <textarea class="form-textarea" placeholder="한 줄에 하나씩 IP 주소를 입력하세요&#10;예: 192.168.1.1&#10;10.0.0.0/24"></textarea>
+                                    </div>
+                                </div>
+
+                                <div class="action-buttons">
+                                    <button class="btn btn--outline" onclick="cancelChanges()">취소</button>
+                                    <button class="btn btn--primary" onclick="saveSecuritySettings()">저장</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- API 설정 -->
+                        <div id="settings-api" class="settings-section">
+                            <div class="settings-card">
+                                <div class="settings-card__header">
+                                    <h2 class="settings-card__title">🔌 API 설정</h2>
+                                    <p class="settings-card__description">API 키 및 접근 제어를 관리합니다</p>
+                                </div>
+
+                                <div class="setting-group">
+                                    <div class="setting-group__label">API 키 관리</div>
+                                    <div class="setting-group__description">시스템 API 키를 관리합니다</div>
+
+                                    <table class="settings-table">
+                                        <thead>
+                                            <tr>
+                                                <th>이름</th>
+                                                <th>키</th>
+                                                <th>생성일</th>
+                                                <th>상태</th>
+                                                <th style="width: 120px;">액션</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><strong>Production API</strong></td>
+                                                <td>
+                                                    <code style="font-family: 'Courier New', monospace; font-size: var(--text-xs);">pk_live_••••••••••••••••</code>
+                                                </td>
+                                                <td>2024-01-15</td>
+                                                <td><span class="badge badge--active">활성</span></td>
+                                                <td>
+                                                    <button class="btn btn--sm btn--outline" onclick="viewApiKey('prod')">보기</button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Development API</strong></td>
+                                                <td>
+                                                    <code style="font-family: 'Courier New', monospace; font-size: var(--text-xs);">pk_test_••••••••••••••••</code>
+                                                </td>
+                                                <td>2024-02-20</td>
+                                                <td><span class="badge badge--active">활성</span></td>
+                                                <td>
+                                                    <button class="btn btn--sm btn--outline" onclick="viewApiKey('dev')">보기</button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Legacy API</strong></td>
+                                                <td>
+                                                    <code style="font-family: 'Courier New', monospace; font-size: var(--text-xs);">pk_live_••••••••••••••••</code>
+                                                </td>
+                                                <td>2023-08-10</td>
+                                                <td><span class="badge badge--inactive">비활성</span></td>
+                                                <td>
+                                                    <button class="btn btn--sm btn--outline" onclick="deleteApiKey('legacy')">삭제</button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+
+                                    <div style="margin-top: var(--space-3);">
+                                        <button class="btn btn--outline" onclick="createApiKey()">➕ 새 API 키 생성</button>
+                                    </div>
+                                </div>
+
+                                <div class="setting-group">
+                                    <div class="setting-group__label">API 제한</div>
+                                    <div class="setting-group__description">API 사용량 및 제한을 설정합니다</div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">요청 속도 제한 (Rate Limit)</label>
+                                        <select class="form-select">
+                                            <option value="100">100 req/분</option>
+                                            <option value="500">500 req/분</option>
+                                            <option value="1000" selected>1,000 req/분</option>
+                                            <option value="5000">5,000 req/분</option>
+                                            <option value="unlimited">무제한</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="setting-item">
+                                        <div class="setting-item__info">
+                                            <div class="setting-item__label">API 버전 관리</div>
+                                            <div class="setting-item__description">구버전 API 지원을 활성화합니다</div>
+                                        </div>
+                                        <div class="setting-item__control">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" checked>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="setting-group">
+                                    <div class="setting-group__label">Webhook</div>
+                                    <div class="setting-group__description">이벤트 알림을 받을 웹훅을 설정합니다</div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">Webhook URL</label>
+                                        <input type="url" class="form-input" placeholder="https://your-domain.com/webhook" value="https://api.growfit.ai/webhook">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">이벤트 선택</label>
+                                        <div style="display: flex; flex-direction: column; gap: var(--space-2);">
+                                            <label style="display: flex; align-items: center; gap: var(--space-2);">
+                                                <input type="checkbox" checked>
+                                                <span style="font-size: var(--text-sm);">사용자 생성/삭제</span>
+                                            </label>
+                                            <label style="display: flex; align-items: center; gap: var(--space-2);">
+                                                <input type="checkbox" checked>
+                                                <span style="font-size: var(--text-sm);">결제 이벤트</span>
+                                            </label>
+                                            <label style="display: flex; align-items: center; gap: var(--space-2);">
+                                                <input type="checkbox">
+                                                <span style="font-size: var(--text-sm);">시스템 알림</span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <button class="btn btn--outline" onclick="testWebhook()">🧪 Webhook 테스트</button>
+                                    </div>
+                                </div>
+
+                                <div class="action-buttons">
+                                    <button class="btn btn--outline" onclick="cancelChanges()">취소</button>
+                                    <button class="btn btn--primary" onclick="saveApiSettings()">저장</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- LLM 프로바이더 설정 -->
+                        <div id="settings-llm" class="settings-section">
+                            <div class="settings-card">
+                                <div class="settings-card__header">
+                                    <h2 class="settings-card__title">🤖 LLM 프로바이더 설정</h2>
+                                    <p class="settings-card__description">연동된 LLM 서비스의 API 키 및 설정을 관리합니다</p>
+                                </div>
+
+                                <div class="success-box">
+                                    <div class="success-box__icon">✅</div>
+                                    <div class="success-box__content">
+                                        <div class="success-box__title">3개 프로바이더 활성</div>
+                                        <div class="success-box__description">
+                                            OpenAI, Anthropic, Google 프로바이더가 정상 작동 중입니다.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- OpenAI -->
+                                <div class="setting-group">
+                                    <div class="setting-group__label">🔵 OpenAI</div>
+                                    <div class="setting-group__description">GPT-4, GPT-3.5 등 OpenAI 모델 설정</div>
+
+                                    <div class="setting-item">
+                                        <div class="setting-item__info">
+                                            <div class="setting-item__label">OpenAI 활성화</div>
+                                            <div class="setting-item__description">OpenAI API 사용</div>
+                                        </div>
+                                        <div class="setting-item__control">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" checked>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label form-label--required">API 키</label>
+                                        <input type="password" class="form-input" value="sk-••••••••••••••••••••••••••••••••" placeholder="sk-...">
+                                        <div class="form-help">OpenAI API 키를 입력하세요</div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">Organization ID</label>
+                                        <input type="text" class="form-input" value="org-••••••••••••••••••" placeholder="org-...">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">기본 모델</label>
+                                        <select class="form-select">
+                                            <option value="gpt-4" selected>GPT-4</option>
+                                            <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                                            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">Temperature</label>
+                                        <input type="number" class="form-input" value="0.7" min="0" max="2" step="0.1">
+                                        <div class="form-help">0 (결정적) ~ 2 (창의적)</div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">Max Tokens</label>
+                                        <input type="number" class="form-input" value="2048" min="1" max="32000">
+                                    </div>
+
+                                    <div>
+                                        <button class="btn btn--outline" onclick="testLLMConnection('openai')">🧪 연결 테스트</button>
+                                    </div>
+                                </div>
+
+                                <!-- Anthropic Claude -->
+                                <div class="setting-group">
+                                    <div class="setting-group__label">🟣 Anthropic (Claude)</div>
+                                    <div class="setting-group__description">Claude 모델 설정</div>
+
+                                    <div class="setting-item">
+                                        <div class="setting-item__info">
+                                            <div class="setting-item__label">Claude 활성화</div>
+                                            <div class="setting-item__description">Anthropic Claude API 사용</div>
+                                        </div>
+                                        <div class="setting-item__control">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" checked>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label form-label--required">API 키</label>
+                                        <input type="password" class="form-input" value="sk-ant-••••••••••••••••••••••••••••••••" placeholder="sk-ant-...">
+                                        <div class="form-help">Anthropic API 키를 입력하세요</div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">기본 모델</label>
+                                        <select class="form-select">
+                                            <option value="claude-3-opus">Claude 3 Opus</option>
+                                            <option value="claude-3-sonnet" selected>Claude 3 Sonnet</option>
+                                            <option value="claude-3-haiku">Claude 3 Haiku</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">Temperature</label>
+                                        <input type="number" class="form-input" value="1.0" min="0" max="1" step="0.1">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">Max Tokens</label>
+                                        <input type="number" class="form-input" value="4096" min="1" max="100000">
+                                    </div>
+
+                                    <div>
+                                        <button class="btn btn--outline" onclick="testLLMConnection('claude')">🧪 연결 테스트</button>
+                                    </div>
+                                </div>
+
+                                <!-- Google Gemini -->
+                                <div class="setting-group">
+                                    <div class="setting-group__label">🔴 Google (Gemini)</div>
+                                    <div class="setting-group__description">Gemini 모델 설정</div>
+
+                                    <div class="setting-item">
+                                        <div class="setting-item__info">
+                                            <div class="setting-item__label">Gemini 활성화</div>
+                                            <div class="setting-item__description">Google Gemini API 사용</div>
+                                        </div>
+                                        <div class="setting-item__control">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" checked>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label form-label--required">API 키</label>
+                                        <input type="password" class="form-input" value="AIzaSy••••••••••••••••••••••••••••••" placeholder="AIzaSy...">
+                                        <div class="form-help">Google API 키를 입력하세요</div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">기본 모델</label>
+                                        <select class="form-select">
+                                            <option value="gemini-pro" selected>Gemini Pro</option>
+                                            <option value="gemini-ultra">Gemini Ultra</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">Temperature</label>
+                                        <input type="number" class="form-input" value="0.9" min="0" max="1" step="0.1">
+                                    </div>
+
+                                    <div>
+                                        <button class="btn btn--outline" onclick="testLLMConnection('gemini')">🧪 연결 테스트</button>
+                                    </div>
+                                </div>
+
+                                <div class="setting-group">
+                                    <div class="setting-group__label">라우팅 설정</div>
+                                    <div class="setting-group__description">요청을 어떤 프로바이더로 보낼지 설정합니다</div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">라우팅 전략</label>
+                                        <select class="form-select">
+                                            <option value="round-robin">Round Robin (순환)</option>
+                                            <option value="priority" selected>Priority (우선순위)</option>
+                                            <option value="cost">Cost-based (비용 기반)</option>
+                                            <option value="performance">Performance (성능 기반)</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">프로바이더 우선순위</label>
+                                        <div style="display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3); background: var(--surface); border-radius: var(--radius-md);">
+                                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                                <span>1순위: OpenAI</span>
+                                                <button class="btn btn--sm btn--outline">변경</button>
+                                            </div>
+                                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                                <span>2순위: Claude</span>
+                                                <button class="btn btn--sm btn--outline">변경</button>
+                                            </div>
+                                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                                <span>3순위: Gemini</span>
+                                                <button class="btn btn--sm btn--outline">변경</button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="setting-item">
+                                        <div class="setting-item__info">
+                                            <div class="setting-item__label">자동 페일오버</div>
+                                            <div class="setting-item__description">프로바이더 장애 시 자동 전환</div>
+                                        </div>
+                                        <div class="setting-item__control">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" checked>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="action-buttons">
+                                    <button class="btn btn--outline" onclick="cancelChanges()">취소</button>
+                                    <button class="btn btn--primary" onclick="saveLLMSettings()">저장</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 이메일 설정 -->
+                        <div id="settings-email" class="settings-section">
+                            <div class="settings-card">
+                                <div class="settings-card__header">
+                                    <h2 class="settings-card__title">📧 이메일 설정</h2>
+                                    <p class="settings-card__description">SMTP 서버 및 이메일 템플릿을 관리합니다</p>
+                                </div>
+
+                                <div class="setting-group">
+                                    <div class="setting-group__label">SMTP 서버</div>
+                                    <div class="setting-group__description">이메일 발송을 위한 SMTP 설정</div>
+
+                                    <div class="form-group">
+                                        <label class="form-label form-label--required">SMTP 호스트</label>
+                                        <input type="text" class="form-input" value="smtp.gmail.com" placeholder="smtp.example.com">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label form-label--required">SMTP 포트</label>
+                                        <select class="form-select">
+                                            <option value="25">25 (기본)</option>
+                                            <option value="465">465 (SSL)</option>
+                                            <option value="587" selected>587 (TLS)</option>
+                                            <option value="2525">2525 (대체)</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">보안</label>
+                                        <select class="form-select">
+                                            <option value="none">없음</option>
+                                            <option value="ssl">SSL</option>
+                                            <option value="tls" selected>TLS</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label form-label--required">사용자명</label>
+                                        <input type="text" class="form-input" value="noreply@growfit.ai" placeholder="username@example.com">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label form-label--required">비밀번호</label>
+                                        <input type="password" class="form-input" value="••••••••••••" placeholder="SMTP 비밀번호">
+                                    </div>
+
+                                    <div>
+                                        <button class="btn btn--outline" onclick="testEmailConnection()">🧪 연결 테스트</button>
+                                    </div>
+                                </div>
+
+                                <div class="setting-group">
+                                    <div class="setting-group__label">발신자 정보</div>
+                                    <div class="setting-group__description">이메일 발신자 이름 및 주소</div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">발신자 이름</label>
+                                        <input type="text" class="form-input" value="GrowFit Platform" placeholder="Your Company">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">발신자 이메일</label>
+                                        <input type="email" class="form-input" value="noreply@growfit.ai" placeholder="noreply@example.com">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">답장 이메일</label>
+                                        <input type="email" class="form-input" value="support@growfit.ai" placeholder="support@example.com">
+                                    </div>
+                                </div>
+
+                                <div class="setting-group">
+                                    <div class="setting-group__label">이메일 템플릿</div>
+                                    <div class="setting-group__description">자동 발송 이메일 활성화 관리</div>
+
+                                    <div class="setting-item">
+                                        <div class="setting-item__info">
+                                            <div class="setting-item__label">환영 이메일</div>
+                                            <div class="setting-item__description">신규 사용자 가입 시</div>
+                                        </div>
+                                        <div class="setting-item__control">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" checked>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="setting-item">
+                                        <div class="setting-item__info">
+                                            <div class="setting-item__label">비밀번호 재설정</div>
+                                            <div class="setting-item__description">비밀번호 재설정 요청 시</div>
+                                        </div>
+                                        <div class="setting-item__control">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" checked>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="setting-item">
+                                        <div class="setting-item__info">
+                                            <div class="setting-item__label">청구서 발송</div>
+                                            <div class="setting-item__description">월간 청구서 자동 발송</div>
+                                        </div>
+                                        <div class="setting-item__control">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" checked>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="setting-item">
+                                        <div class="setting-item__info">
+                                            <div class="setting-item__label">시스템 알림</div>
+                                            <div class="setting-item__description">중요 시스템 알림</div>
+                                        </div>
+                                        <div class="setting-item__control">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" checked>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <button class="btn btn--outline" onclick="manageEmailTemplates()">📝 템플릿 편집</button>
+                                    </div>
+                                </div>
+
+                                <div class="action-buttons">
+                                    <button class="btn btn--outline" onclick="cancelChanges()">취소</button>
+                                    <button class="btn btn--primary" onclick="saveEmailSettings()">저장</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 통합 설정 -->
+                        <div id="settings-integrations" class="settings-section">
+                            <div class="settings-card">
+                                <div class="settings-card__header">
+                                    <h2 class="settings-card__title">🔗 통합 설정</h2>
+                                    <p class="settings-card__description">외부 서비스 및 도구와의 통합을 관리합니다</p>
+                                </div>
+
+                                <!-- Slack -->
+                                <div class="setting-group">
+                                    <div class="setting-group__label">💬 Slack</div>
+                                    <div class="setting-group__description">Slack 워크스페이스 연동</div>
+
+                                    <div class="setting-item">
+                                        <div class="setting-item__info">
+                                            <div class="setting-item__label">Slack 통합</div>
+                                            <div class="setting-item__description">알림을 Slack으로 전송</div>
+                                        </div>
+                                        <div class="setting-item__control">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" checked>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">Webhook URL</label>
+                                        <input type="url" class="form-input" value="https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXX" placeholder="https://hooks.slack.com/...">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">기본 채널</label>
+                                        <input type="text" class="form-input" value="#platform-alerts" placeholder="#channel-name">
+                                    </div>
+
+                                    <div>
+                                        <button class="btn btn--outline" onclick="testSlackIntegration()">🧪 테스트 메시지 전송</button>
+                                    </div>
+                                </div>
+
+                                <!-- Google Analytics -->
+                                <div class="setting-group">
+                                    <div class="setting-group__label">📊 Google Analytics</div>
+                                    <div class="setting-group__description">사용자 행동 추적 및 분석</div>
+
+                                    <div class="setting-item">
+                                        <div class="setting-item__info">
+                                            <div class="setting-item__label">Google Analytics</div>
+                                            <div class="setting-item__description">GA4 추적 활성화</div>
+                                        </div>
+                                        <div class="setting-item__control">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" checked>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">측정 ID</label>
+                                        <input type="text" class="form-input" value="G-XXXXXXXXXX" placeholder="G-XXXXXXXXXX">
+                                        <div class="form-help">Google Analytics 4 측정 ID</div>
+                                    </div>
+                                </div>
+
+                                <!-- Stripe -->
+                                <div class="setting-group">
+                                    <div class="setting-group__label">💳 Stripe</div>
+                                    <div class="setting-group__description">결제 처리 연동</div>
+
+                                    <div class="setting-item">
+                                        <div class="setting-item__info">
+                                            <div class="setting-item__label">Stripe 통합</div>
+                                            <div class="setting-item__description">Stripe 결제 활성화</div>
+                                        </div>
+                                        <div class="setting-item__control">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" checked>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">Publishable Key</label>
+                                        <input type="text" class="form-input" value="pk_live_••••••••••••••••••••••••" placeholder="pk_live_...">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">Secret Key</label>
+                                        <input type="password" class="form-input" value="sk_live_••••••••••••••••••••••••" placeholder="sk_live_...">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">Webhook Secret</label>
+                                        <input type="password" class="form-input" value="whsec_••••••••••••••••••••••" placeholder="whsec_...">
+                                    </div>
+                                </div>
+
+                                <!-- GitHub -->
+                                <div class="setting-group">
+                                    <div class="setting-group__label">🐙 GitHub</div>
+                                    <div class="setting-group__description">GitHub 저장소 연동</div>
+
+                                    <div class="setting-item">
+                                        <div class="setting-item__info">
+                                            <div class="setting-item__label">GitHub 통합</div>
+                                            <div class="setting-item__description">이슈 추적 및 배포 연동</div>
+                                        </div>
+                                        <div class="setting-item__control">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox">
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">Personal Access Token</label>
+                                        <input type="password" class="form-input" placeholder="ghp_...">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">저장소</label>
+                                        <input type="text" class="form-input" placeholder="username/repository">
+                                    </div>
+                                </div>
+
+                                <div class="action-buttons">
+                                    <button class="btn btn--outline" onclick="cancelChanges()">취소</button>
+                                    <button class="btn btn--primary" onclick="saveIntegrationSettings()">저장</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 백업 설정 -->
+                        <div id="settings-backup" class="settings-section">
+                            <div class="settings-card">
+                                <div class="settings-card__header">
+                                    <h2 class="settings-card__title">💾 백업 설정</h2>
+                                    <p class="settings-card__description">자동 백업 및 복구 설정을 관리합니다</p>
+                                </div>
+
+                                <div class="setting-group">
+                                    <div class="setting-group__label">자동 백업</div>
+                                    <div class="setting-group__description">정기적인 자동 백업을 설정합니다</div>
+
+                                    <div class="setting-item">
+                                        <div class="setting-item__info">
+                                            <div class="setting-item__label">자동 백업 활성화</div>
+                                            <div class="setting-item__description">예약된 시간에 자동 백업 실행</div>
+                                        </div>
+                                        <div class="setting-item__control">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" checked>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">백업 빈도</label>
+                                        <select class="form-select">
+                                            <option value="hourly">매시간</option>
+                                            <option value="daily" selected>매일</option>
+                                            <option value="weekly">매주</option>
+                                            <option value="monthly">매월</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">백업 시간</label>
+                                        <input type="time" class="form-input" value="03:00">
+                                        <div class="form-help">서버 시간대(UTC) 기준</div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">백업 보존 기간</label>
+                                        <select class="form-select">
+                                            <option value="7">7일</option>
+                                            <option value="14">14일</option>
+                                            <option value="30" selected>30일</option>
+                                            <option value="90">90일</option>
+                                            <option value="365">1년</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="setting-group">
+                                    <div class="setting-group__label">백업 범위</div>
+                                    <div class="setting-group__description">백업에 포함할 데이터를 선택합니다</div>
+
+                                    <div class="setting-item">
+                                        <div class="setting-item__info">
+                                            <div class="setting-item__label">데이터베이스</div>
+                                            <div class="setting-item__description">모든 데이터베이스 테이블</div>
+                                        </div>
+                                        <div class="setting-item__control">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" checked>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="setting-item">
+                                        <div class="setting-item__info">
+                                            <div class="setting-item__label">파일 스토리지</div>
+                                            <div class="setting-item__description">업로드된 모든 파일</div>
+                                        </div>
+                                        <div class="setting-item__control">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" checked>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="setting-item">
+                                        <div class="setting-item__info">
+                                            <div class="setting-item__label">시스템 설정</div>
+                                            <div class="setting-item__description">모든 설정 파일</div>
+                                        </div>
+                                        <div class="setting-item__control">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" checked>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="setting-group">
+                                    <div class="setting-group__label">백업 저장소</div>
+                                    <div class="setting-group__description">백업 파일 저장 위치</div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">저장소 유형</label>
+                                        <select class="form-select">
+                                            <option value="local">로컬 서버</option>
+                                            <option value="s3" selected>Amazon S3</option>
+                                            <option value="gcs">Google Cloud Storage</option>
+                                            <option value="azure">Azure Blob Storage</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">S3 Bucket</label>
+                                        <input type="text" class="form-input" value="growfit-backups" placeholder="bucket-name">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">AWS Access Key</label>
+                                        <input type="text" class="form-input" value="AKIA••••••••••••••••" placeholder="AKIA...">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">AWS Secret Key</label>
+                                        <input type="password" class="form-input" value="••••••••••••••••••••••••••••••••" placeholder="Secret Key">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">Region</label>
+                                        <select class="form-select">
+                                            <option value="us-east-1">US East (N. Virginia)</option>
+                                            <option value="ap-northeast-2" selected>Asia Pacific (Seoul)</option>
+                                            <option value="ap-northeast-1">Asia Pacific (Tokyo)</option>
+                                            <option value="eu-west-1">Europe (Ireland)</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="setting-group">
+                                    <div class="setting-group__label">최근 백업</div>
+                                    <div class="setting-group__description">백업 히스토리 및 관리</div>
+
+                                    <table class="settings-table">
+                                        <thead>
+                                            <tr>
+                                                <th>날짜</th>
+                                                <th>유형</th>
+                                                <th>크기</th>
+                                                <th>상태</th>
+                                                <th style="width: 150px;">액션</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>2024-10-09 03:00</td>
+                                                <td>전체</td>
+                                                <td>4.2 GB</td>
+                                                <td><span class="badge badge--active">완료</span></td>
+                                                <td>
+                                                    <button class="btn btn--sm btn--outline" onclick="downloadBackup('backup-1')">다운로드</button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>2024-10-08 03:00</td>
+                                                <td>전체</td>
+                                                <td>4.1 GB</td>
+                                                <td><span class="badge badge--active">완료</span></td>
+                                                <td>
+                                                    <button class="btn btn--sm btn--outline" onclick="downloadBackup('backup-2')">다운로드</button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>2024-10-07 03:00</td>
+                                                <td>전체</td>
+                                                <td>4.0 GB</td>
+                                                <td><span class="badge badge--active">완료</span></td>
+                                                <td>
+                                                    <button class="btn btn--sm btn--outline" onclick="downloadBackup('backup-3')">다운로드</button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+
+                                    <div style="margin-top: var(--space-3); display: flex; gap: var(--space-2);">
+                                        <button class="btn btn--outline" onclick="createManualBackup()">💾 수동 백업 생성</button>
+                                        <button class="btn btn--outline" onclick="restoreBackup()">🔄 백업 복원</button>
+                                    </div>
+                                </div>
+
+                                <div class="action-buttons">
+                                    <button class="btn btn--outline" onclick="cancelChanges()">취소</button>
+                                    <button class="btn btn--primary" onclick="saveBackupSettings()">저장</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 고급 설정 -->
+                        <div id="settings-advanced" class="settings-section">
+                            <div class="settings-card">
+                                <div class="settings-card__header">
+                                    <h2 class="settings-card__title">🛠️ 고급 설정</h2>
+                                    <p class="settings-card__description">시스템 고급 설정 및 개발자 옵션</p>
+                                </div>
+
+                                <div class="danger-box">
+                                    <div class="danger-box__icon">⚠️</div>
+                                    <div class="danger-box__content">
+                                        <div class="danger-box__title">경고</div>
+                                        <div class="danger-box__description">
+                                            고급 설정 변경은 시스템 안정성에 영향을 줄 수 있습니다. 변경 전 백업을 권장합니다.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="setting-group">
+                                    <div class="setting-group__label">개발자 모드</div>
+                                    <div class="setting-group__description">디버깅 및 개발 도구</div>
+
+                                    <div class="setting-item">
+                                        <div class="setting-item__info">
+                                            <div class="setting-item__label">디버그 모드</div>
+                                            <div class="setting-item__description">상세한 에러 로그 표시</div>
+                                        </div>
+                                        <div class="setting-item__control">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox">
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="setting-item">
+                                        <div class="setting-item__info">
+                                            <div class="setting-item__label">API 로깅</div>
+                                            <div class="setting-item__description">모든 API 요청/응답 기록</div>
+                                        </div>
+                                        <div class="setting-item__control">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox">
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="setting-item">
+                                        <div class="setting-item__info">
+                                            <div class="setting-item__label">성능 프로파일링</div>
+                                            <div class="setting-item__description">성능 메트릭 수집</div>
+                                        </div>
+                                        <div class="setting-item__control">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox">
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="setting-group">
+                                    <div class="setting-group__label">캐시 설정</div>
+                                    <div class="setting-group__description">캐싱 전략 및 설정</div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">캐시 드라이버</label>
+                                        <select class="form-select">
+                                            <option value="redis" selected>Redis</option>
+                                            <option value="memcached">Memcached</option>
+                                            <option value="file">파일</option>
+                                            <option value="database">데이터베이스</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">기본 TTL (초)</label>
+                                        <input type="number" class="form-input" value="3600" min="60">
+                                        <div class="form-help">캐시 만료 시간 (기본값: 1시간)</div>
+                                    </div>
+
+                                    <div>
+                                        <button class="btn btn--outline" onclick="clearAllCache()">🗑️ 캐시 전체 삭제</button>
+                                    </div>
+                                </div>
+
+                                <div class="setting-group">
+                                    <div class="setting-group__label">데이터베이스</div>
+                                    <div class="setting-group__description">데이터베이스 최적화 및 관리</div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">연결 풀 크기</label>
+                                        <input type="number" class="form-input" value="100" min="10" max="500">
+                                        <div class="form-help">동시 데이터베이스 연결 수</div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">쿼리 타임아웃 (초)</label>
+                                        <input type="number" class="form-input" value="30" min="5" max="300">
+                                    </div>
+
+                                    <div style="display: flex; gap: var(--space-2);">
+                                        <button class="btn btn--outline" onclick="optimizeDatabase()">⚡ 데이터베이스 최적화</button>
+                                        <button class="btn btn--outline" onclick="analyzeDatabase()">🔍 분석 실행</button>
+                                    </div>
+                                </div>
+
+                                <div class="setting-group">
+                                    <div class="setting-group__label">환경 변수</div>
+                                    <div class="setting-group__description">시스템 환경 변수 관리</div>
+
+                                    <div class="code-block">
+                                        <div class="code-block__header">
+                                            <div class="code-block__title">.env</div>
+                                            <button class="code-block__copy" onclick="copyEnvVariables()">복사</button>
+                                        </div>
+                                        <pre style="margin: 0;">APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://platform.growfit.ai
+
+DB_CONNECTION=postgresql
+DB_HOST=db.growfit.internal
+DB_PORT=5432
+DB_DATABASE=growfit_prod
+
+REDIS_HOST=cache.growfit.internal
+REDIS_PORT=6379
+
+OPENAI_API_KEY=sk-••••••••••••••••••
+CLAUDE_API_KEY=sk-ant-••••••••••••••••••
+GEMINI_API_KEY=AIzaSy••••••••••••••••••</pre>
+                                    </div>
+
+                                    <div>
+                                        <button class="btn btn--outline" onclick="editEnvVariables()">✏️ 환경 변수 편집</button>
+                                    </div>
+                                </div>
+
+                                <div class="setting-group">
+                                    <div class="setting-group__label">위험 영역</div>
+                                    <div class="setting-group__description">시스템을 초기화하거나 삭제합니다</div>
+
+                                    <div style="display: flex; flex-direction: column; gap: var(--space-2);">
+                                        <button class="btn btn--outline" onclick="resetAllSettings()" style="border-color: var(--platform-warning); color: var(--platform-warning);">
+                                            🔄 모든 설정 초기화
+                                        </button>
+                                        <button class="btn btn--outline" onclick="clearAllData()" style="border-color: var(--platform-danger); color: var(--platform-danger);">
+                                            🗑️ 모든 데이터 삭제
+                                        </button>
+                                        <button class="btn btn--outline" onclick="factoryReset()" style="border-color: var(--platform-danger); color: var(--platform-danger);">
+                                            ⚠️ 공장 초기화
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="action-buttons">
+                                    <button class="btn btn--outline" onclick="cancelChanges()">취소</button>
+                                    <button class="btn btn--primary" onclick="saveAdvancedSettings()">저장</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- 공통 스크립트 -->
+    <script src="../common/layout.js"></script>
+    <script src="../common/utils.js"></script>
+
+    <!-- 페이지 전용 스크립트 -->
+    <script>
+        // ========== Platform Settings 전용 로직 ==========
+
+        // 전역 변수
+        let currentSection = 'general';
+        let unsavedChanges = false;
+
+        // ========== 초기화 ==========
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Platform Settings 페이지 초기화');
+            
+            initializeSettings();
+            trackChanges();
+        });
+
+        function initializeSettings() {
+            // URL 파라미터 확인
+            const urlParams = new URLSearchParams(window.location.search);
+            const section = urlParams.get('section');
+
+            if (section) {
+                switchSettingsSection(section);
+            }
+        }
+
+        // ========== 섹션 전환 ==========
+        function switchSettingsSection(section) {
+            // 저장되지 않은 변경사항 확인
+            if (unsavedChanges) {
+                if (!confirm('저장되지 않은 변경사항이 있습니다. 계속하시겠습니까?')) {
+                    return;
+                }
+                unsavedChanges = false;
+            }
+
+            // 모든 네비게이션 비활성화
+            document.querySelectorAll('.settings-nav__item').forEach(item => {
+                item.classList.remove('settings-nav__item--active');
+            });
+
+            // 모든 섹션 숨김
+            document.querySelectorAll('.settings-section').forEach(section => {
+                section.classList.remove('settings-section--active');
+            });
+
+            // 선택된 네비게이션 활성화
+            const navItems = document.querySelectorAll('.settings-nav__item');
+            const sectionMap = ['general', 'security', 'api', 'llm', 'email', 'integrations', 'backup', 'advanced'];
+            const index = sectionMap.indexOf(section);
+            
+            if (index !== -1 && navItems[index]) {
+                navItems[index].classList.add('settings-nav__item--active');
+            }
+
+            // 선택된 섹션 표시
+            const sectionElement = document.getElementById(`settings-${section}`);
+            if (sectionElement) {
+                sectionElement.classList.add('settings-section--active');
+            }
+
+            currentSection = section;
+
+            // URL 업데이트
+            const url = new URL(window.location);
+            url.searchParams.set('section', section);
+            window.history.pushState({}, '', url);
+        }
+
+        // ========== 변경사항 추적 ==========
+        function trackChanges() {
+            // 모든 입력 필드에 change 이벤트 리스너 추가
+            document.querySelectorAll('input, select, textarea').forEach(element => {
+                element.addEventListener('change', function() {
+                    unsavedChanges = true;
+                });
+            });
+        }
+
+        // ========== 저장 함수들 ==========
+        function saveGeneralSettings() {
+            window.GrowFitUtils.showToast('일반 설정을 저장하는 중...', 'info');
+            
+            setTimeout(() => {
+                unsavedChanges = false;
+                window.GrowFitUtils.showToast('일반 설정이 저장되었습니다', 'success');
+            }, 1000);
+        }
+
+        function saveSecuritySettings() {
+            window.GrowFitUtils.showToast('보안 설정을 저장하는 중...', 'info');
+            
+            setTimeout(() => {
+                unsavedChanges = false;
+                window.GrowFitUtils.showToast('보안 설정이 저장되었습니다', 'success');
+            }, 1000);
+        }
+
+        function saveApiSettings() {
+            window.GrowFitUtils.showToast('API 설정을 저장하는 중...', 'info');
+            
+            setTimeout(() => {
+                unsavedChanges = false;
+                window.GrowFitUtils.showToast('API 설정이 저장되었습니다', 'success');
+            }, 1000);
+        }
+
+        function saveLLMSettings() {
+            window.GrowFitUtils.showToast('LLM 설정을 저장하는 중...', 'info');
+            
+            setTimeout(() => {
+                unsavedChanges = false;
+                window.GrowFitUtils.showToast('LLM 설정이 저장되었습니다', 'success');
+            }, 1000);
+        }
+
+        function saveEmailSettings() {
+            window.GrowFitUtils.showToast('이메일 설정을 저장하는 중...', 'info');
+            
+            setTimeout(() => {
+                unsavedChanges = false;
+                window.GrowFitUtils.showToast('이메일 설정이 저장되었습니다', 'success');
+            }, 1000);
+        }
+
+        function saveIntegrationSettings() {
+            window.GrowFitUtils.showToast('통합 설정을 저장하는 중...', 'info');
+            
+            setTimeout(() => {
+                unsavedChanges = false;
+                window.GrowFitUtils.showToast('통합 설정이 저장되었습니다', 'success');
+            }, 1000);
+        }
+
+        function saveBackupSettings() {
+            window.GrowFitUtils.showToast('백업 설정을 저장하는 중...', 'info');
+            
+            setTimeout(() => {
+                unsavedChanges = false;
+                window.GrowFitUtils.showToast('백업 설정이 저장되었습니다', 'success');
+            }, 1000);
+        }
+
+        function saveAdvancedSettings() {
+            if (confirm('고급 설정 변경은 시스템에 영향을 줄 수 있습니다. 계속하시겠습니까?')) {
+                window.GrowFitUtils.showToast('고급 설정을 저장하는 중...', 'info');
+                
+                setTimeout(() => {
+                    unsavedChanges = false;
+                    window.GrowFitUtils.showToast('고급 설정이 저장되었습니다', 'success');
+                }, 1000);
+            }
+        }
+
+        function saveAllSettings() {
+            if (confirm('모든 설정을 저장하시겠습니까?')) {
+                window.GrowFitUtils.showToast('모든 설정을 저장하는 중...', 'info');
+                
+                setTimeout(() => {
+                    unsavedChanges = false;
+                    window.GrowFitUtils.showToast('모든 설정이 저장되었습니다', 'success');
+                }, 2000);
+            }
+        }
+
+        function cancelChanges() {
+            if (unsavedChanges) {
+                if (confirm('변경사항을 취소하시겠습니까?')) {
+                    location.reload();
+                }
+            } else {
+                window.GrowFitUtils.showToast('변경사항이 없습니다', 'info');
+            }
+        }
+
+        // ========== API 키 관리 ==========
+        function viewApiKey(keyId) {
+            const keys = {
+                'prod': 'pk_live_1234567890abcdefghijklmnopqrstuvwxyz',
+                'dev': 'pk_test_abcdefghijklmnopqrstuvwxyz1234567890',
+                'legacy': 'pk_live_oldkey1234567890abcdefghijklmnop'
+            };
+
+            const key = keys[keyId];
+            
+            if (key) {
+                const display = `
+📋 API 키 정보
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+전체 키:
+${key}
+
+⚠️ 이 키를 안전하게 보관하세요.
+외부에 노출되지 않도록 주의하세요.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[클립보드에 복사]
+                `.trim();
+
+                alert(display);
+            }
+        }
+
+        function createApiKey() {
+            const name = prompt('API 키 이름을 입력하세요:');
+            
+            if (name && name.trim()) {
+                window.GrowFitUtils.showToast('API 키를 생성하는 중...', 'info');
+                
+                setTimeout(() => {
+                    const newKey = 'pk_live_' + Math.random().toString(36).substring(2, 38);
+                    alert(`새 API 키가 생성되었습니다:\n\n${newKey}\n\n⚠️ 이 키를 안전하게 보관하세요.`);
+                    window.GrowFitUtils.showToast('API 키가 생성되었습니다', 'success');
+                }, 1000);
+            }
+        }
+
+        function deleteApiKey(keyId) {
+            if (confirm('이 API 키를 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없으며, 이 키를 사용하는 모든 요청이 실패합니다.')) {
+                window.GrowFitUtils.showToast('API 키를 삭제하는 중...', 'info');
+                
+                setTimeout(() => {
+                    window.GrowFitUtils.showToast('API 키가 삭제되었습니다', 'success');
+                }, 1000);
+            }
+        }
+
+        // ========== 테스트 함수들 ==========
+        function testWebhook() {
+            window.GrowFitUtils.showToast('Webhook 테스트 메시지를 전송하는 중...', 'info');
+            
+            setTimeout(() => {
+                const success = Math.random() > 0.2;
+                if (success) {
+                    window.GrowFitUtils.showToast('Webhook 테스트 성공! 응답: 200 OK', 'success');
+                } else {
+                    window.GrowFitUtils.showToast('Webhook 테스트 실패: 연결 시간 초과', 'error');
+                }
+            }, 2000);
+        }
+
+        function testLLMConnection(provider) {
+            const providerNames = {
+                'openai': 'OpenAI',
+                'claude': 'Anthropic Claude',
+                'gemini': 'Google Gemini'
+            };
+
+            window.GrowFitUtils.showToast(`${providerNames[provider]} 연결을 테스트하는 중...`, 'info');
+            
+            setTimeout(() => {
+                const success = Math.random() > 0.1;
+                if (success) {
+                    const latency = (Math.random() * 500 + 500).toFixed(0);
+                    window.GrowFitUtils.showToast(`연결 성공! 응답 시간: ${latency}ms`, 'success');
+                } else {
+                    window.GrowFitUtils.showToast('연결 실패: API 키를 확인하세요', 'error');
+                }
+            }, 2000);
+        }
+
+        function testEmailConnection() {
+            window.GrowFitUtils.showToast('SMTP 연결을 테스트하는 중...', 'info');
+            
+            setTimeout(() => {
+                const success = Math.random() > 0.2;
+                if (success) {
+                    window.GrowFitUtils.showToast('SMTP 연결 성공! 테스트 이메일이 전송되었습니다', 'success');
+                } else {
+                    window.GrowFitUtils.showToast('SMTP 연결 실패: 인증 오류', 'error');
+                }
+            }, 2000);
+        }
+
+        function testSlackIntegration() {
+            window.GrowFitUtils.showToast('Slack 테스트 메시지를 전송하는 중...', 'info');
+            
+            setTimeout(() => {
+                window.GrowFitUtils.showToast('테스트 메시지가 Slack으로 전송되었습니다', 'success');
+            }, 1500);
+        }
+
+        // ========== 이메일 템플릿 ==========
+        function manageEmailTemplates() {
+            const templates = `
+📧 이메일 템플릿 관리
+
+사용 가능한 템플릿:
+
+1. 환영 이메일 (welcome.html)
+2. 비밀번호 재설정 (password-reset.html)
+3. 청구서 발송 (invoice.html)
+4. 시스템 알림 (system-alert.html)
+5. 주간 리포트 (weekly-report.html)
+
+편집할 템플릿 번호를 입력하세요:
+            `.trim();
+
+            const choice = prompt(templates);
+
+            if (choice && ['1', '2', '3', '4', '5'].includes(choice)) {
+                alert('템플릿 편집 기능은 개발 중입니다.\n향후 업데이트에서 제공될 예정입니다.');
+            }
+        }
+
+        // ========== 백업 관리 ==========
+        function createManualBackup() {
+            if (confirm('수동 백업을 생성하시겠습니까?\n\n약 5-10분이 소요될 수 있습니다.')) {
+                window.GrowFitUtils.showToast('백업을 생성하는 중...', 'info');
+                
+                setTimeout(() => {
+                    window.GrowFitUtils.showToast('백업이 생성되었습니다 (4.2 GB)', 'success');
+                }, 3000);
+            }
+        }
+
+        function downloadBackup(backupId) {
+            window.GrowFitUtils.showToast('백업 다운로드를 준비하는 중...', 'info');
+            
+            setTimeout(() => {
+                window.GrowFitUtils.showToast('백업 파일 다운로드가 시작되었습니다', 'success');
+            }, 1500);
+        }
+
+        function restoreBackup() {
+            const backups = `
+🔄 백업 복원
+
+사용 가능한 백업:
+
+1. 2024-10-09 03:00 (4.2 GB)
+2. 2024-10-08 03:00 (4.1 GB)
+3. 2024-10-07 03:00 (4.0 GB)
+4. 2024-10-06 03:00 (3.9 GB)
+
+⚠️ 경고: 복원 시 현재 데이터가 덮어씌워집니다.
+
+복원할 백업 번호를 입력하세요:
+            `.trim();
+
+            const choice = prompt(backups);
+
+            if (choice && ['1', '2', '3', '4'].includes(choice)) {
+                if (confirm('정말 복원하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.')) {
+                    window.GrowFitUtils.showToast('백업을 복원하는 중...', 'info');
+                    
+                    setTimeout(() => {
+                        window.GrowFitUtils.showToast('백업 복원이 완료되었습니다', 'success');
+                    }, 5000);
+                }
+            }
+        }
+
+        // ========== 고급 기능 ==========
+        function clearAllCache() {
+            if (confirm('모든 캐시를 삭제하시겠습니까?\n\n일시적으로 성능이 저하될 수 있습니다.')) {
+                window.GrowFitUtils.showToast('캐시를 삭제하는 중...', 'info');
+                
+                setTimeout(() => {
+                    window.GrowFitUtils.showToast('모든 캐시가 삭제되었습니다', 'success');
+                }, 1500);
+            }
+        }
+
+        function optimizeDatabase() {
+            if (confirm('데이터베이스를 최적화하시겠습니까?\n\n약 2-5분이 소요될 수 있습니다.')) {
+                window.GrowFitUtils.showToast('데이터베이스를 최적화하는 중...', 'info');
+                
+                setTimeout(() => {
+                    const result = `
+데이터베이스 최적화 완료
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+최적화된 테이블: 47개
+복구된 공간: 1.2 GB
+인덱스 재구성: 완료
+통계 업데이트: 완료
+
+소요 시간: 3분 24초
+
+성능 개선:
+- 쿼리 속도: +15%
+- 저장 공간: -12%
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                    `.trim();
+
+                    alert(result);
+                    window.GrowFitUtils.showToast('데이터베이스 최적화가 완료되었습니다', 'success');
+                }, 3000);
+            }
+        }
+
+        function analyzeDatabase() {
+            window.GrowFitUtils.showToast('데이터베이스를 분석하는 중...', 'info');
+            
+            setTimeout(() => {
+                const result = `
+데이터베이스 분석 리포트
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+총 테이블: 47개
+총 레코드: 8,947,234개
+총 크기: 24.3 GB
+
+상위 5개 큰 테이블:
+1. logs - 12.4 GB (51%)
+2. analytics - 5.2 GB (21%)
+3. messages - 3.1 GB (13%)
+4. files - 2.4 GB (10%)
+5. users - 1.2 GB (5%)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+권장 사항:
+- logs 테이블 아카이빙 고려
+- analytics 파티셔닝 검토
+- 미사용 인덱스 제거
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                `.trim();
+
+                alert(result);
+                window.GrowFitUtils.showToast('분석이 완료되었습니다', 'success');
+            }, 2000);
+        }
+
+        function copyEnvVariables() {
+            const envText = document.querySelector('.code-block pre').textContent;
+            
+            navigator.clipboard.writeText(envText).then(() => {
+                window.GrowFitUtils.showToast('환경 변수가 클립보드에 복사되었습니다', 'success');
+            }).catch(() => {
+                window.GrowFitUtils.showToast('복사 실패', 'error');
+            });
+        }
+
+        function editEnvVariables() {
+            alert('환경 변수 편집 기능은 보안상 제한되어 있습니다.\n서버에 직접 접속하여 수정하세요.');
+        }
+
+        // ========== 위험 영역 ==========
+        function resetAllSettings() {
+            const confirmation = prompt('모든 설정을 초기화하시겠습니까?\n\n계속하려면 "RESET"을 입력하세요:');
+            
+            if (confirmation === 'RESET') {
+                window.GrowFitUtils.showToast('설정을 초기화하는 중...', 'info');
+                
+                setTimeout(() => {
+                    window.GrowFitUtils.showToast('모든 설정이 초기화되었습니다', 'success');
+                    setTimeout(() => location.reload(), 2000);
+                }, 2000);
+            }
+        }
+
+        function clearAllData() {
+            const confirmation = prompt('⚠️ 경고: 모든 데이터를 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.\n계속하려면 "DELETE ALL DATA"를 입력하세요:');
+            
+            if (confirmation === 'DELETE ALL DATA') {
+                const finalConfirm = confirm('정말로 모든 데이터를 삭제하시겠습니까?\n\n• 모든 사용자 데이터\n• 모든 조직 데이터\n• 모든 파일\n• 모든 로그\n\n이 작업은 되돌릴 수 없습니다!');
+                
+                if (finalConfirm) {
+                    window.GrowFitUtils.showToast('모든 데이터를 삭제하는 중...', 'info');
+                    
+                    setTimeout(() => {
+                        window.GrowFitUtils.showToast('모든 데이터가 삭제되었습니다', 'success');
+                    }, 3000);
+                }
+            }
+        }
+
+        function factoryReset() {
+            const confirmation = prompt('⚠️ 위험: 공장 초기화를 실행하시겠습니까?\n\n이 작업은:\n• 모든 설정 초기화\n• 모든 데이터 삭제\n• 모든 사용자 제거\n• 시스템을 처음 설치 상태로 복원\n\n계속하려면 "FACTORY RESET"을 입력하세요:');
+            
+            if (confirmation === 'FACTORY RESET') {
+                const finalConfirm = confirm('마지막 확인\n\n정말로 공장 초기화를 실행하시겠습니까?\n\n이 작업 후에는 로그인할 수 없으며,\n처음부터 다시 설정해야 합니다.');
+                
+                if (finalConfirm) {
+                    window.GrowFitUtils.showToast('공장 초기화를 실행하는 중...', 'info');
+                    
+                    setTimeout(() => {
+                        alert('공장 초기화가 완료되었습니다.\n\n페이지가 초기 설정 화면으로 이동합니다.');
+                        window.location.href = '/setup';
+                    }, 3000);
+                }
+            }
+        }
+
+        // ========== 설정 내보내기/가져오기 ==========
+        function exportSettings() {
+            const formats = `
+📥 설정 내보내기
+
+내보낼 형식:
+
+1. JSON (전체 설정)
+2. ENV (환경 변수만)
+3. YAML (설정 파일)
+
+번호를 입력하세요:
+            `.trim();
+
+            const choice = prompt(formats);
+
+            if (choice && ['1', '2', '3'].includes(choice)) {
+                handleExportSettings(choice);
+            }
+        }
+
+        function handleExportSettings(format) {
+            const formatMap = {
+                '1': 'settings.json',
+                '2': 'environment.env',
+                '3': 'config.yaml'
+            };
+
+            window.GrowFitUtils.showToast('설정을 내보내는 중...', 'info');
+
+            setTimeout(() => {
+                const filename = formatMap[format];
+                window.GrowFitUtils.showToast(`${filename}이(가) 다운로드되었습니다`, 'success');
+            }, 1500);
+        }
+
+        function resetSettings() {
+            if (confirm('모든 설정을 기본값으로 초기화하시겠습니까?')) {
+                window.GrowFitUtils.showToast('설정을 초기화하는 중...', 'info');
+                
+                setTimeout(() => {
+                    window.GrowFitUtils.showToast('설정이 초기화되었습니다', 'success');
+                    setTimeout(() => location.reload(), 1000);
+                }, 1500);
+            }
+        }
+
+        // ========== 도움말 ==========
+        function showHelp() {
+            const help = `
+❓ 시스템 설정 도움말
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+각 설정 섹션:
+
+🏠 일반
+플랫폼 기본 정보, 언어, 시간대 등
+
+🔒 보안
+비밀번호 정책, 2FA, 세션 관리 등
+
+🔌 API
+API 키 관리, Rate Limit, Webhook 설정
+
+🤖 LLM 프로바이더
+OpenAI, Claude, Gemini 연동 설정
+
+📧 이메일
+SMTP 서버 및 이메일 템플릿 관리
+
+🔗 통합
+Slack, Analytics, Stripe 등 외부 서비스
+
+💾 백업
+자동 백업 설정 및 복구
+
+🛠️ 고급
+개발자 옵션 및 시스템 고급 설정
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+변경사항은 각 섹션의 '저장' 버튼을
+클릭해야 적용됩니다.
+
+자세한 내용은 문서를 참고하세요:
+https://docs.growfit.ai/settings
+
+[문서 보기] [지원 요청]
+            `.trim();
+
+            alert(help);
+        }
+
+        // ========== 페이지 이탈 경고 ==========
+        window.addEventListener('beforeunload', function(e) {
+            if (unsavedChanges) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        });
+
+        // ========== 키보드 단축키 ==========
+        document.addEventListener('keydown', function(e) {
+            // Ctrl/Cmd + S: 저장
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                saveAllSettings();
+            }
+
+            // Ctrl/Cmd + H: 도움말
+            if ((e.ctrlKey || e.metaKey) && e.key === 'h') {
+                e.preventDefault();
+                showHelp();
+            }
+
+            // ESC: 취소
+            if (e.key === 'Escape' && unsavedChanges) {
+                cancelChanges();
+            }
+        });
+
+        // ========== 성능 모니터링 ==========
+        function logPerformance() {
+            if (window.performance) {
+                const perfData = window.performance.timing;
+                const pageLoadTime = perfData.loadEventEnd - perfData.navigationStart;
+                
+                console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+                console.log('⚙️ 페이지 성능 메트릭');
+                console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+                console.log('페이지 로드 시간:', pageLoadTime + 'ms');
+                console.log('DOM 준비 시간:', (perfData.domContentLoadedEventEnd - perfData.navigationStart) + 'ms');
+                console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            }
+        }
+
+        // 페이지 로드 완료 후 성능 측정
+        window.addEventListener('load', function() {
+            setTimeout(logPerformance, 0);
+        });
+
+        // ========== 초기화 완료 ==========
+        console.log('✅ Platform Settings 완전히 로드됨');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('⚙️ 현재 섹션:', currentSection);
+        console.log('🔧 설정 항목: 100+개');
+        console.log('📝 변경사항:', unsavedChanges ? '있음' : '없음');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('단축키: Ctrl+S(저장), Ctrl+H(도움말), ESC(취소)');
+    </script>
+</body>
+</html>

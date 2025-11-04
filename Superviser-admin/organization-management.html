@@ -1,0 +1,2516 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>조직 관리 - GrowFit Platform Admin</title>
+
+    <!-- 공통 CSS -->
+    <link rel="stylesheet" href="../common/variables.css">
+    <link rel="stylesheet" href="../common/layout.css">
+    <link rel="stylesheet" href="../common/components.css">
+
+    <style>
+        /* ========== Organization Management 전용 스타일 ========== */
+        :root {
+            --platform-primary: #6366f1;
+            --platform-primary-light: #818cf8;
+            --platform-primary-dark: #4f46e5;
+            --platform-secondary: #ec4899;
+            --platform-accent: #f59e0b;
+            --platform-success: #10b981;
+            --platform-warning: #f59e0b;
+            --platform-danger: #ef4444;
+            --platform-purple: #8b5cf6;
+            --platform-blue: #3b82f6;
+        }
+
+        /* 페이지 헤더 */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-6);
+        }
+
+        .page-header__left h1 {
+            font-size: var(--text-3xl);
+            font-weight: var(--font-bold);
+            background: linear-gradient(135deg, var(--platform-primary), var(--platform-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: var(--space-1);
+        }
+
+        .page-header__left p {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+        }
+
+        .page-header__actions {
+            display: flex;
+            gap: var(--space-2);
+        }
+
+        /* 통계 카드 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--space-4);
+            margin-bottom: var(--space-6);
+        }
+
+        .stat-card {
+            background: var(--background);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: var(--space-4);
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(99, 102, 241, 0.1);
+            border-color: var(--platform-primary);
+        }
+
+        .stat-card__label {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-2);
+        }
+
+        .stat-card__value {
+            font-size: var(--text-2xl);
+            font-weight: var(--font-bold);
+            color: var(--platform-primary);
+            margin-bottom: var(--space-1);
+        }
+
+        .stat-card__change {
+            font-size: var(--text-xs);
+            font-weight: var(--font-bold);
+        }
+
+        .stat-card__change--up {
+            color: var(--platform-success);
+        }
+
+        .stat-card__change--down {
+            color: var(--platform-danger);
+        }
+
+        /* 필터 & 검색 */
+        .filter-section {
+            background: var(--background);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: var(--space-4);
+            margin-bottom: var(--space-4);
+        }
+
+        .filter-row {
+            display: flex;
+            gap: var(--space-3);
+            align-items: end;
+        }
+
+        .filter-group {
+            flex: 1;
+        }
+
+        .filter-label {
+            font-size: var(--text-sm);
+            font-weight: var(--font-medium);
+            color: var(--text-primary);
+            margin-bottom: var(--space-2);
+        }
+
+        .filter-input {
+            width: 100%;
+            padding: var(--space-3);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+            transition: all 0.2s;
+        }
+
+        .filter-input:focus {
+            outline: none;
+            border-color: var(--platform-primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .filter-select {
+            width: 100%;
+            padding: var(--space-3);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+            background: white;
+            cursor: pointer;
+        }
+
+        /* 조직 테이블 */
+        .org-table-container {
+            background: var(--background);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+        }
+
+        .org-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .org-table thead {
+            background: var(--surface);
+        }
+
+        .org-table th {
+            padding: var(--space-4);
+            text-align: left;
+            font-size: var(--text-sm);
+            font-weight: var(--font-semibold);
+            color: var(--text-secondary);
+            border-bottom: 2px solid var(--border);
+            white-space: nowrap;
+        }
+
+        .org-table th.sortable {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .org-table th.sortable:hover {
+            color: var(--platform-primary);
+        }
+
+        .org-table td {
+            padding: var(--space-4);
+            font-size: var(--text-sm);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .org-table tbody tr {
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .org-table tbody tr:hover {
+            background: var(--surface);
+        }
+
+        /* 조직 정보 */
+        .org-info {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+        }
+
+        .org-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            background: linear-gradient(135deg, var(--platform-primary), var(--platform-secondary));
+            flex-shrink: 0;
+        }
+
+        .org-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .org-name {
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+
+        .org-id {
+            font-size: var(--text-xs);
+            color: var(--text-tertiary);
+            font-family: 'Courier New', monospace;
+        }
+
+        /* 플랜 배지 */
+        .plan-badge {
+            padding: 4px 12px;
+            border-radius: var(--radius-full);
+            font-size: var(--text-xs);
+            font-weight: var(--font-bold);
+            display: inline-block;
+        }
+
+        .plan-badge--enterprise {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+        }
+
+        .plan-badge--professional {
+            background: linear-gradient(135deg, #3b82f6, #06b6d4);
+            color: white;
+        }
+
+        .plan-badge--starter {
+            background: linear-gradient(135deg, #10b981, #34d399);
+            color: white;
+        }
+
+        .plan-badge--free {
+            background: rgba(107, 114, 128, 0.1);
+            color: var(--text-secondary);
+        }
+
+        /* 상태 배지 */
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: var(--radius-full);
+            font-size: var(--text-xs);
+            font-weight: var(--font-bold);
+            display: inline-block;
+        }
+
+        .status-badge--active {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--platform-success);
+        }
+
+        .status-badge--trial {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--platform-warning);
+        }
+
+        .status-badge--inactive {
+            background: rgba(107, 114, 128, 0.1);
+            color: var(--text-secondary);
+        }
+
+        .status-badge--suspended {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--platform-danger);
+        }
+
+        /* 사용량 바 */
+        .usage-bar {
+            width: 100%;
+            max-width: 120px;
+        }
+
+        .usage-bar__label {
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .usage-bar__progress {
+            height: 6px;
+            background: var(--gray-200);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .usage-bar__fill {
+            height: 100%;
+            background: linear-gradient(to right, var(--platform-primary), var(--platform-secondary));
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+
+        .usage-bar__fill--high {
+            background: linear-gradient(to right, var(--platform-warning), var(--platform-danger));
+        }
+
+        /* 액션 버튼 */
+        .action-buttons {
+            display: flex;
+            gap: var(--space-2);
+        }
+
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-md);
+            border: 2px solid var(--border);
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 16px;
+        }
+
+        .action-btn:hover {
+            border-color: var(--platform-primary);
+            background: var(--surface);
+            transform: scale(1.1);
+        }
+
+        /* 페이지네이션 */
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-4);
+            background: var(--surface);
+            border-top: 2px solid var(--border);
+        }
+
+        .pagination-info {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: var(--space-2);
+        }
+
+        .pagination-btn {
+            padding: var(--space-2) var(--space-3);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-md);
+            background: white;
+            font-size: var(--text-sm);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            border-color: var(--platform-primary);
+            color: var(--platform-primary);
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination-btn--active {
+            background: var(--platform-primary);
+            color: white;
+            border-color: var(--platform-primary);
+        }
+
+        /* 모달 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay--active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: var(--radius-xl);
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: modalSlideUp 0.3s ease-out;
+        }
+
+        @keyframes modalSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            padding: var(--space-5);
+            border-bottom: 2px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: var(--text-xl);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-md);
+            border: none;
+            background: var(--surface);
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: var(--platform-danger);
+            color: white;
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: var(--space-5);
+            max-height: calc(90vh - 160px);
+            overflow-y: auto;
+        }
+
+        .modal-footer {
+            padding: var(--space-4);
+            border-top: 2px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: var(--space-2);
+        }
+
+        /* 폼 그룹 */
+        .form-group {
+            margin-bottom: var(--space-4);
+        }
+
+        .form-label {
+            display: block;
+            font-size: var(--text-sm);
+            font-weight: var(--font-medium);
+            color: var(--text-primary);
+            margin-bottom: var(--space-2);
+        }
+
+        .form-label--required::after {
+            content: '*';
+            color: var(--platform-danger);
+            margin-left: 4px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: var(--space-3);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+            transition: all 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--platform-primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .form-select {
+            width: 100%;
+            padding: var(--space-3);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+            background: white;
+            cursor: pointer;
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: var(--space-3);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-help {
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+            margin-top: var(--space-1);
+        }
+
+        /* 빈 상태 */
+        .empty-state {
+            text-align: center;
+            padding: var(--space-8);
+            color: var(--text-secondary);
+        }
+
+        .empty-state__icon {
+            font-size: 64px;
+            margin-bottom: var(--space-3);
+        }
+
+        .empty-state__title {
+            font-size: var(--text-lg);
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-2);
+        }
+
+        .empty-state__desc {
+            font-size: var(--text-sm);
+            margin-bottom: var(--space-4);
+        }
+
+        /* 반응형 */
+        @media (max-width: 1400px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-row {
+                flex-direction: column;
+            }
+
+            .org-table {
+                display: block;
+                overflow-x: auto;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header__left">
+                <button id="menuToggle" class="header__icon-button hidden-desktop">
+                    <span>☰</span>
+                </button>
+                <a href="platform-dashboard.html" class="header__logo">
+                    <span class="header__logo-icon">🚀</span>
+                    <span>GrowFit Platform</span>
+                </a>
+            </div>
+
+            <div class="header__right">
+                <button class="header__icon-button" title="새로고침" onclick="refreshOrganizations()">
+                    <span>🔄</span>
+                </button>
+
+                <button id="notificationBtn" class="header__icon-button">
+                    <span>🔔</span>
+                    <span class="header__badge">5</span>
+                </button>
+
+                <div id="profileBtn" class="header__profile">
+                    <div class="header__avatar" style="background: linear-gradient(135deg, #6366f1, #ec4899);">플</div>
+                    <span class="hidden-mobile">플랫폼 관리자</span>
+                    <span class="hidden-mobile">▼</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="container">
+            <!-- Sidebar -->
+            <aside class="sidebar sidebar--open">
+                <div class="sidebar__user">
+                    <div class="sidebar__user-info">
+                        <div class="sidebar__user-avatar"
+                            style="background: linear-gradient(135deg, #6366f1, #ec4899);">플</div>
+                        <div class="sidebar__user-details">
+                            <div class="sidebar__user-name">플랫폼 관리자</div>
+                            <div class="sidebar__user-role">Platform Admin</div>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="sidebar__nav">
+                    <ul class="sidebar__menu">
+                        <li class="sidebar__menu-item">
+                            <a href="platform-dashboard.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">🏠</span>
+                                <span>플랫폼 대시보드</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="organization-management.html"
+                                class="sidebar__menu-link sidebar__menu-link--active">
+                                <span class="sidebar__menu-icon">🏢</span>
+                                <span>조직 관리</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="user-management.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">👥</span>
+                                <span>전체 사용자</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="revenue-billing.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">💰</span>
+                                <span>매출/과금</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="analytics-reports.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">📊</span>
+                                <span>분석 & 리포트</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="system-monitoring.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">🔧</span>
+                                <span>시스템 모니터링</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="platform-settings.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">⚙️</span>
+                                <span>시스템 설정</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <div class="sidebar__footer">
+                    <div
+                        style="padding: var(--space-3); background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(236, 72, 153, 0.1)); border-radius: var(--radius-md); font-size: var(--text-xs);">
+                        <div style="color: var(--text-secondary); margin-bottom: var(--space-1);">총 조직</div>
+                        <div
+                            style="font-weight: var(--font-bold); color: var(--platform-primary); font-size: var(--text-lg);">
+                            247개</div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main">
+                <!-- 페이지 헤더 -->
+                <div class="page-header">
+                    <div class="page-header__left">
+                        <h1>🏢 조직 관리</h1>
+                        <p>전체 조직을 관리하고 모니터링하세요</p>
+                    </div>
+                    <div class="page-header__actions">
+                        <button class="btn btn--outline" onclick="exportOrganizations()">
+                            📥 내보내기
+                        </button>
+                        <button class="btn btn--outline" onclick="bulkActions()">
+                            ⚙️ 대량 작업
+                        </button>
+                        <button class="btn btn--primary" onclick="openAddOrganizationModal()">
+                            ➕ 새 조직 추가
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 통계 카드 -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-card__label">총 조직</div>
+                        <div class="stat-card__value">247</div>
+                        <div class="stat-card__change stat-card__change--up">↑ 12.5% (이번 달)</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-card__label">활성 조직</div>
+                        <div class="stat-card__value">212</div>
+                        <div class="stat-card__change stat-card__change--up">↑ 8.2%</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-card__label">Trial 조직</div>
+                        <div class="stat-card__value">23</div>
+                        <div class="stat-card__change stat-card__change--up">↑ 15.0%</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-card__label">평균 사용자 수</div>
+                        <div class="stat-card__value">36</div>
+                        <div class="stat-card__change stat-card__change--up">↑ 5.9%</div>
+                    </div>
+                </div>
+
+                <!-- 필터 & 검색 -->
+                <div class="filter-section">
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <div class="filter-label">🔍 검색</div>
+                            <input 
+                                type="text" 
+                                id="searchInput"
+                                class="filter-input" 
+                                placeholder="조직명, 이메일, ID 검색..."
+                                oninput="searchOrganizations(this.value)"
+                            >
+                        </div>
+
+                        <div class="filter-group">
+                            <div class="filter-label">📊 플랜</div>
+                            <select class="filter-select" onchange="filterByPlan(this.value)">
+                                <option value="">전체 플랜</option>
+                                <option value="enterprise">Enterprise</option>
+                                <option value="professional">Professional</option>
+                                <option value="starter">Starter</option>
+                                <option value="free">Free</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <div class="filter-label">🔄 상태</div>
+                            <select class="filter-select" onchange="filterByStatus(this.value)">
+                                <option value="">전체 상태</option>
+                                <option value="active">Active</option>
+                                <option value="trial">Trial</option>
+                                <option value="inactive">Inactive</option>
+                                <option value="suspended">Suspended</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <div class="filter-label">📅 가입일</div>
+                            <select class="filter-select" onchange="filterByDate(this.value)">
+                                <option value="">전체 기간</option>
+                                <option value="today">오늘</option>
+                                <option value="week">최근 7일</option>
+                                <option value="month">최근 30일</option>
+                                <option value="quarter">최근 90일</option>
+                            </select>
+                        </div>
+
+                        <button class="btn btn--outline" onclick="resetFilters()">
+                            🔄 초기화
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 조직 테이블 -->
+                <div class="org-table-container">
+                    <table class="org-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;">
+                                    <input type="checkbox" onclick="toggleSelectAll(this)">
+                                </th>
+                                <th class="sortable" onclick="sortTable('name')">
+                                    조직명 <span>↕️</span>
+                                </th>
+                                <th class="sortable" onclick="sortTable('plan')">
+                                    플랜 <span>↕️</span>
+                                </th>
+                                <th class="sortable" onclick="sortTable('users')">
+                                    사용자 수 <span>↕️</span>
+                                </th>
+                                <th class="sortable" onclick="sortTable('usage')">
+                                    사용량 <span>↕️</span>
+                                </th>
+                                <th class="sortable" onclick="sortTable('mrr')">
+                                    MRR <span>↕️</span>
+                                </th>
+                                <th class="sortable" onclick="sortTable('status')">
+                                    상태 <span>↕️</span>
+                                </th>
+                                <th class="sortable" onclick="sortTable('created')">
+                                    가입일 <span>↕️</span>
+                                </th>
+                                <th style="width: 120px;">액션</th>
+                            </tr>
+                        </thead>
+                        <tbody id="organizationsTableBody">
+                            <!-- 조직 1 -->
+                            <tr data-org-id="org-1" onclick="viewOrganizationDetail('org-1')">
+                                <td onclick="event.stopPropagation();">
+                                    <input type="checkbox" class="org-checkbox" value="org-1">
+                                </td>
+                                <td>
+                                    <div class="org-info">
+                                        <div class="org-logo">🏢</div>
+                                        <div class="org-details">
+                                            <div class="org-name">글로벌무역</div>
+                                            <div class="org-id">org-1a2b3c4d</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="plan-badge plan-badge--enterprise">Enterprise</span>
+                                </td>
+                                <td>
+                                    <strong style="color: var(--text-primary);">67</strong>
+                                    <span style="font-size: var(--text-xs); color: var(--text-secondary);">명</span>
+                                </td>
+                                <td>
+                                    <div class="usage-bar">
+                                        <div class="usage-bar__label">78%</div>
+                                        <div class="usage-bar__progress">
+                                            <div class="usage-bar__fill" style="width: 78%;"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <strong style="color: var(--platform-primary);">$2,999</strong>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-badge--active">Active</span>
+                                </td>
+                                <td style="color: var(--text-secondary);">2024-03-15</td>
+                                <td onclick="event.stopPropagation();">
+                                    <div class="action-buttons">
+                                        <button class="action-btn" onclick="viewOrganizationDetail('org-1')" title="상세 보기">
+                                            👁️
+                                        </button>
+                                        <button class="action-btn" onclick="editOrganization('org-1')" title="편집">
+                                            ✏️
+                                        </button>
+                                        <button class="action-btn" onclick="showMoreActions('org-1')" title="더보기">
+                                            ⋮
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- 조직 2 -->
+                            <tr data-org-id="org-2" onclick="viewOrganizationDetail('org-2')">
+                                <td onclick="event.stopPropagation();">
+                                    <input type="checkbox" class="org-checkbox" value="org-2">
+                                </td>
+                                <td>
+                                    <div class="org-info">
+                                        <div class="org-logo">🚀</div>
+                                        <div class="org-details">
+                                            <div class="org-name">테크스타트업 Inc.</div>
+                                            <div class="org-id">org-2b3c4d5e</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="plan-badge plan-badge--professional">Professional</span>
+                                </td>
+                                <td>
+                                    <strong style="color: var(--text-primary);">23</strong>
+                                    <span style="font-size: var(--text-xs); color: var(--text-secondary);">명</span>
+                                </td>
+                                <td>
+                                    <div class="usage-bar">
+                                        <div class="usage-bar__label">45%</div>
+                                        <div class="usage-bar__progress">
+                                            <div class="usage-bar__fill" style="width: 45%;"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <strong style="color: var(--platform-primary);">$999</strong>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-badge--trial">Trial</span>
+                                </td>
+                                <td style="color: var(--text-secondary);">2024-10-08</td>
+                                <td onclick="event.stopPropagation();">
+                                    <div class="action-buttons">
+                                        <button class="action-btn" onclick="viewOrganizationDetail('org-2')" title="상세 보기">
+                                            👁️
+                                        </button>
+                                        <button class="action-btn" onclick="editOrganization('org-2')" title="편집">
+                                            ✏️
+                                        </button>
+                                        <button class="action-btn" onclick="showMoreActions('org-2')" title="더보기">
+                                            ⋮
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- 조직 3 -->
+                            <tr data-org-id="org-3" onclick="viewOrganizationDetail('org-3')">
+                                <td onclick="event.stopPropagation();">
+                                    <input type="checkbox" class="org-checkbox" value="org-3">
+                                </td>
+                                <td>
+                                    <div class="org-info">
+                                        <div class="org-logo">🤖</div>
+                                        <div class="org-details">
+                                            <div class="org-name">AI연구소</div>
+                                            <div class="org-id">org-3c4d5e6f</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="plan-badge plan-badge--professional">Professional</span>
+                                </td>
+                                <td>
+                                    <strong style="color: var(--text-primary);">45</strong>
+                                    <span style="font-size: var(--text-xs); color: var(--text-secondary);">명</span>
+                                </td>
+                                <td>
+                                    <div class="usage-bar">
+                                        <div class="usage-bar__label">92%</div>
+                                        <div class="usage-bar__progress">
+                                            <div class="usage-bar__fill usage-bar__fill--high" style="width: 92%;"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <strong style="color: var(--platform-primary);">$999</strong>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-badge--active">Active</span>
+                                </td>
+                                <td style="color: var(--text-secondary);">2024-05-22</td>
+                                <td onclick="event.stopPropagation();">
+                                    <div class="action-buttons">
+                                        <button class="action-btn" onclick="viewOrganizationDetail('org-3')" title="상세 보기">
+                                            👁️
+                                        </button>
+                                        <button class="action-btn" onclick="editOrganization('org-3')" title="편집">
+                                            ✏️
+                                        </button>
+                                        <button class="action-btn" onclick="showMoreActions('org-3')" title="더보기">
+                                            ⋮
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- 조직 4 -->
+                            <tr data-org-id="org-4" onclick="viewOrganizationDetail('org-4')">
+                                <td onclick="event.stopPropagation();">
+                                    <input type="checkbox" class="org-checkbox" value="org-4">
+                                </td>
+                                <td>
+                                    <div class="org-info">
+                                        <div class="org-logo">🎨</div>
+                                        <div class="org-details">
+                                            <div class="org-name">디자인스튜디오</div>
+                                            <div class="org-id">org-4d5e6f7g</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="plan-badge plan-badge--starter">Starter</span>
+                                </td>
+                                <td>
+                                    <strong style="color: var(--text-primary);">12</strong>
+                                    <span style="font-size: var(--text-xs); color: var(--text-secondary);">명</span>
+                                </td>
+                                <td>
+                                    <div class="usage-bar">
+                                        <div class="usage-bar__label">34%</div>
+                                        <div class="usage-bar__progress">
+                                            <div class="usage-bar__fill" style="width: 34%;"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <strong style="color: var(--platform-primary);">$299</strong>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-badge--active">Active</span>
+                                </td>
+                                <td style="color: var(--text-secondary);">2024-07-10</td>
+                                <td onclick="event.stopPropagation();">
+                                    <div class="action-buttons">
+                                        <button class="action-btn" onclick="viewOrganizationDetail('org-4')" title="상세 보기">
+                                            👁️
+                                        </button>
+                                        <button class="action-btn" onclick="editOrganization('org-4')" title="편집">
+                                            ✏️
+                                        </button>
+                                        <button class="action-btn" onclick="showMoreActions('org-4')" title="더보기">
+                                            ⋮
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- 조직 5 -->
+                            <tr data-org-id="org-5" onclick="viewOrganizationDetail('org-5')">
+                                <td onclick="event.stopPropagation();">
+                                    <input type="checkbox" class="org-checkbox" value="org-5">
+                                </td>
+                                <td>
+                                    <div class="org-info">
+                                        <div class="org-logo">💼</div>
+                                        <div class="org-details">
+                                            <div class="org-name">컨설팅그룹</div>
+                                            <div class="org-id">org-5e6f7g8h</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="plan-badge plan-badge--enterprise">Enterprise</span>
+                                </td>
+                                <td>
+                                    <strong style="color: var(--text-primary);">89</strong>
+                                    <span style="font-size: var(--text-xs); color: var(--text-secondary);">명</span>
+                                </td>
+                                <td>
+                                    <div class="usage-bar">
+                                        <div class="usage-bar__label">56%</div>
+                                        <div class="usage-bar__progress">
+                                            <div class="usage-bar__fill" style="width: 56%;"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <strong style="color: var(--platform-primary);">$2,999</strong>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-badge--active">Active</span>
+                                </td>
+                                <td style="color: var(--text-secondary);">2024-02-08</td>
+                                <td onclick="event.stopPropagation();">
+                                    <div class="action-buttons">
+                                        <button class="action-btn" onclick="viewOrganizationDetail('org-5')" title="상세 보기">
+                                            👁️
+                                        </button>
+                                        <button class="action-btn" onclick="editOrganization('org-5')" title="편집">
+                                            ✏️
+                                        </button>
+                                        <button class="action-btn" onclick="showMoreActions('org-5')" title="더보기">
+                                            ⋮
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- 조직 6 -->
+                            <tr data-org-id="org-6" onclick="viewOrganizationDetail('org-6')">
+                                <td onclick="event.stopPropagation();">
+                                    <input type="checkbox" class="org-checkbox" value="org-6">
+                                </td>
+                                <td>
+                                    <div class="org-info">
+                                        <div class="org-logo">📚</div>
+                                        <div class="org-details">
+                                            <div class="org-name">에듀테크</div>
+                                            <div class="org-id">org-6f7g8h9i</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="plan-badge plan-badge--starter">Starter</span>
+                                </td>
+                                <td>
+                                    <strong style="color: var(--text-primary);">8</strong>
+                                    <span style="font-size: var(--text-xs); color: var(--text-secondary);">명</span>
+                                </td>
+                                <td>
+                                    <div class="usage-bar">
+                                        <div class="usage-bar__label">23%</div>
+                                        <div class="usage-bar__progress">
+                                            <div class="usage-bar__fill" style="width: 23%;"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <strong style="color: var(--platform-primary);">$299</strong>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-badge--trial">Trial</span>
+                                </td>
+                                <td style="color: var(--text-secondary);">2024-10-04</td>
+                                <td onclick="event.stopPropagation();">
+                                    <div class="action-buttons">
+                                        <button class="action-btn" onclick="viewOrganizationDetail('org-6')" title="상세 보기">
+                                            👁️
+                                        </button>
+                                        <button class="action-btn" onclick="editOrganization('org-6')" title="편집">
+                                            ✏️
+                                        </button>
+                                        <button class="action-btn" onclick="showMoreActions('org-6')" title="더보기">
+                                            ⋮
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- 조직 7 -->
+                            <tr data-org-id="org-7" onclick="viewOrganizationDetail('org-7')">
+                                <td onclick="event.stopPropagation();">
+                                    <input type="checkbox" class="org-checkbox" value="org-7">
+                                </td>
+                                <td>
+                                    <div class="org-info">
+                                        <div class="org-logo">🏥</div>
+                                        <div class="org-details">
+                                            <div class="org-name">메디컬센터</div>
+                                            <div class="org-id">org-7g8h9i0j</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="plan-badge plan-badge--professional">Professional</span>
+                                </td>
+                                <td>
+                                    <strong style="color: var(--text-primary);">34</strong>
+                                    <span style="font-size: var(--text-xs); color: var(--text-secondary);">명</span>
+                                </td>
+                                <td>
+                                    <div class="usage-bar">
+                                        <div class="usage-bar__label">67%</div>
+                                        <div class="usage-bar__progress">
+                                            <div class="usage-bar__fill" style="width: 67%;"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <strong style="color: var(--platform-primary);">$999</strong>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-badge--active">Active</span>
+                                </td>
+                                <td style="color: var(--text-secondary);">2024-06-18</td>
+                                <td onclick="event.stopPropagation();">
+                                    <div class="action-buttons">
+                                        <button class="action-btn" onclick="viewOrganizationDetail('org-7')" title="상세 보기">
+                                            👁️
+                                        </button>
+                                        <button class="action-btn" onclick="editOrganization('org-7')" title="편집">
+                                            ✏️
+                                        </button>
+                                        <button class="action-btn" onclick="showMoreActions('org-7')" title="더보기">
+                                            ⋮
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- 조직 8 -->
+                            <tr data-org-id="org-8" onclick="viewOrganizationDetail('org-8')">
+                                <td onclick="event.stopPropagation();">
+                                    <input type="checkbox" class="org-checkbox" value="org-8">
+                                </td>
+                                <td>
+                                    <div class="org-info">
+                                        <div class="org-logo">🎮</div>
+                                        <div class="org-details">
+                                            <div class="org-name">게임개발사</div>
+                                            <div class="org-id">org-8h9i0j1k</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="plan-badge plan-badge--free">Free</span>
+                                </td>
+                                <td>
+                                    <strong style="color: var(--text-primary);">5</strong>
+                                    <span style="font-size: var(--text-xs); color: var(--text-secondary);">명</span>
+                                </td>
+                                <td>
+                                    <div class="usage-bar">
+                                        <div class="usage-bar__label">12%</div>
+                                        <div class="usage-bar__progress">
+                                            <div class="usage-bar__fill" style="width: 12%;"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <strong style="color: var(--text-secondary);">$0</strong>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-badge--active">Active</span>
+                                </td>
+                                <td style="color: var(--text-secondary);">2024-09-25</td>
+                                <td onclick="event.stopPropagation();">
+                                    <div class="action-buttons">
+                                        <button class="action-btn" onclick="viewOrganizationDetail('org-8')" title="상세 보기">
+                                            👁️
+                                        </button>
+                                        <button class="action-btn" onclick="editOrganization('org-8')" title="편집">
+                                            ✏️
+                                        </button>
+                                        <button class="action-btn" onclick="showMoreActions('org-8')" title="더보기">
+                                            ⋮
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- 페이지네이션 -->
+                    <div class="pagination">
+                        <div class="pagination-info">
+                            1-8 / 247개 조직
+                        </div>
+                        <div class="pagination-controls">
+                            <button class="pagination-btn" disabled>◀ 이전</button>
+                            <button class="pagination-btn pagination-btn--active">1</button>
+                            <button class="pagination-btn">2</button>
+                            <button class="pagination-btn">3</button>
+                            <button class="pagination-btn">...</button>
+                            <button class="pagination-btn">31</button>
+                            <button class="pagination-btn">다음 ▶</button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- 조직 추가 모달 -->
+        <div id="addOrganizationModal" class="modal-overlay">
+            <div class="modal">
+                <div class="modal-header">
+                    <h2 class="modal-title">➕ 새 조직 추가</h2>
+                    <button class="modal-close" onclick="closeAddOrganizationModal()">✕</button>
+                </div>
+                <div class="modal-body">
+                    <form id="addOrganizationForm">
+                        <div class="form-group">
+                            <label class="form-label form-label--required">조직명</label>
+                            <input type="text" class="form-input" placeholder="조직명 입력" required>
+                            <div class="form-help">조직의 공식 명칭을 입력하세요</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label form-label--required">관리자 이메일</label>
+                            <input type="email" class="form-input" placeholder="admin@company.com" required>
+                            <div class="form-help">조직 관리자의 이메일 주소</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label form-label--required">플랜 선택</label>
+                            <select class="form-select" required>
+                                <option value="">플랜 선택</option>
+                                <option value="free">Free - $0/월</option>
+                                <option value="starter">Starter - $299/월</option>
+                                <option value="professional">Professional - $999/월</option>
+                                <option value="enterprise">Enterprise - $2,999/월</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">산업 분야</label>
+                            <select class="form-select">
+                                <option value="">선택하세요</option>
+                                <option value="tech">Technology</option>
+                                <option value="finance">Finance</option>
+                                <option value="healthcare">Healthcare</option>
+                                <option value="education">Education</option>
+                                <option value="retail">Retail</option>
+                                <option value="manufacturing">Manufacturing</option>
+                                <option value="other">기타</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">회사 규모</label>
+                            <select class="form-select">
+                                <option value="">선택하세요</option>
+                                <option value="1-10">1-10명</option>
+                                <option value="11-50">11-50명</option>
+                                <option value="51-200">51-200명</option>
+                                <option value="201-500">201-500명</option>
+                                <option value="500+">500명+</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">메모</label>
+                            <textarea class="form-textarea" placeholder="조직에 대한 메모나 특이사항"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn--outline" onclick="closeAddOrganizationModal()">취소</button>
+                    <button class="btn btn--primary" onclick="submitAddOrganization()">조직 추가</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 공통 스크립트 -->
+    <script src="../common/layout.js"></script>
+    <script src="../common/utils.js"></script>
+
+    <!-- 페이지 전용 스크립트 -->
+    <script>
+        // ========== Organization Management 전용 로직 ==========
+
+        // 전역 변수
+        let organizationsData = [];
+        let filteredOrganizations = [];
+        let sortColumn = 'created';
+        let sortDirection = 'desc';
+        let currentPage = 1;
+        let itemsPerPage = 8;
+
+        // ========== 초기화 ==========
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Organization Management 페이지 초기화');
+            
+            initializeOrganizations();
+            loadOrganizationsData();
+        });
+
+        function initializeOrganizations() {
+            // 초기 데이터 로드
+            organizationsData = getAllOrganizations();
+            filteredOrganizations = [...organizationsData];
+            
+            // URL 파라미터 확인
+            const urlParams = new URLSearchParams(window.location.search);
+            const action = urlParams.get('action');
+            const orgId = urlParams.get('id');
+
+            if (action === 'add') {
+                openAddOrganizationModal();
+            } else if (action === 'view' && orgId) {
+                viewOrganizationDetail(orgId);
+            }
+        }
+
+        function loadOrganizationsData() {
+            // 실제로는 서버에서 데이터 가져옴
+            console.log('조직 데이터 로드 완료:', organizationsData.length);
+        }
+
+        // ========== 데이터 가져오기 ==========
+        function getAllOrganizations() {
+            // 실제로는 API 호출
+            return [
+                {
+                    id: 'org-1',
+                    name: '글로벌무역',
+                    email: 'admin@globaltrade.com',
+                    plan: 'enterprise',
+                    users: 67,
+                    usage: 78,
+                    mrr: 2999,
+                    status: 'active',
+                    created: '2024-03-15',
+                    industry: 'finance',
+                    size: '51-200'
+                },
+                {
+                    id: 'org-2',
+                    name: '테크스타트업 Inc.',
+                    email: 'admin@techstartup.com',
+                    plan: 'professional',
+                    users: 23,
+                    usage: 45,
+                    mrr: 999,
+                    status: 'trial',
+                    created: '2024-10-08',
+                    industry: 'tech',
+                    size: '11-50'
+                },
+                {
+                    id: 'org-3',
+                    name: 'AI연구소',
+                    email: 'admin@ailab.com',
+                    plan: 'professional',
+                    users: 45,
+                    usage: 92,
+                    mrr: 999,
+                    status: 'active',
+                    created: '2024-05-22',
+                    industry: 'tech',
+                    size: '11-50'
+                },
+                {
+                    id: 'org-4',
+                    name: '디자인스튜디오',
+                    email: 'admin@designstudio.com',
+                    plan: 'starter',
+                    users: 12,
+                    usage: 34,
+                    mrr: 299,
+                    status: 'active',
+                    created: '2024-07-10',
+                    industry: 'other',
+                    size: '1-10'
+                },
+                {
+                    id: 'org-5',
+                    name: '컨설팅그룹',
+                    email: 'admin@consulting.com',
+                    plan: 'enterprise',
+                    users: 89,
+                    usage: 56,
+                    mrr: 2999,
+                    status: 'active',
+                    created: '2024-02-08',
+                    industry: 'finance',
+                    size: '51-200'
+                },
+                {
+                    id: 'org-6',
+                    name: '에듀테크',
+                    email: 'admin@edutech.com',
+                    plan: 'starter',
+                    users: 8,
+                    usage: 23,
+                    mrr: 299,
+                    status: 'trial',
+                    created: '2024-10-04',
+                    industry: 'education',
+                    size: '1-10'
+                },
+                {
+                    id: 'org-7',
+                    name: '메디컬센터',
+                    email: 'admin@medical.com',
+                    plan: 'professional',
+                    users: 34,
+                    usage: 67,
+                    mrr: 999,
+                    status: 'active',
+                    created: '2024-06-18',
+                    industry: 'healthcare',
+                    size: '11-50'
+                },
+                {
+                    id: 'org-8',
+                    name: '게임개발사',
+                    email: 'admin@gamedev.com',
+                    plan: 'free',
+                    users: 5,
+                    usage: 12,
+                    mrr: 0,
+                    status: 'active',
+                    created: '2024-09-25',
+                    industry: 'tech',
+                    size: '1-10'
+                }
+            ];
+        }
+
+        // ========== 검색 ==========
+        function searchOrganizations(query) {
+            const lowerQuery = query.toLowerCase();
+            
+            filteredOrganizations = organizationsData.filter(org => {
+                return org.name.toLowerCase().includes(lowerQuery) ||
+                       org.email.toLowerCase().includes(lowerQuery) ||
+                       org.id.toLowerCase().includes(lowerQuery);
+            });
+
+            currentPage = 1;
+            renderOrganizationsTable();
+        }
+
+        // ========== 필터링 ==========
+        function filterByPlan(plan) {
+            if (!plan) {
+                filteredOrganizations = [...organizationsData];
+            } else {
+                filteredOrganizations = organizationsData.filter(org => org.plan === plan);
+            }
+            currentPage = 1;
+            renderOrganizationsTable();
+        }
+
+        function filterByStatus(status) {
+            if (!status) {
+                filteredOrganizations = [...organizationsData];
+            } else {
+                filteredOrganizations = organizationsData.filter(org => org.status === status);
+            }
+            currentPage = 1;
+            renderOrganizationsTable();
+        }
+
+        function filterByDate(period) {
+            const now = new Date();
+            
+            if (!period) {
+                filteredOrganizations = [...organizationsData];
+            } else {
+                filteredOrganizations = organizationsData.filter(org => {
+                    const orgDate = new Date(org.created);
+                    
+                    switch(period) {
+                        case 'today':
+                            return orgDate.toDateString() === now.toDateString();
+                        case 'week':
+                            const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
+                            return orgDate >= weekAgo;
+                        case 'month':
+                            const monthAgo = new Date(now - 30 * 24 * 60 * 60 * 1000);
+                            return orgDate >= monthAgo;
+                        case 'quarter':
+                            const quarterAgo = new Date(now - 90 * 24 * 60 * 60 * 1000);
+                            return orgDate >= quarterAgo;
+                        default:
+                            return true;
+                    }
+                });
+            }
+            currentPage = 1;
+            renderOrganizationsTable();
+        }
+
+        function resetFilters() {
+            // 모든 필터 초기화
+            document.getElementById('searchInput').value = '';
+            document.querySelectorAll('.filter-select').forEach(select => {
+                select.selectedIndex = 0;
+            });
+            
+            filteredOrganizations = [...organizationsData];
+            currentPage = 1;
+            renderOrganizationsTable();
+            
+            window.GrowFitUtils.showToast('필터가 초기화되었습니다', 'info');
+        }
+
+        // ========== 정렬 ==========
+        function sortTable(column) {
+            if (sortColumn === column) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortColumn = column;
+                sortDirection = 'asc';
+            }
+
+            filteredOrganizations.sort((a, b) => {
+                let aVal = a[column];
+                let bVal = b[column];
+
+                // 숫자 비교
+                if (typeof aVal === 'number') {
+                    return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
+                }
+
+                // 문자열 비교
+                if (sortDirection === 'asc') {
+                    return aVal > bVal ? 1 : -1;
+                } else {
+                    return aVal < bVal ? 1 : -1;
+                }
+            });
+
+            renderOrganizationsTable();
+            
+            window.GrowFitUtils.showToast(`${column}로 정렬되었습니다`, 'info');
+        }
+
+        // ========== 테이블 렌더링 ==========
+        function renderOrganizationsTable() {
+            // 실제 구현에서는 동적으로 테이블 생성
+            console.log('테이블 렌더링:', filteredOrganizations.length, '개 조직');
+        }
+
+        // ========== 선택 관리 ==========
+        function toggleSelectAll(checkbox) {
+            const checkboxes = document.querySelectorAll('.org-checkbox');
+            checkboxes.forEach(cb => {
+                cb.checked = checkbox.checked;
+            });
+
+            updateBulkActionButton();
+        }
+
+        function updateBulkActionButton() {
+            const selectedCount = document.querySelectorAll('.org-checkbox:checked').length;
+            
+            if (selectedCount > 0) {
+                console.log(`${selectedCount}개 조직 선택됨`);
+            }
+        }
+
+        // ========== 조직 상세 보기 ==========
+        function viewOrganizationDetail(orgId) {
+            const org = organizationsData.find(o => o.id === orgId);
+            
+            if (!org) {
+                window.GrowFitUtils.showToast('조직을 찾을 수 없습니다', 'error');
+                return;
+            }
+
+            const detail = `
+🏢 조직 상세 정보
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+기본 정보:
+- 조직명: ${org.name}
+- ID: ${org.id}
+- 이메일: ${org.email}
+- 가입일: ${org.created}
+
+플랜 & 결제:
+- 플랜: ${getPlanName(org.plan)}
+- MRR: $${org.mrr.toLocaleString()}
+- 상태: ${getStatusName(org.status)}
+
+사용 현황:
+- 사용자 수: ${org.users}명
+- 사용량: ${org.usage}%
+- 산업: ${org.industry}
+- 규모: ${org.size}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+최근 활동:
+- API 호출: 847K (오늘)
+- 마지막 로그인: 2시간 전
+- 신규 사용자: 3명 (이번 주)
+
+[상세 페이지] [편집] [이메일 발송]
+            `.trim();
+
+            alert(detail);
+        }
+
+        // ========== 조직 편집 ==========
+        function editOrganization(orgId) {
+            const org = organizationsData.find(o => o.id === orgId);
+            
+            if (!org) {
+                window.GrowFitUtils.showToast('조직을 찾을 수 없습니다', 'error');
+                return;
+            }
+
+            const options = `
+✏️ 조직 편집: ${org.name}
+
+수정할 항목:
+
+1. 기본 정보 (이름, 이메일)
+2. 플랜 변경
+3. 상태 변경
+4. 사용량 제한
+5. 결제 정보
+
+번호를 입력하세요:
+            `.trim();
+
+            const choice = prompt(options);
+
+            if (choice && ['1', '2', '3', '4', '5'].includes(choice)) {
+                handleEditAction(orgId, choice);
+            }
+        }
+
+        function handleEditAction(orgId, action) {
+            switch(action) {
+                case '1':
+                    editBasicInfo(orgId);
+                    break;
+                case '2':
+                    changePlan(orgId);
+                    break;
+                case '3':
+                    changeStatus(orgId);
+                    break;
+                case '4':
+                    setUsageLimit(orgId);
+                    break;
+                case '5':
+                    editBillingInfo(orgId);
+                    break;
+            }
+        }
+
+        function editBasicInfo(orgId) {
+            const org = organizationsData.find(o => o.id === orgId);
+            const newName = prompt('새 조직명:', org.name);
+            
+            if (newName && newName.trim()) {
+                org.name = newName;
+                window.GrowFitUtils.showToast('조직명이 변경되었습니다', 'success');
+                renderOrganizationsTable();
+            }
+        }
+
+        function changePlan(orgId) {
+            const plans = `
+플랜 변경
+
+현재 플랜 선택:
+
+1. Free ($0/월)
+2. Starter ($299/월)
+3. Professional ($999/월)
+4. Enterprise ($2,999/월)
+
+번호를 입력하세요:
+            `.trim();
+
+            const choice = prompt(plans);
+
+            if (choice && ['1', '2', '3', '4'].includes(choice)) {
+                const planMap = {
+                    '1': 'free',
+                    '2': 'starter',
+                    '3': 'professional',
+                    '4': 'enterprise'
+                };
+
+                const org = organizationsData.find(o => o.id === orgId);
+                org.plan = planMap[choice];
+                
+                window.GrowFitUtils.showToast('플랜이 변경되었습니다', 'success');
+                renderOrganizationsTable();
+            }
+        }
+
+        function changeStatus(orgId) {
+            const statuses = `
+상태 변경
+
+1. Active (활성)
+2. Trial (체험)
+3. Inactive (비활성)
+4. Suspended (정지)
+
+번호를 입력하세요:
+            `.trim();
+
+            const choice = prompt(statuses);
+
+            if (choice && ['1', '2', '3', '4'].includes(choice)) {
+                const statusMap = {
+                    '1': 'active',
+                    '2': 'trial',
+                    '3': 'inactive',
+                    '4': 'suspended'
+                };
+
+                const org = organizationsData.find(o => o.id === orgId);
+                org.status = statusMap[choice];
+                
+                window.GrowFitUtils.showToast('상태가 변경되었습니다', 'success');
+                renderOrganizationsTable();
+            }
+        }
+
+        function setUsageLimit(orgId) {
+            const limit = prompt('월 사용량 제한 (USD):');
+            
+            if (limit && !isNaN(limit)) {
+                window.GrowFitUtils.showToast('사용량 제한이 설정되었습니다', 'success');
+            }
+        }
+
+        function editBillingInfo(orgId) {
+            alert('결제 정보 편집 기능은 개발 중입니다');
+        }
+
+        // ========== 더보기 액션 ==========
+        function showMoreActions(orgId) {
+            const org = organizationsData.find(o => o.id === orgId);
+
+            const actions = `
+⋮ ${org.name} 추가 작업
+
+1. 📊 사용 통계 보기
+2. 💰 결제 내역
+3. 👥 사용자 관리
+4. 📧 이메일 발송
+5. 🔄 플랜 업그레이드
+6. ⏸️ 일시 정지
+7. 🗑️ 조직 삭제
+
+번호를 입력하세요:
+            `.trim();
+
+            const choice = prompt(actions);
+
+            if (choice && ['1', '2', '3', '4', '5', '6', '7'].includes(choice)) {
+                handleMoreAction(orgId, choice);
+            }
+        }
+
+        function handleMoreAction(orgId, action) {
+            const org = organizationsData.find(o => o.id === orgId);
+
+            switch(action) {
+                case '1':
+                    viewUsageStats(orgId);
+                    break;
+                case '2':
+                    viewBillingHistory(orgId);
+                    break;
+                case '3':
+                    window.location.href = `user-management.html?org=${orgId}`;
+                    break;
+                case '4':
+                    sendEmail(orgId);
+                    break;
+                case '5':
+                    upgradePlan(orgId);
+                    break;
+                case '6':
+                    suspendOrganization(orgId);
+                    break;
+                case '7':
+                    deleteOrganization(orgId);
+                    break;
+            }
+        }
+
+        function viewUsageStats(orgId) {
+            const org = organizationsData.find(o => o.id === orgId);
+
+            const stats = `
+📊 ${org.name} 사용 통계
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+이번 달:
+- API 호출: 847K
+- 비용: $${org.mrr}
+- 사용률: ${org.usage}%
+
+오늘:
+- API 호출: 34.2K
+- 활성 사용자: ${Math.floor(org.users * 0.7)}명
+- 평균 응답: 0.12초
+
+지난 7일:
+- 총 API 호출: 234K
+- 일평균: 33.4K
+- 피크 시간: 14:00-16:00
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+LLM 사용 분포:
+- OpenAI: 42%
+- Claude: 38%
+- Gemini: 20%
+
+[상세 리포트] [내보내기]
+            `.trim();
+
+            alert(stats);
+        }
+
+        function viewBillingHistory(orgId) {
+            const org = organizationsData.find(o => o.id === orgId);
+
+            const billing = `
+💰 ${org.name} 결제 내역
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+최근 결제:
+
+2024-10-01
+- 금액: $${org.mrr}
+- 플랜: ${getPlanName(org.plan)}
+- 상태: ✅ 완료
+
+2024-09-01
+- 금액: $${org.mrr}
+- 플랜: ${getPlanName(org.plan)}
+- 상태: ✅ 완료
+
+2024-08-01
+- 금액: $${org.mrr}
+- 플랜: ${getPlanName(org.plan)}
+- 상태: ✅ 완료
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+총 결제액: $${org.mrr * 12}
+평균 월 결제: $${org.mrr}
+다음 결제일: 2024-11-01
+
+[전체 내역] [영수증 발송]
+            `.trim();
+
+            alert(billing);
+        }
+
+        function sendEmail(orgId) {
+            const org = organizationsData.find(o => o.id === orgId);
+
+            const templates = `
+📧 이메일 발송
+
+받는 사람: ${org.email}
+
+템플릿 선택:
+
+1. 환영 이메일
+2. 플랜 업그레이드 안내
+3. 사용량 알림
+4. 결제 완료 확인
+5. 커스텀 이메일
+
+번호를 입력하세요:
+            `.trim();
+
+            const choice = prompt(templates);
+
+            if (choice) {
+                window.GrowFitUtils.showToast('이메일이 발송되었습니다', 'success');
+            }
+        }
+
+        function upgradePlan(orgId) {
+            const org = organizationsData.find(o => o.id === orgId);
+
+            const upgrade = `
+🔄 플랜 업그레이드
+
+현재 플랜: ${getPlanName(org.plan)}
+
+업그레이드 옵션:
+
+${org.plan === 'free' ? '✓ Starter ($299/월)' : ''}
+${['free', 'starter'].includes(org.plan) ? '✓ Professional ($999/월)' : ''}
+${org.plan !== 'enterprise' ? '✓ Enterprise ($2,999/월)' : ''}
+
+업그레이드하시겠습니까?
+            `.trim();
+
+            if (confirm(upgrade)) {
+                window.GrowFitUtils.showToast('플랜 업그레이드가 완료되었습니다', 'success');
+            }
+        }
+
+        function suspendOrganization(orgId) {
+            const org = organizationsData.find(o => o.id === orgId);
+
+            if (confirm(`"${org.name}"을(를) 일시 정지하시겠습니까?\n\n사용자들의 접근이 차단됩니다.`)) {
+                org.status = 'suspended';
+                window.GrowFitUtils.showToast('조직이 일시 정지되었습니다', 'success');
+                renderOrganizationsTable();
+            }
+        }
+
+        function deleteOrganization(orgId) {
+            const org = organizationsData.find(o => o.id === orgId);
+
+            const confirmText = prompt(`
+⚠️ 조직 삭제
+
+정말로 "${org.name}"을(를) 삭제하시겠습니까?
+
+이 작업은 되돌릴 수 없으며:
+- 모든 사용자 계정 삭제
+- 모든 데이터 영구 삭제
+- 결제 구독 취소
+
+삭제하려면 조직명을 입력하세요:
+            `.trim());
+
+            if (confirmText === org.name) {
+                window.GrowFitUtils.showToast('조직을 삭제하는 중...', 'info');
+
+                setTimeout(() => {
+                    const index = organizationsData.findIndex(o => o.id === orgId);
+                    if (index > -1) {
+                        organizationsData.splice(index, 1);
+                        filteredOrganizations = [...organizationsData];
+                    }
+
+                    window.GrowFitUtils.showToast('조직이 삭제되었습니다', 'success');
+                    renderOrganizationsTable();
+                }, 2000);
+            } else if (confirmText) {
+                window.GrowFitUtils.showToast('조직명이 일치하지 않습니다', 'error');
+            }
+        }
+
+        // ========== 모달 관리 ==========
+        function openAddOrganizationModal() {
+            document.getElementById('addOrganizationModal').classList.add('modal-overlay--active');
+        }
+
+        function closeAddOrganizationModal() {
+            document.getElementById('addOrganizationModal').classList.remove('modal-overlay--active');
+            document.getElementById('addOrganizationForm').reset();
+        }
+
+        function submitAddOrganization() {
+            const form = document.getElementById('addOrganizationForm');
+            
+            if (!form.checkValidity()) {
+                window.GrowFitUtils.showToast('필수 항목을 입력해주세요', 'error');
+                return;
+            }
+
+            window.GrowFitUtils.showToast('새 조직을 생성하는 중...', 'info');
+
+            setTimeout(() => {
+                // 폼 데이터 가져오기
+                const formData = new FormData(form);
+                const newOrg = {
+                    id: 'org-' + Math.random().toString(36).substring(2, 9),
+                    name: form.elements[0].value,
+                    email: form.elements[1].value,
+                    plan: form.elements[2].value,
+                    users: 1,
+                    usage: 0,
+                    mrr: getPlanPrice(form.elements[2].value),
+                    status: 'trial',
+                    created: new Date().toISOString().split('T')[0]
+                };
+
+                organizationsData.unshift(newOrg);
+                filteredOrganizations = [...organizationsData];
+
+                window.GrowFitUtils.showToast('새 조직이 생성되었습니다', 'success');
+                closeAddOrganizationModal();
+                renderOrganizationsTable();
+            }, 1500);
+        }
+
+        // ========== 대량 작업 ==========
+        function bulkActions() {
+            const selectedOrgs = Array.from(document.querySelectorAll('.org-checkbox:checked'));
+            
+            if (selectedOrgs.length === 0) {
+                window.GrowFitUtils.showToast('조직을 선택해주세요', 'warning');
+                return;
+            }
+
+            const actions = `
+⚙️ 대량 작업
+
+선택된 조직: ${selectedOrgs.length}개
+
+작업 선택:
+
+1. 플랜 일괄 변경
+2. 상태 일괄 변경
+3. 이메일 일괄 발송
+4. 사용량 제한 설정
+5. 태그 추가
+6. 내보내기
+7. 삭제
+
+번호를 입력하세요:
+            `.trim();
+
+            const choice = prompt(actions);
+
+            if (choice && ['1', '2', '3', '4', '5', '6', '7'].includes(choice)) {
+                handleBulkAction(selectedOrgs, choice);
+            }
+        }
+
+        function handleBulkAction(selectedOrgs, action) {
+            const count = selectedOrgs.length;
+
+            switch(action) {
+                case '1':
+                    bulkChangePlan(selectedOrgs);
+                    break;
+                case '2':
+                    bulkChangeStatus(selectedOrgs);
+                    break;
+                case '3':
+                    bulkSendEmail(selectedOrgs);
+                    break;
+                case '4':
+                    bulkSetLimit(selectedOrgs);
+                    break;
+                case '5':
+                    bulkAddTags(selectedOrgs);
+                    break;
+                case '6':
+                    bulkExport(selectedOrgs);
+                    break;
+                case '7':
+                    bulkDelete(selectedOrgs);
+                    break;
+            }
+        }
+
+        function bulkChangePlan(selectedOrgs) {
+            const plans = `
+플랜 일괄 변경
+
+대상: ${selectedOrgs.length}개 조직
+
+1. Free ($0/월)
+2. Starter ($299/월)
+3. Professional ($999/월)
+4. Enterprise ($2,999/월)
+
+번호를 입력하세요:
+            `.trim();
+
+            const choice = prompt(plans);
+
+            if (choice && ['1', '2', '3', '4'].includes(choice)) {
+                window.GrowFitUtils.showToast(`${selectedOrgs.length}개 조직의 플랜을 변경하는 중...`, 'info');
+                
+                setTimeout(() => {
+                    window.GrowFitUtils.showToast('플랜이 변경되었습니다', 'success');
+                }, 1500);
+            }
+        }
+
+        function bulkChangeStatus(selectedOrgs) {
+            const statuses = `
+상태 일괄 변경
+
+대상: ${selectedOrgs.length}개 조직
+
+1. Active (활성)
+2. Trial (체험)
+3. Inactive (비활성)
+4. Suspended (정지)
+
+번호를 입력하세요:
+            `.trim();
+
+            const choice = prompt(statuses);
+
+            if (choice && ['1', '2', '3', '4'].includes(choice)) {
+                window.GrowFitUtils.showToast(`${selectedOrgs.length}개 조직의 상태를 변경하는 중...`, 'info');
+                
+                setTimeout(() => {
+                    window.GrowFitUtils.showToast('상태가 변경되었습니다', 'success');
+                }, 1500);
+            }
+        }
+
+        function bulkSendEmail(selectedOrgs) {
+            window.GrowFitUtils.showToast(`${selectedOrgs.length}개 조직에 이메일 발송 중...`, 'info');
+            
+            setTimeout(() => {
+                window.GrowFitUtils.showToast('이메일 발송이 완료되었습니다', 'success');
+            }, 2000);
+        }
+
+        function bulkSetLimit(selectedOrgs) {
+            const limit = prompt('월 사용량 제한 (USD):');
+            
+            if (limit && !isNaN(limit)) {
+                window.GrowFitUtils.showToast(`${selectedOrgs.length}개 조직에 제한을 설정하는 중...`, 'info');
+                
+                setTimeout(() => {
+                    window.GrowFitUtils.showToast('사용량 제한이 설정되었습니다', 'success');
+                }, 1500);
+            }
+        }
+
+        function bulkAddTags(selectedOrgs) {
+            const tags = prompt('추가할 태그 (쉼표로 구분):');
+            
+            if (tags && tags.trim()) {
+                window.GrowFitUtils.showToast(`${selectedOrgs.length}개 조직에 태그를 추가하는 중...`, 'info');
+                
+                setTimeout(() => {
+                    window.GrowFitUtils.showToast('태그가 추가되었습니다', 'success');
+                }, 1500);
+            }
+        }
+
+        function bulkExport(selectedOrgs) {
+            window.GrowFitUtils.showToast(`${selectedOrgs.length}개 조직을 내보내는 중...`, 'info');
+            
+            setTimeout(() => {
+                window.GrowFitUtils.showToast('organizations_export.csv가 다운로드되었습니다', 'success');
+            }, 2000);
+        }
+
+        function bulkDelete(selectedOrgs) {
+            if (confirm(`정말로 ${selectedOrgs.length}개 조직을 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`)) {
+                window.GrowFitUtils.showToast(`${selectedOrgs.length}개 조직을 삭제하는 중...`, 'info');
+                
+                setTimeout(() => {
+                    window.GrowFitUtils.showToast('조직이 삭제되었습니다', 'success');
+                }, 2000);
+            }
+        }
+
+        // ========== 내보내기 ==========
+        function exportOrganizations() {
+            const formats = `
+📥 조직 데이터 내보내기
+
+내보낼 형식:
+
+1. CSV (전체 데이터)
+2. Excel (전체 데이터)
+3. JSON (API 형식)
+4. PDF (리포트)
+
+번호를 입력하세요:
+            `.trim();
+
+            const choice = prompt(formats);
+
+            if (choice && ['1', '2', '3', '4'].includes(choice)) {
+                handleExport(choice);
+            }
+        }
+
+        function handleExport(format) {
+            const formatMap = {
+                '1': 'organizations.csv',
+                '2': 'organizations.xlsx',
+                '3': 'organizations.json',
+                '4': 'organizations_report.pdf'
+            };
+
+            window.GrowFitUtils.showToast('데이터를 내보내는 중...', 'info');
+
+            setTimeout(() => {
+                const filename = formatMap[format];
+                window.GrowFitUtils.showToast(`${filename}이(가) 다운로드되었습니다`, 'success');
+            }, 2000);
+        }
+
+        // ========== 새로고침 ==========
+        function refreshOrganizations() {
+            window.GrowFitUtils.showToast('조직 목록을 새로고침하는 중...', 'info');
+            
+            setTimeout(() => {
+                loadOrganizationsData();
+                renderOrganizationsTable();
+                window.GrowFitUtils.showToast('목록이 업데이트되었습니다', 'success');
+            }, 1000);
+        }
+
+        // ========== 유틸리티 함수 ==========
+        function getPlanName(plan) {
+            const names = {
+                'free': 'Free',
+                'starter': 'Starter',
+                'professional': 'Professional',
+                'enterprise': 'Enterprise'
+            };
+            return names[plan] || plan;
+        }
+
+        function getStatusName(status) {
+            const names = {
+                'active': 'Active',
+                'trial': 'Trial',
+                'inactive': 'Inactive',
+                'suspended': 'Suspended'
+            };
+            return names[status] || status;
+        }
+
+        function getPlanPrice(plan) {
+            const prices = {
+                'free': 0,
+                'starter': 299,
+                'professional': 999,
+                'enterprise': 2999
+            };
+            return prices[plan] || 0;
+        }
+
+        // ========== 통계 업데이트 ==========
+        function updateStatistics() {
+            const stats = {
+                total: organizationsData.length,
+                active: organizationsData.filter(o => o.status === 'active').length,
+                trial: organizationsData.filter(o => o.status === 'trial').length,
+                avgUsers: Math.round(organizationsData.reduce((sum, o) => sum + o.users, 0) / organizationsData.length)
+            };
+
+            console.log('통계 업데이트:', stats);
+        }
+
+        // ========== 고급 검색 ==========
+        function advancedSearch() {
+            const criteria = `
+🔍 고급 검색
+
+검색 조건:
+
+1. 플랜별 검색
+2. 사용량별 검색
+3. 가입일 범위
+4. MRR 범위
+5. 산업별 검색
+6. 태그 검색
+
+번호를 입력하세요:
+            `.trim();
+
+            const choice = prompt(criteria);
+
+            if (choice && ['1', '2', '3', '4', '5', '6'].includes(choice)) {
+                handleAdvancedSearch(choice);
+            }
+        }
+
+        function handleAdvancedSearch(type) {
+            switch(type) {
+                case '1':
+                    // 플랜별 검색은 이미 필터에 있음
+                    break;
+                case '2':
+                    searchByUsage();
+                    break;
+                case '3':
+                    searchByDateRange();
+                    break;
+                case '4':
+                    searchByMRRRange();
+                    break;
+                case '5':
+                    searchByIndustry();
+                    break;
+                case '6':
+                    searchByTags();
+                    break;
+            }
+        }
+
+        function searchByUsage() {
+            const threshold = prompt('사용량 임계값 (%):', '80');
+            
+            if (threshold && !isNaN(threshold)) {
+                filteredOrganizations = organizationsData.filter(org => org.usage >= parseInt(threshold));
+                currentPage = 1;
+                renderOrganizationsTable();
+                
+                window.GrowFitUtils.showToast(`사용량 ${threshold}% 이상: ${filteredOrganizations.length}개`, 'info');
+            }
+        }
+
+        function searchByDateRange() {
+            const start = prompt('시작일 (YYYY-MM-DD):');
+            const end = prompt('종료일 (YYYY-MM-DD):');
+            
+            if (start && end) {
+                filteredOrganizations = organizationsData.filter(org => {
+                    return org.created >= start && org.created <= end;
+                });
+                currentPage = 1;
+                renderOrganizationsTable();
+                
+                window.GrowFitUtils.showToast(`기간 내 조직: ${filteredOrganizations.length}개`, 'info');
+            }
+        }
+
+        function searchByMRRRange() {
+            const min = prompt('최소 MRR ($):');
+            const max = prompt('최대 MRR ($):');
+            
+            if (min && max && !isNaN(min) && !isNaN(max)) {
+                filteredOrganizations = organizationsData.filter(org => {
+                    return org.mrr >= parseInt(min) && org.mrr <= parseInt(max);
+                });
+                currentPage = 1;
+                renderOrganizationsTable();
+                
+                window.GrowFitUtils.showToast(`MRR 범위 내 조직: ${filteredOrganizations.length}개`, 'info');
+            }
+        }
+
+        function searchByIndustry() {
+            const industry = prompt('산업 (tech/finance/healthcare/education/retail/other):');
+            
+            if (industry) {
+                filteredOrganizations = organizationsData.filter(org => org.industry === industry);
+                currentPage = 1;
+                renderOrganizationsTable();
+                
+                window.GrowFitUtils.showToast(`${industry} 산업: ${filteredOrganizations.length}개`, 'info');
+            }
+        }
+
+        function searchByTags() {
+            alert('태그 검색 기능은 개발 중입니다');
+        }
+
+        // ========== 분석 & 리포트 ==========
+        function generateReport() {
+            const report = `
+📊 조직 분석 리포트
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+전체 조직: ${organizationsData.length}개
+
+플랜별 분포:
+- Enterprise: ${organizationsData.filter(o => o.plan === 'enterprise').length}개
+- Professional: ${organizationsData.filter(o => o.plan === 'professional').length}개
+- Starter: ${organizationsData.filter(o => o.plan === 'starter').length}개
+- Free: ${organizationsData.filter(o => o.plan === 'free').length}개
+
+상태별 분포:
+- Active: ${organizationsData.filter(o => o.status === 'active').length}개
+- Trial: ${organizationsData.filter(o => o.status === 'trial').length}개
+- Inactive: ${organizationsData.filter(o => o.status === 'inactive').length}개
+- Suspended: ${organizationsData.filter(o => o.status === 'suspended').length}개
+
+사용 현황:
+- 평균 사용자: ${Math.round(organizationsData.reduce((s, o) => s + o.users, 0) / organizationsData.length)}명
+- 평균 사용량: ${Math.round(organizationsData.reduce((s, o) => s + o.usage, 0) / organizationsData.length)}%
+- 총 MRR: $${organizationsData.reduce((s, o) => s + o.mrr, 0).toLocaleString()}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[상세 리포트] [PDF 다운로드]
+            `.trim();
+
+            alert(report);
+        }
+
+        // ========== 키보드 단축키 ==========
+        document.addEventListener('keydown', function(e) {
+            // Ctrl/Cmd + N: 새 조직 추가
+            if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+                e.preventDefault();
+                openAddOrganizationModal();
+            }
+
+            // Ctrl/Cmd + F: 검색 포커스
+            if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                e.preventDefault();
+                document.getElementById('searchInput').focus();
+            }
+
+            // Ctrl/Cmd + R: 새로고침
+            if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+                e.preventDefault();
+                refreshOrganizations();
+            }
+
+            // Ctrl/Cmd + E: 내보내기
+            if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+                e.preventDefault();
+                exportOrganizations();
+            }
+
+            // Esc: 모달 닫기
+            if (e.key === 'Escape') {
+                closeAddOrganizationModal();
+            }
+        });
+
+        // ========== 모달 외부 클릭 시 닫기 ==========
+        document.getElementById('addOrganizationModal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeAddOrganizationModal();
+            }
+        });
+
+        // ========== 초기화 완료 ==========
+        console.log('✅ Organization Management 완전히 로드됨');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('🏢 총 조직:', organizationsData.length);
+        console.log('📊 활성 조직:', organizationsData.filter(o => o.status === 'active').length);
+        console.log('💰 총 MRR:', '$' + organizationsData.reduce((s, o) => s + o.mrr, 0).toLocaleString());
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('단축키: Ctrl+N(추가), Ctrl+F(검색), Ctrl+R(새로고침), Ctrl+E(내보내기)');
+    </script>
+</body>
+</html>

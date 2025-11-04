@@ -1,0 +1,2047 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>내 에이전트 - GrowFit Employee</title>
+
+    <!-- 공통 CSS -->
+    <link rel="stylesheet" href="../common/variables.css">
+    <link rel="stylesheet" href="../common/layout.css">
+    <link rel="stylesheet" href="../common/components.css">
+
+    <style>
+        /* ========== Agents 전용 스타일 ========== */
+        :root {
+            --employee-primary: #10b981;
+            --employee-primary-light: #34d399;
+            --employee-primary-dark: #059669;
+            --employee-secondary: #06b6d4;
+            --employee-accent: #f59e0b;
+        }
+
+        /* 레이아웃 */
+        .agents-layout {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: var(--space-6);
+            height: calc(100vh - var(--header-height) - 100px);
+        }
+
+        /* 왼쪽: 에이전트 리스트 */
+        .agents-sidebar {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            overflow-y: auto;
+        }
+
+        .agents-sidebar__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-4);
+        }
+
+        .agents-sidebar__title {
+            font-size: var(--text-lg);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+        }
+
+        .agents-tabs {
+            display: flex;
+            gap: var(--space-1);
+            margin-bottom: var(--space-4);
+            background: var(--surface);
+            border-radius: var(--radius-md);
+            padding: 2px;
+        }
+
+        .agent-tab {
+            flex: 1;
+            padding: var(--space-2);
+            border: none;
+            background: transparent;
+            border-radius: var(--radius-sm);
+            font-size: var(--text-sm);
+            font-weight: var(--font-semibold);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .agent-tab:hover {
+            background: white;
+        }
+
+        .agent-tab--active {
+            background: var(--employee-primary);
+            color: white;
+        }
+
+        .agents-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+        }
+
+        .agent-item {
+            padding: var(--space-3);
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .agent-item:hover {
+            border-color: var(--employee-primary);
+            background: white;
+        }
+
+        .agent-item--active {
+            border-color: var(--employee-primary);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .agent-item__header {
+            display: flex;
+            gap: var(--space-2);
+            margin-bottom: var(--space-2);
+        }
+
+        .agent-item__icon {
+            font-size: 24px;
+        }
+
+        .agent-item__info {
+            flex: 1;
+        }
+
+        .agent-item__name {
+            font-size: var(--text-sm);
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-1);
+        }
+
+        .agent-item__role {
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+        }
+
+        .agent-item__meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+        }
+
+        .agent-badge {
+            padding: 2px 6px;
+            background: var(--employee-primary);
+            color: white;
+            border-radius: var(--radius-sm);
+            font-size: 10px;
+            font-weight: var(--font-bold);
+        }
+
+        /* 오른쪽: 에이전트 빌더/상세 */
+        .agent-builder {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .builder-header {
+            padding: var(--space-5);
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(6, 182, 212, 0.05));
+        }
+
+        .builder-title {
+            font-size: var(--text-2xl);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-2);
+        }
+
+        .builder-subtitle {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+        }
+
+        .builder-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--space-5);
+        }
+
+        .builder-section {
+            margin-bottom: var(--space-6);
+        }
+
+        .builder-section__title {
+            font-size: var(--text-lg);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-1);
+        }
+
+        .builder-section__description {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-3);
+        }
+
+        /* 입력 필드 */
+        .form-group {
+            margin-bottom: var(--space-4);
+        }
+
+        .form-label {
+            display: block;
+            font-size: var(--text-sm);
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-2);
+        }
+
+        .form-label__required {
+            color: var(--error);
+            margin-left: var(--space-1);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: var(--space-3);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+            color: var(--text-primary);
+            transition: all 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--employee-primary);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            line-height: 1.6;
+        }
+
+        .form-textarea--large {
+            min-height: 200px;
+        }
+
+        .form-hint {
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+            margin-top: var(--space-1);
+        }
+
+        /* 시스템 프롬프트 에디터 */
+        .prompt-editor {
+            background: #1e1e1e;
+            border-radius: var(--radius-md);
+            padding: var(--space-4);
+            color: #d4d4d4;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: var(--text-sm);
+        }
+
+        .prompt-editor textarea {
+            width: 100%;
+            min-height: 250px;
+            background: transparent;
+            border: none;
+            color: #d4d4d4;
+            font-family: inherit;
+            font-size: inherit;
+            resize: vertical;
+        }
+
+        .prompt-editor textarea:focus {
+            outline: none;
+        }
+
+        .prompt-editor__toolbar {
+            display: flex;
+            gap: var(--space-2);
+            margin-bottom: var(--space-3);
+            padding-bottom: var(--space-3);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .prompt-toolbar-btn {
+            padding: 4px 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: var(--radius-sm);
+            color: #d4d4d4;
+            font-size: var(--text-xs);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .prompt-toolbar-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* 프롬프트 템플릿 */
+        .template-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-3);
+            margin-bottom: var(--space-4);
+        }
+
+        .template-card {
+            padding: var(--space-3);
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .template-card:hover {
+            border-color: var(--employee-primary);
+            background: white;
+        }
+
+        .template-card__icon {
+            font-size: 28px;
+            margin-bottom: var(--space-2);
+        }
+
+        .template-card__name {
+            font-size: var(--text-sm);
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-1);
+        }
+
+        .template-card__desc {
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+        }
+
+        /* 예시 추가 */
+        .examples-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+        }
+
+        .example-item {
+            padding: var(--space-3);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            position: relative;
+        }
+
+        .example-item__remove {
+            position: absolute;
+            top: var(--space-2);
+            right: var(--space-2);
+            width: 24px;
+            height: 24px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+        }
+
+        .example-item__remove:hover {
+            border-color: var(--error);
+            color: var(--error);
+            background: var(--error-light);
+        }
+
+        .example-item__label {
+            font-size: var(--text-xs);
+            font-weight: var(--font-semibold);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-2);
+        }
+
+        .example-input {
+            width: 100%;
+            padding: var(--space-2);
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: var(--text-sm);
+        }
+
+        /* 테스트 섹션 */
+        .test-section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            margin-top: var(--space-6);
+        }
+
+        .test-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-4);
+        }
+
+        .test-title {
+            font-size: var(--text-lg);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+        }
+
+        .test-input-group {
+            display: flex;
+            gap: var(--space-2);
+            margin-bottom: var(--space-4);
+        }
+
+        .test-output {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: var(--space-4);
+            min-height: 150px;
+            font-size: var(--text-sm);
+            line-height: 1.6;
+            color: var(--text-primary);
+        }
+
+        .test-output--loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+        }
+
+        /* 하단 액션 바 */
+        .builder-footer {
+            padding: var(--space-4);
+            border-top: 1px solid var(--border);
+            background: var(--surface);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .builder-status {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+        }
+
+        .builder-actions {
+            display: flex;
+            gap: var(--space-2);
+        }
+
+        /* 빈 상태 */
+        .empty-state {
+            text-align: center;
+            padding: var(--space-8);
+        }
+
+        .empty-state__icon {
+            font-size: 64px;
+            margin-bottom: var(--space-3);
+            opacity: 0.5;
+        }
+
+        .empty-state__title {
+            font-size: var(--text-xl);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-2);
+        }
+
+        .empty-state__desc {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-4);
+        }
+
+        /* 반응형 */
+        @media (max-width: 1024px) {
+            .agents-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .agents-sidebar {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .template-selector {
+                grid-template-columns: 1fr;
+            }
+
+            .test-input-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header__left">
+                <button id="menuToggle" class="header__icon-button hidden-desktop">
+                    <span>☰</span>
+                </button>
+                <a href="dashboard.html" class="header__logo">
+                    <span class="header__logo-icon">🌱</span>
+                    <span>GrowFit</span>
+                </a>
+            </div>
+
+            <div class="header__right">
+                <button id="notificationBtn" class="header__icon-button">
+                    <span>🔔</span>
+                    <span class="header__badge">3</span>
+                </button>
+
+                <div id="profileBtn" class="header__profile">
+                    <div class="header__avatar" style="background: linear-gradient(135deg, #10b981, #06b6d4);">김</div>
+                    <span class="hidden-mobile">김직원</span>
+                    <span class="hidden-mobile">▼</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="container">
+            <!-- Sidebar -->
+            <aside class="sidebar sidebar--open">
+                <div class="sidebar__user">
+                    <div class="sidebar__user-info">
+                        <div class="sidebar__user-avatar"
+                            style="background: linear-gradient(135deg, #10b981, #06b6d4);">김</div>
+                        <div class="sidebar__user-details">
+                            <div class="sidebar__user-name">김직원</div>
+                            <div class="sidebar__user-role">AI 실습생</div>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="sidebar__nav">
+                    <ul class="sidebar__menu">
+                        <li class="sidebar__menu-item">
+                            <a href="dashboard.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">🏠</span>
+                                <span>대시보드</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="practice.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">💬</span>
+                                <span>AI 실습</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="my-projects.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">📁</span>
+                                <span>내 프로젝트</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="my-agents.html" class="sidebar__menu-link sidebar__menu-link--active">
+                                <span class="sidebar__menu-icon">🤖</span>
+                                <span>내 에이전트</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="my-documents.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">📚</span>
+                                <span>내 문서</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="history.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">📊</span>
+                                <span>내 기록</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="profile.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">⚙️</span>
+                                <span>설정</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <div class="sidebar__footer">
+                    <div
+                        style="padding: var(--space-3); background: var(--surface); border-radius: var(--radius-md); font-size: var(--text-xs);">
+                        <div style="color: var(--text-secondary); margin-bottom: var(--space-1);">이번 주 실습</div>
+                        <div style="font-weight: var(--font-bold); color: var(--employee-primary);">3시간 24분</div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main">
+                <div class="agents-layout">
+                    <!-- 왼쪽: 에이전트 리스트 -->
+                    <div class="agents-sidebar">
+                        <div class="agents-sidebar__header">
+                            <h2 class="agents-sidebar__title">🤖 내 에이전트</h2>
+                            <button class="btn btn--sm btn--primary" style="background: var(--employee-primary);" onclick="createNewAgent()">
+                                ➕
+                            </button>
+                        </div>
+
+                        <!-- 탭 -->
+                        <div class="agents-tabs">
+                            <button class="agent-tab agent-tab--active" onclick="switchAgentTab('my')">
+                                내 에이전트
+                            </button>
+                            <button class="agent-tab" onclick="switchAgentTab('library')">
+                                라이브러리
+                            </button>
+                        </div>
+
+                        <!-- 내 에이전트 리스트 -->
+                        <div id="myAgentsList" class="agents-list">
+                            <div class="agent-item agent-item--active" onclick="selectAgent('coding-tutor')">
+                                <div class="agent-item__header">
+                                    <span class="agent-item__icon">💻</span>
+                                    <div class="agent-item__info">
+                                        <div class="agent-item__name">코딩 튜터</div>
+                                        <div class="agent-item__role">시니어 개발자</div>
+                                    </div>
+                                </div>
+                                <div class="agent-item__meta">
+                                    <span>사용 23회</span>
+                                    <span class="agent-badge">활성</span>
+                                </div>
+                            </div>
+
+                            <div class="agent-item" onclick="selectAgent('content-writer')">
+                                <div class="agent-item__header">
+                                    <span class="agent-item__icon">✍️</span>
+                                    <div class="agent-item__info">
+                                        <div class="agent-item__name">콘텐츠 작가</div>
+                                        <div class="agent-item__role">카피라이터</div>
+                                    </div>
+                                </div>
+                                <div class="agent-item__meta">
+                                    <span>사용 45회</span>
+                                    <span>2시간 전</span>
+                                </div>
+                            </div>
+
+                            <div class="agent-item" onclick="selectAgent('data-analyst')">
+                                <div class="agent-item__header">
+                                    <span class="agent-item__icon">📊</span>
+                                    <div class="agent-item__info">
+                                        <div class="agent-item__name">데이터 분석가</div>
+                                        <div class="agent-item__role">데이터 사이언티스트</div>
+                                    </div>
+                                </div>
+                                <div class="agent-item__meta">
+                                    <span>사용 12회</span>
+                                    <span>어제</span>
+                                </div>
+                            </div>
+
+                            <div class="agent-item" onclick="selectAgent('translator')">
+                                <div class="agent-item__header">
+                                    <span class="agent-item__icon">🌐</span>
+                                    <div class="agent-item__info">
+                                        <div class="agent-item__name">전문 번역가</div>
+                                        <div class="agent-item__role">다국어 전문가</div>
+                                    </div>
+                                </div>
+                                <div class="agent-item__meta">
+                                    <span>사용 8회</span>
+                                    <span>3일 전</span>
+                                </div>
+                            </div>
+
+                            <div class="agent-item" onclick="selectAgent('meeting-summarizer')">
+                                <div class="agent-item__header">
+                                    <span class="agent-item__icon">📝</span>
+                                    <div class="agent-item__info">
+                                        <div class="agent-item__name">회의록 작성자</div>
+                                        <div class="agent-item__role">비즈니스 어시스턴트</div>
+                                    </div>
+                                </div>
+                                <div class="agent-item__meta">
+                                    <span>사용 31회</span>
+                                    <span>1시간 전</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 라이브러리 (숨김) -->
+                        <div id="libraryAgentsList" class="agents-list" style="display: none;">
+                            <div class="agent-item" onclick="selectAgent('lib-seo-expert')">
+                                <div class="agent-item__header">
+                                    <span class="agent-item__icon">🔍</span>
+                                    <div class="agent-item__info">
+                                        <div class="agent-item__name">SEO 전문가</div>
+                                        <div class="agent-item__role">마케팅 전문가</div>
+                                    </div>
+                                </div>
+                                <div class="agent-item__meta">
+                                    <span>⭐ 4.8 (234)</span>
+                                </div>
+                            </div>
+
+                            <div class="agent-item" onclick="selectAgent('lib-customer-support')">
+                                <div class="agent-item__header">
+                                    <span class="agent-item__icon">💬</span>
+                                    <div class="agent-item__info">
+                                        <div class="agent-item__name">고객 지원</div>
+                                        <div class="agent-item__role">CS 전문가</div>
+                                    </div>
+                                </div>
+                                <div class="agent-item__meta">
+                                    <span>⭐ 4.9 (567)</span>
+                                </div>
+                            </div>
+
+                            <div class="agent-item" onclick="selectAgent('lib-recruiter')">
+                                <div class="agent-item__header">
+                                    <span class="agent-item__icon">👥</span>
+                                    <div class="agent-item__info">
+                                        <div class="agent-item__name">채용 담당자</div>
+                                        <div class="agent-item__role">HR 전문가</div>
+                                    </div>
+                                </div>
+                                <div class="agent-item__meta">
+                                    <span>⭐ 4.7 (189)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 오른쪽: 에이전트 빌더 -->
+                    <div class="agent-builder">
+                        <div class="builder-header">
+                            <h1 class="builder-title">🤖 AI 에이전트 빌더</h1>
+                            <p class="builder-subtitle">시스템 프롬프트를 설계하여 업무 자동화 AI를 만들어보세요</p>
+                        </div>
+
+                        <div class="builder-content">
+                            <!-- 1. 기본 정보 -->
+                            <div class="builder-section">
+                                <h3 class="builder-section__title">1️⃣ 기본 정보</h3>
+                                <p class="builder-section__description">에이전트의 이름과 역할을 설정하세요</p>
+
+                                <div class="form-group">
+                                    <label class="form-label">
+                                        에이전트 이름
+                                        <span class="form-label__required">*</span>
+                                    </label>
+                                    <input 
+                                        type="text" 
+                                        class="form-input" 
+                                        id="agentName"
+                                        placeholder="예: 코딩 튜터, 마케팅 전문가, 데이터 분석가"
+                                        value="코딩 튜터"
+                                    >
+                                    <div class="form-hint">명확하고 직관적인 이름을 사용하세요</div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">아이콘</label>
+                                    <div style="display: flex; gap: var(--space-2);">
+                                        <input 
+                                            type="text" 
+                                            class="form-input" 
+                                            id="agentIcon"
+                                            placeholder="이모지 선택"
+                                            value="💻"
+                                            style="width: 80px; text-align: center; font-size: 24px;"
+                                        >
+                                        <button class="btn btn--outline" onclick="openEmojiPicker()">
+                                            선택
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">간단한 설명</label>
+                                    <textarea 
+                                        class="form-input form-textarea"
+                                        id="agentDescription"
+                                        placeholder="이 에이전트가 어떤 일을 하는지 간단히 설명하세요"
+                                    >Python, JavaScript 등 프로그래밍 언어를 가르치는 친절한 튜터입니다.</textarea>
+                                </div>
+                            </div>
+
+                            <!-- 2. 시스템 프롬프트 -->
+                            <div class="builder-section">
+                                <h3 class="builder-section__title">2️⃣ 시스템 프롬프트 (System Prompt)</h3>
+                                <p class="builder-section__description">에이전트의 역할, 전문성, 톤&매너를 정의하세요</p>
+
+                                <!-- 템플릿 선택 -->
+                                <div class="form-group">
+                                    <label class="form-label">템플릿 선택 (선택사항)</label>
+                                    <div class="template-selector">
+                                        <div class="template-card" onclick="loadTemplate('teacher')">
+                                            <div class="template-card__icon">👨‍🏫</div>
+                                            <div class="template-card__name">교육자</div>
+                                            <div class="template-card__desc">친절하게 가르치는 튜터</div>
+                                        </div>
+                                        <div class="template-card" onclick="loadTemplate('expert')">
+                                            <div class="template-card__icon">👔</div>
+                                            <div class="template-card__name">전문가</div>
+                                            <div class="template-card__desc">전문적이고 정확한 답변</div>
+                                        </div>
+                                        <div class="template-card" onclick="loadTemplate('creative')">
+                                            <div class="template-card__icon">🎨</div>
+                                            <div class="template-card__name">크리에이터</div>
+                                            <div class="template-card__desc">창의적이고 독창적</div>
+                                        </div>
+                                        <div class="template-card" onclick="loadTemplate('analyst')">
+                                            <div class="template-card__icon">📊</div>
+                                            <div class="template-card__name">분석가</div>
+                                            <div class="template-card__desc">데이터 중심 분석</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 프롬프트 에디터 -->
+                                <div class="form-group">
+                                    <label class="form-label">
+                                        시스템 프롬프트
+                                        <span class="form-label__required">*</span>
+                                    </label>
+                                    <div class="prompt-editor">
+                                        <div class="prompt-editor__toolbar">
+                                            <button class="prompt-toolbar-btn" onclick="insertPromptSection('role')">
+                                                역할 추가
+                                            </button>
+                                            <button class="prompt-toolbar-btn" onclick="insertPromptSection('expertise')">
+                                                전문성 추가
+                                            </button>
+                                            <button class="prompt-toolbar-btn" onclick="insertPromptSection('tone')">
+                                                톤 추가
+                                            </button>
+                                            <button class="prompt-toolbar-btn" onclick="insertPromptSection('constraints')">
+                                                제약사항 추가
+                                            </button>
+                                        </div>
+                                        <textarea id="systemPrompt" placeholder="시스템 프롬프트를 작성하세요...">당신은 10년 경력의 시니어 개발자이자 프로그래밍 교육 전문가입니다.
+
+[역할 (Role)]
+당신의 역할은 프로그래밍을 배우는 학생들에게 개념을 명확하고 이해하기 쉽게 설명하는 것입니다.
+
+[전문성 (Expertise)]
+- Python, JavaScript, Java 등 주요 프로그래밍 언어
+- 알고리즘과 자료구조
+- 코드 디버깅 및 최적화
+- 베스트 프랙티스 및 설계 패턴
+
+[톤 & 스타일 (Tone)]
+- 친근하고 격려하는 톤
+- 복잡한 개념을 단순하게 설명
+- 비유와 예시를 적극 활용
+- 학생의 이해도를 확인하며 진행
+
+[제약 조건 (Constraints)]
+- 코드 예제는 항목 주석과 함께 제공
+- 단계별로 설명하여 이해를 돕기
+- 학생이 스스로 생각할 수 있도록 힌트 제공
+- 오류가 있을 때는 직접 답을 주기보다 디버깅 방법 안내</textarea>
+                                    </div>
+                                    <div class="form-hint">
+                                        💡 팁: 구체적이고 명확하게 작성할수록 에이전트가 더 일관성 있게 동작합니다
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 3. 예시 (Few-shot Examples) -->
+                            <div class="builder-section">
+                                <h3 class="builder-section__title">3️⃣ 예시 (Few-shot Examples)</h3>
+                                <p class="builder-section__description">에이전트가 어떻게 답변해야 하는지 예시를 제공하세요 (선택사항)</p>
+
+                                <div id="examplesList" class="examples-list">
+                                    <div class="example-item">
+                                        <button class="example-item__remove" onclick="removeExample(this)">×</button>
+                                        <div class="example-item__label">사용자 입력:</div>
+                                        <textarea class="example-input" rows="2" placeholder="예: Python으로 리스트를 정렬하는 방법을 알려줘">Python으로 리스트를 정렬하는 방법을 알려줘</textarea>
+                                        
+                                        <div class="example-item__label" style="margin-top: var(--space-2);">에이전트 응답:</div>
+                                        <textarea class="example-input" rows="4" placeholder="이상적인 응답 예시를 작성하세요">좋은 질문이네요! Python에서 리스트 정렬은 아주 간단합니다.
+
+두 가지 방법이 있어요:
+
+1. sort() 메서드 - 원본 수정
+2. sorted() 함수 - 새 리스트 생성
+
+어떤 방법이 궁금하신가요? 둘 다 예제 코드와 함께 설명해드릴게요! 😊</textarea>
+                                    </div>
+                                </div>
+
+                                <button class="btn btn--outline" style="width: 100%;" onclick="addExample()">
+                                    ➕ 예시 추가
+                                </button>
+                            </div>
+
+                            <!-- 4. 테스트 -->
+                            <div class="test-section">
+                                <div class="test-header">
+                                    <h3 class="test-title">🧪 에이전트 테스트</h3>
+                                    <button class="btn btn--sm btn--outline" onclick="clearTest()">
+                                        초기화
+                                    </button>
+                                </div>
+
+                                <div class="test-input-group">
+                                    <input 
+                                        type="text" 
+                                        class="form-input" 
+                                        id="testInput"
+                                        placeholder="테스트 질문을 입력하세요..."
+                                        style="flex: 1;"
+                                    >
+                                    <button class="btn btn--primary" style="background: var(--employee-primary);" onclick="runTest()">
+                                        테스트 실행
+                                    </button>
+                                </div>
+
+                                <div id="testOutput" class="test-output">
+                                    <div style="color: var(--text-secondary); text-align: center;">
+                                        테스트 질문을 입력하고 "테스트 실행"을 클릭하세요
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 하단 액션 바 -->
+                        <div class="builder-footer">
+                            <div class="builder-status">
+                                <span id="saveStatus" style="color: var(--text-secondary);">
+                                    마지막 저장: 2분 전
+                                </span>
+                            </div>
+                            <div class="builder-actions">
+                                <button class="btn btn--outline" onclick="cancelAgent()">
+                                    취소
+                                </button>
+                                <button class="btn btn--outline" onclick="saveAsDraft()">
+                                    💾 임시저장
+                                </button>
+                                <button class="btn btn--primary" style="background: var(--employee-primary);" onclick="saveAgent()">
+                                    ✓ 저장 및 활성화
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- 공통 스크립트 -->
+    <script src="../common/layout.js"></script>
+    <script src="../common/utils.js"></script>
+    
+    <!-- 페이지 전용 스크립트 -->
+    <script>
+        // ========== Agents 전용 로직 ==========
+
+        // 전역 변수
+        let currentAgent = null;
+        let currentTab = 'my';
+        let isDirty = false; // 수정 여부
+
+        // 에이전트 데이터 (시뮬레이션)
+        const agentsData = {
+            'coding-tutor': {
+                id: 'coding-tutor',
+                name: '코딩 튜터',
+                icon: '💻',
+                role: '시니어 개발자',
+                description: 'Python, JavaScript 등 프로그래밍 언어를 가르치는 친절한 튜터입니다.',
+                systemPrompt: `당신은 10년 경력의 시니어 개발자이자 프로그래밍 교육 전문가입니다.
+    
+    [역할 (Role)]
+    당신의 역할은 프로그래밍을 배우는 학생들에게 개념을 명확하고 이해하기 쉽게 설명하는 것입니다.
+    
+    [전문성 (Expertise)]
+    - Python, JavaScript, Java 등 주요 프로그래밍 언어
+    - 알고리즘과 자료구조
+    - 코드 디버깅 및 최적화
+    - 베스트 프랙티스 및 설계 패턴
+    
+    [톤 & 스타일 (Tone)]
+    - 친근하고 격려하는 톤
+    - 복잡한 개념을 단순하게 설명
+    - 비유와 예시를 적극 활용
+    - 학생의 이해도를 확인하며 진행
+    
+    [제약 조건 (Constraints)]
+    - 코드 예제는 항상 주석과 함께 제공
+    - 단계별로 설명하여 이해를 돕기
+    - 학생이 스스로 생각할 수 있도록 힌트 제공
+    - 오류가 있을 때는 직접 답을 주기보다 디버깅 방법 안내`,
+                examples: [
+                    {
+                        user: 'Python으로 리스트를 정렬하는 방법을 알려줘',
+                        agent: '좋은 질문이네요! Python에서 리스트 정렬은 아주 간단합니다.\n\n두 가지 방법이 있어요:\n\n1. sort() 메서드 - 원본 수정\n2. sorted() 함수 - 새 리스트 생성\n\n어떤 방법이 궁금하신가요? 둘 다 예제 코드와 함께 설명해드릴게요! 😊'
+                    }
+                ],
+                usageCount: 23,
+                lastUsed: '활성',
+                created: '2025-09-01'
+            },
+            'content-writer': {
+                id: 'content-writer',
+                name: '콘텐츠 작가',
+                icon: '✍️',
+                role: '카피라이터',
+                description: '매력적인 마케팅 콘텐츠를 작성하는 전문 작가입니다.',
+                systemPrompt: `당신은 10년 경력의 전문 카피라이터입니다.`,
+                examples: [],
+                usageCount: 45,
+                lastUsed: '2시간 전',
+                created: '2025-08-15'
+            }
+        };
+
+        // ========== 초기화 ==========
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('Agents 페이지 초기화');
+
+            initializeAgents();
+            setupEventListeners();
+            loadAgent('coding-tutor');
+        });
+
+        function initializeAgents() {
+            currentAgent = 'coding-tutor';
+
+            // 자동 저장 활성화
+            enableAutoSave();
+        }
+
+        function setupEventListeners() {
+            // 입력 필드 변경 감지
+            const inputs = [
+                'agentName',
+                'agentIcon',
+                'agentDescription',
+                'systemPrompt'
+            ];
+
+            inputs.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.addEventListener('input', function () {
+                        isDirty = true;
+                        updateSaveStatus('변경사항이 있습니다');
+                    });
+                }
+            });
+
+            // Enter 키로 테스트 실행
+            const testInput = document.getElementById('testInput');
+            if (testInput) {
+                testInput.addEventListener('keypress', function (e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        runTest();
+                    }
+                });
+            }
+        }
+
+        // ========== 탭 전환 ==========
+        function switchAgentTab(tab) {
+            currentTab = tab;
+
+            // 탭 버튼 상태 업데이트
+            document.querySelectorAll('.agent-tab').forEach(btn => {
+                btn.classList.remove('agent-tab--active');
+            });
+            event.target.classList.add('agent-tab--active');
+
+            // 리스트 전환
+            const myList = document.getElementById('myAgentsList');
+            const libraryList = document.getElementById('libraryAgentsList');
+
+            if (tab === 'my') {
+                myList.style.display = 'flex';
+                libraryList.style.display = 'none';
+            } else {
+                myList.style.display = 'none';
+                libraryList.style.display = 'flex';
+            }
+
+            window.GrowFitUtils.showToast(
+                tab === 'my' ? '내 에이전트를 표시합니다' : '에이전트 라이브러리를 표시합니다',
+                'info'
+            );
+        }
+
+        // ========== 에이전트 선택 ==========
+        function selectAgent(agentId) {
+            // 변경사항 확인
+            if (isDirty) {
+                if (!confirm('저장하지 않은 변경사항이 있습니다. 계속하시겠습니까?')) {
+                    return;
+                }
+            }
+
+            // 활성 상태 업데이트
+            document.querySelectorAll('.agent-item').forEach(item => {
+                item.classList.remove('agent-item--active');
+            });
+            event.target.closest('.agent-item').classList.add('agent-item--active');
+
+            // 에이전트 로드
+            loadAgent(agentId);
+        }
+
+        function loadAgent(agentId) {
+            const agent = agentsData[agentId];
+            if (!agent) {
+                console.error('에이전트를 찾을 수 없습니다:', agentId);
+                return;
+            }
+
+            currentAgent = agentId;
+
+            // 폼에 데이터 채우기
+            document.getElementById('agentName').value = agent.name;
+            document.getElementById('agentIcon').value = agent.icon;
+            document.getElementById('agentDescription').value = agent.description;
+            document.getElementById('systemPrompt').value = agent.systemPrompt;
+
+            // 예시 로드
+            loadExamples(agent.examples);
+
+            // 테스트 출력 초기화
+            clearTest();
+
+            isDirty = false;
+            updateSaveStatus('로드 완료');
+
+            console.log('에이전트 로드:', agentId);
+        }
+
+        // ========== 예시 관리 ==========
+        function loadExamples(examples) {
+            const examplesList = document.getElementById('examplesList');
+            examplesList.innerHTML = '';
+
+            examples.forEach((example, index) => {
+                addExample(example);
+            });
+
+            if (examples.length === 0) {
+                // 빈 예시 하나 추가
+                addExample();
+            }
+        }
+
+        function addExample(data = null) {
+            const examplesList = document.getElementById('examplesList');
+
+            const exampleItem = document.createElement('div');
+            exampleItem.className = 'example-item';
+            exampleItem.innerHTML = `
+                    <button class="example-item__remove" onclick="removeExample(this)">×</button>
+                    <div class="example-item__label">사용자 입력:</div>
+                    <textarea class="example-input" rows="2" placeholder="예: Python으로 리스트를 정렬하는 방법을 알려줘">${data ? data.user : ''}</textarea>
+                    
+                    <div class="example-item__label" style="margin-top: var(--space-2);">에이전트 응답:</div>
+                    <textarea class="example-input" rows="4" placeholder="이상적인 응답 예시를 작성하세요">${data ? data.agent : ''}</textarea>
+                `;
+
+            examplesList.appendChild(exampleItem);
+
+            // 입력 변경 감지
+            exampleItem.querySelectorAll('textarea').forEach(textarea => {
+                textarea.addEventListener('input', function () {
+                    isDirty = true;
+                });
+            });
+
+            isDirty = true;
+        }
+
+        function removeExample(button) {
+            if (confirm('이 예시를 삭제하시겠습니까?')) {
+                button.closest('.example-item').remove();
+                isDirty = true;
+                window.GrowFitUtils.showToast('예시가 삭제되었습니다', 'info');
+            }
+        }
+
+        function getExamples() {
+            const examples = [];
+            document.querySelectorAll('.example-item').forEach(item => {
+                const textareas = item.querySelectorAll('textarea');
+                const user = textareas[0].value.trim();
+                const agent = textareas[1].value.trim();
+
+                if (user && agent) {
+                    examples.push({ user, agent });
+                }
+            });
+            return examples;
+        }
+
+        // ========== 템플릿 로드 ==========
+        function loadTemplate(templateType) {
+            const templates = {
+                'teacher': `당신은 학생들을 가르치는 친절하고 인내심 있는 교육자입니다.
+    
+    [역할 (Role)]
+    복잡한 개념을 쉽게 설명하고, 학생의 이해를 돕는 것이 당신의 역할입니다.
+    
+    [전문성 (Expertise)]
+    - 교육학 및 학습 이론
+    - 단계별 설명 기법
+    - 피드백 제공
+    
+    [톤 & 스타일 (Tone)]
+    - 친근하고 격려하는 톤
+    - 긍정적인 피드백
+    - 이해도를 확인하며 진행
+    
+    [제약 조건 (Constraints)]
+    - 전문 용어는 쉬운 말로 풀어서 설명
+    - 예시와 비유를 적극 활용
+    - 학생이 스스로 답을 찾도록 유도`,
+
+                'expert': `당신은 해당 분야의 전문가이자 권위자입니다.
+    
+    [역할 (Role)]
+    정확하고 전문적인 답변을 제공하는 것이 당신의 역할입니다.
+    
+    [전문성 (Expertise)]
+    - 해당 분야의 깊은 지식
+    - 최신 트렌드와 베스트 프랙티스
+    - 실무 경험 기반 조언
+    
+    [톤 & 스타일 (Tone)]
+    - 전문적이고 신뢰감 있는 톤
+    - 객관적이고 근거 기반 답변
+    - 간결하고 명확한 표현
+    
+    [제약 조건 (Constraints)]
+    - 출처가 명확한 정보만 제공
+    - 추측이 아닌 사실에 기반한 답변
+    - 필요시 추가 학습 자료 추천`,
+
+                'creative': `당신은 창의적이고 독창적인 크리에이터입니다.
+    
+    [역할 (Role)]
+    새롭고 혁신적인 아이디어를 제안하는 것이 당신의 역할입니다.
+    
+    [전문성 (Expertise)]
+    - 창의적 사고 기법
+    - 트렌드 분석 및 예측
+    - 스토리텔링
+    
+    [톤 & 스타일 (Tone)]
+    - 영감을 주는 톤
+    - 열정적이고 긍정적
+    - 자유로운 발상
+    
+    [제약 조건 (Constraints)]
+    - 다양한 관점 제시
+    - 실현 가능성도 함께 고려
+    - 구체적인 예시 제공`,
+
+                'analyst': `당신은 데이터 기반으로 분석하는 전문 분석가입니다.
+    
+    [역할 (Role)]
+    데이터를 분석하고 인사이트를 도출하는 것이 당신의 역할입니다.
+    
+    [전문성 (Expertise)]
+    - 데이터 분석 및 해석
+    - 통계 및 시각화
+    - 트렌드 발견
+    
+    [톤 & 스타일 (Tone)]
+    - 논리적이고 체계적인 톤
+    - 객관적인 분석
+    - 숫자와 근거 중심
+    
+    [제약 조건 (Constraints)]
+    - 데이터에 기반한 결론
+    - 가정과 제약사항 명시
+    - 시각화 제안 포함`
+            };
+
+            const template = templates[templateType];
+            if (template) {
+                if (confirm('현재 작성 중인 프롬프트를 템플릿으로 교체하시겠습니까?')) {
+                    document.getElementById('systemPrompt').value = template;
+                    isDirty = true;
+                    window.GrowFitUtils.showToast('템플릿이 적용되었습니다', 'success');
+                }
+            }
+        }
+
+        // ========== 프롬프트 섹션 삽입 ==========
+        function insertPromptSection(section) {
+            const textarea = document.getElementById('systemPrompt');
+            const sections = {
+                'role': '\n[역할 (Role)]\n당신의 역할은 ...\n',
+                'expertise': '\n[전문성 (Expertise)]\n- \n- \n- \n',
+                'tone': '\n[톤 & 스타일 (Tone)]\n- \n- \n',
+                'constraints': '\n[제약 조건 (Constraints)]\n- \n- \n'
+            };
+
+            const sectionText = sections[section];
+            if (sectionText) {
+                const cursorPos = textarea.selectionStart;
+                const textBefore = textarea.value.substring(0, cursorPos);
+                const textAfter = textarea.value.substring(cursorPos);
+
+                textarea.value = textBefore + sectionText + textAfter;
+                textarea.focus();
+                textarea.selectionStart = textarea.selectionEnd = cursorPos + sectionText.length;
+
+                isDirty = true;
+            }
+        }
+
+        // ========== 이모지 피커 ==========
+        function openEmojiPicker() {
+            const emojis = [
+                '💻', '📊', '✍️', '🎨', '🔍', '💬', '📝', '🤖',
+                '👨‍🏫', '👔', '🌐', '📈', '💡', '🎯', '⚡', '🚀',
+                '📱', '💼', '🎓', '🏆', '💰', '🔧', '⚙️', '🛠️'
+            ];
+
+            const selected = prompt(`이모지를 선택하세요:\n\n${emojis.join(' ')}\n\n이모지를 복사하여 붙여넣기 하거나, 직접 입력하세요:`);
+
+            if (selected && selected.trim()) {
+                document.getElementById('agentIcon').value = selected.trim();
+                isDirty = true;
+            }
+        }
+
+        // ========== 테스트 실행 ==========
+        async function runTest() {
+            const testInput = document.getElementById('testInput');
+            const testOutput = document.getElementById('testOutput');
+            const input = testInput.value.trim();
+
+            if (!input) {
+                window.GrowFitUtils.showToast('테스트 질문을 입력하세요', 'warning');
+                testInput.focus();
+                return;
+            }
+
+            // 로딩 상태
+            testOutput.innerHTML = `
+                    <div class="test-output--loading">
+                        <div style="margin-bottom: var(--space-2);">
+                            <div style="width: 40px; height: 40px; border: 3px solid var(--gray-200); border-top-color: var(--employee-primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+                        </div>
+                        <div>에이전트가 응답을 생성하고 있습니다...</div>
+                    </div>
+                `;
+
+            // 시스템 프롬프트 가져오기
+            const systemPrompt = document.getElementById('systemPrompt').value;
+            const examples = getExamples();
+
+            // 실제로는 API 호출
+            // 시뮬레이션: 2초 대기 후 응답
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            // 샘플 응답 생성
+            const response = generateTestResponse(input, systemPrompt);
+
+            testOutput.innerHTML = `
+                    <div style="line-height: 1.8;">
+                        ${response.replace(/\n/g, '<br>')}
+                    </div>
+                `;
+
+            window.GrowFitUtils.showToast('테스트 완료', 'success');
+        }
+
+        function generateTestResponse(input, systemPrompt) {
+            // 실제로는 API 응답 사용
+            // 여기서는 시뮬레이션
+
+            const responses = {
+                'python': '좋은 질문이네요! 😊\n\nPython에서 리스트 정렬은 두 가지 방법이 있습니다:\n\n1. **sort() 메서드**\n   - 원본 리스트를 직접 수정합니다\n   - 반환값이 None입니다\n\n2. **sorted() 함수**\n   - 새로운 정렬된 리스트를 반환합니다\n   - 원본은 그대로 유지됩니다\n\n코드 예제를 보여드릴까요?',
+
+                'default': `안녕하세요! 질문해주셔서 감사합니다.\n\n"${input}"에 대해 설명드리겠습니다.\n\n[여기에 에이전트의 상세한 답변이 표시됩니다]\n\n추가로 궁금한 점이 있으시면 말씀해주세요!`
+            };
+
+            if (input.toLowerCase().includes('python') || input.toLowerCase().includes('리스트')) {
+                return responses.python;
+            }
+
+            return responses.default;
+        }
+
+        function clearTest() {
+            document.getElementById('testInput').value = '';
+            document.getElementById('testOutput').innerHTML = `
+                    <div style="color: var(--text-secondary); text-align: center;">
+                        테스트 질문을 입력하고 "테스트 실행"을 클릭하세요
+                    </div>
+                `;
+        }
+
+        // ========== 저장 ==========
+        function saveAgent() {
+            // 유효성 검사
+            const name = document.getElementById('agentName').value.trim();
+            const systemPrompt = document.getElementById('systemPrompt').value.trim();
+
+            if (!name) {
+                window.GrowFitUtils.showToast('에이전트 이름을 입력하세요', 'warning');
+                document.getElementById('agentName').focus();
+                return;
+            }
+
+            if (!systemPrompt) {
+                window.GrowFitUtils.showToast('시스템 프롬프트를 작성하세요', 'warning');
+                document.getElementById('systemPrompt').focus();
+                return;
+            }
+
+            // 에이전트 데이터 수집
+            const agentData = {
+                id: currentAgent || `agent-${Date.now()}`,
+                name: name,
+                icon: document.getElementById('agentIcon').value,
+                description: document.getElementById('agentDescription').value,
+                systemPrompt: systemPrompt,
+                examples: getExamples(),
+                created: new Date().toISOString(),
+                updated: new Date().toISOString()
+            };
+
+            // 실제로는 API 호출하여 저장
+            console.log('에이전트 저장:', agentData);
+
+            isDirty = false;
+            updateSaveStatus('저장 완료');
+
+            window.GrowFitUtils.showToast('에이전트가 저장되었습니다', 'success');
+
+            // 리스트 업데이트 (실제로는 새로고침 또는 동적 추가)
+        }
+
+        function saveAsDraft() {
+            const agentData = {
+                name: document.getElementById('agentName').value,
+                icon: document.getElementById('agentIcon').value,
+                description: document.getElementById('agentDescription').value,
+                systemPrompt: document.getElementById('systemPrompt').value,
+                examples: getExamples(),
+                draft: true
+            };
+
+            // localStorage에 임시 저장
+            localStorage.setItem('agent_draft', JSON.stringify(agentData));
+
+            isDirty = false;
+            updateSaveStatus('임시저장 완료');
+
+            window.GrowFitUtils.showToast('임시저장되었습니다', 'success');
+        }
+
+        function cancelAgent() {
+            if (isDirty) {
+                if (!confirm('저장하지 않은 변경사항이 있습니다. 취소하시겠습니까?')) {
+                    return;
+                }
+            }
+
+            // 원래 데이터로 복원 또는 목록으로 이동
+            if (currentAgent) {
+                loadAgent(currentAgent);
+            }
+
+            window.GrowFitUtils.showToast('취소되었습니다', 'info');
+        }
+
+        // ========== 상태 업데이트 ==========
+        function updateSaveStatus(message) {
+            const statusEl = document.getElementById('saveStatus');
+            if (statusEl) {
+                statusEl.textContent = message;
+                statusEl.style.color = isDirty ? 'var(--warning)' : 'var(--text-secondary)';
+            }
+        }
+
+        // ========== 자동 저장 ==========
+        let autoSaveTimer;
+        function enableAutoSave() {
+            const fields = ['agentName', 'agentIcon', 'agentDescription', 'systemPrompt'];
+
+            fields.forEach(fieldId => {
+                const element = document.getElementById(fieldId);
+                if (element) {
+                    element.addEventListener('input', function () {
+                        clearTimeout(autoSaveTimer);
+
+                        autoSaveTimer = setTimeout(() => {
+                            saveAsDraft();
+                        }, 5000); // 5초 후 자동 임시저장
+                    });
+                }
+            });
+        }
+
+        // ========== 임시 저장 복원 ==========
+        function restoreDraft() {
+            const draft = localStorage.getItem('agent_draft');
+            if (draft) {
+                try {
+                    const data = JSON.parse(draft);
+                    if (confirm('이전에 작성 중이던 에이전트를 복원하시겠습니까?')) {
+                        document.getElementById('agentName').value = data.name || '';
+                        document.getElementById('agentIcon').value = data.icon || '🤖';
+                        document.getElementById('agentDescription').value = data.description || '';
+                        document.getElementById('systemPrompt').value = data.systemPrompt || '';
+
+                        if (data.examples) {
+                            loadExamples(data.examples);
+                        }
+
+                        localStorage.removeItem('agent_draft');
+                        window.GrowFitUtils.showToast('임시저장된 내용을 복원했습니다', 'success');
+                    }
+                } catch (e) {
+                    console.error('임시저장 복원 오류:', e);
+                }
+            }
+        }
+
+        // 페이지 로드 시 임시저장 복원 확인
+        window.addEventListener('load', function () {
+            restoreDraft();
+        });
+
+        // ========== 새 에이전트 만들기 ==========
+            function createNewAgent() {
+                if (isDirty) {
+                    if (!confirm('저장하지 않은 변경사항이 있습니다. 계속하시겠습니까?')) {
+                        return;
+                    }
+                }
+
+                currentAgent = null;
+
+                // 폼 초기화
+                document.getElementById('agentName').value = '';
+                document.getElementById('agentIcon').value = '🤖';
+                document.getElementById('agentDescription').value = '';
+                document.getElementById('systemPrompt').value = '';
+
+                // 예시 초기화
+                document.getElementById('examplesList').innerHTML = '';
+                addExample();
+
+                // 테스트 초기화
+                clearTest();
+
+                // 활성 상태 제거
+                document.querySelectorAll('.agent-item').forEach(item => {
+                    item.classList.remove('agent-item--active');
+                });
+
+                isDirty = false;
+                updateSaveStatus('새 에이전트');
+
+                window.GrowFitUtils.showToast('새 에이전트를 만들어보세요', 'success');
+
+                // 이름 입력란에 포커스
+                document.getElementById('agentName').focus();
+            }
+
+            // ========== 에이전트 복제 ==========
+            function duplicateAgent(agentId) {
+                const agent = agentsData[agentId];
+                if (!agent) return;
+
+                const newName = prompt('복제할 에이전트 이름:', `${agent.name} (복사본)`);
+
+                if (newName && newName.trim()) {
+                    const duplicated = {
+                        ...agent,
+                        id: `agent-${Date.now()}`,
+                        name: newName.trim(),
+                        created: new Date().toISOString()
+                    };
+
+                    console.log('에이전트 복제:', duplicated);
+                    window.GrowFitUtils.showToast('에이전트가 복제되었습니다', 'success');
+
+                    // 실제로는 API 호출 후 리스트 업데이트
+                }
+            }
+
+            // ========== 에이전트 삭제 ==========
+            function deleteAgent(agentId) {
+                const agent = agentsData[agentId];
+                if (!agent) return;
+
+                if (confirm(`"${agent.name}" 에이전트를 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`)) {
+                    // 실제로는 API 호출
+                    console.log('에이전트 삭제:', agentId);
+                    window.GrowFitUtils.showToast('에이전트가 삭제되었습니다', 'success');
+
+                    // 리스트에서 제거
+                    // 첫 번째 에이전트로 이동
+                }
+            }
+
+            // ========== 에이전트 내보내기 ==========
+            function exportAgent(agentId) {
+                const agent = agentsData[agentId] || getCurrentAgentData();
+                if (!agent) return;
+
+                const exportData = {
+                    name: agent.name,
+                    icon: agent.icon,
+                    description: agent.description,
+                    systemPrompt: agent.systemPrompt,
+                    examples: agent.examples,
+                    version: '1.0',
+                    exportedAt: new Date().toISOString()
+                };
+
+                const dataStr = JSON.stringify(exportData, null, 2);
+                const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(dataBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `${agent.name}_agent_${Date.now()}.json`;
+                link.click();
+                URL.revokeObjectURL(url);
+
+                window.GrowFitUtils.showToast('에이전트가 내보내졌습니다', 'success');
+            }
+
+            function getCurrentAgentData() {
+                return {
+                    name: document.getElementById('agentName').value,
+                    icon: document.getElementById('agentIcon').value,
+                    description: document.getElementById('agentDescription').value,
+                    systemPrompt: document.getElementById('systemPrompt').value,
+                    examples: getExamples()
+                };
+            }
+
+            // ========== 에이전트 가져오기 ==========
+            function importAgent() {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.json';
+
+                input.onchange = function (e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function (event) {
+                            try {
+                                const agentData = JSON.parse(event.target.result);
+
+                                // 유효성 검사
+                                if (!agentData.name || !agentData.systemPrompt) {
+                                    throw new Error('잘못된 에이전트 파일입니다');
+                                }
+
+                                // 폼에 로드
+                                document.getElementById('agentName').value = agentData.name;
+                                document.getElementById('agentIcon').value = agentData.icon || '🤖';
+                                document.getElementById('agentDescription').value = agentData.description || '';
+                                document.getElementById('systemPrompt').value = agentData.systemPrompt;
+
+                                if (agentData.examples) {
+                                    loadExamples(agentData.examples);
+                                }
+
+                                isDirty = true;
+
+                                window.GrowFitUtils.showToast(
+                                    `"${agentData.name}" 에이전트를 가져왔습니다`,
+                                    'success'
+                                );
+                            } catch (error) {
+                                console.error('파일 파싱 오류:', error);
+                                window.GrowFitUtils.showToast('잘못된 파일 형식입니다', 'error');
+                            }
+                        };
+                        reader.readAsText(file);
+                    }
+                };
+
+                input.click();
+            }
+
+            // ========== 에이전트 공유 ==========
+            function shareAgent(agentId) {
+                const agent = agentsData[agentId];
+                if (!agent) return;
+
+                // 공유 링크 생성 (실제로는 서버에서 생성)
+                const shareUrl = `${window.location.origin}/agent/share/${agentId}`;
+
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(shareUrl).then(() => {
+                        window.GrowFitUtils.showToast('공유 링크가 복사되었습니다', 'success');
+                    });
+                } else {
+                    prompt('공유 링크:', shareUrl);
+                }
+            }
+
+            // ========== 에이전트 통계 ==========
+            function showAgentStats(agentId) {
+                const agent = agentsData[agentId];
+                if (!agent) return;
+
+                const stats = `
+에이전트 통계: ${agent.name}
+
+📊 사용 현황
+- 사용 횟수: ${agent.usageCount}회
+- 최근 사용: ${agent.lastUsed}
+- 생성일: ${agent.created}
+
+💬 프롬프트 정보
+- 시스템 프롬프트 길이: ${agent.systemPrompt.length}자
+- 예시 개수: ${agent.examples.length}개
+
+⭐ 성능
+- 평균 응답 품질: 4.5/5.0
+- 평균 응답 시간: 2.3초
+            `.trim();
+
+                alert(stats);
+            }
+
+            // ========== 프롬프트 최적화 제안 ==========
+            function suggestOptimizations() {
+                const systemPrompt = document.getElementById('systemPrompt').value;
+
+                const suggestions = [];
+
+                // 길이 체크
+                if (systemPrompt.length < 100) {
+                    suggestions.push('⚠️ 시스템 프롬프트가 너무 짧습니다. 더 상세한 지시사항을 추가하세요.');
+                }
+
+                // 섹션 체크
+                if (!systemPrompt.includes('역할') && !systemPrompt.includes('Role')) {
+                    suggestions.push('💡 [역할] 섹션을 추가하여 에이전트의 정체성을 명확히 하세요.');
+                }
+
+                if (!systemPrompt.includes('전문성') && !systemPrompt.includes('Expertise')) {
+                    suggestions.push('💡 [전문성] 섹션을 추가하여 에이전트의 강점을 정의하세요.');
+                }
+
+                if (!systemPrompt.includes('톤') && !systemPrompt.includes('Tone')) {
+                    suggestions.push('💡 [톤 & 스타일] 섹션을 추가하여 대화 스타일을 지정하세요.');
+                }
+
+                // 예시 체크
+                const examples = getExamples();
+                if (examples.length === 0) {
+                    suggestions.push('💡 Few-shot 예시를 추가하면 에이전트가 더 일관되게 동작합니다.');
+                }
+
+                if (suggestions.length > 0) {
+                    alert('프롬프트 최적화 제안:\n\n' + suggestions.join('\n\n'));
+                } else {
+                    window.GrowFitUtils.showToast('프롬프트가 잘 작성되었습니다! 👍', 'success');
+                }
+            }
+
+            // ========== 프롬프트 비교 ==========
+            function comparePrompts() {
+                // 두 에이전트의 프롬프트를 비교하는 기능
+                window.GrowFitUtils.showToast('프롬프트 비교 기능은 개발 중입니다', 'info');
+            }
+
+            // ========== 프롬프트 버전 관리 ==========
+            function savePromptVersion() {
+                const version = {
+                    systemPrompt: document.getElementById('systemPrompt').value,
+                    examples: getExamples(),
+                    timestamp: new Date().toISOString()
+                };
+
+                // localStorage에 버전 저장
+                const versions = JSON.parse(localStorage.getItem('prompt_versions') || '[]');
+                versions.push(version);
+
+                // 최대 10개까지만 보관
+                if (versions.length > 10) {
+                    versions.shift();
+                }
+
+                localStorage.setItem('prompt_versions', JSON.stringify(versions));
+
+                window.GrowFitUtils.showToast('프롬프트 버전이 저장되었습니다', 'success');
+            }
+
+            function restorePromptVersion() {
+                const versions = JSON.parse(localStorage.getItem('prompt_versions') || '[]');
+
+                if (versions.length === 0) {
+                    window.GrowFitUtils.showToast('저장된 버전이 없습니다', 'info');
+                    return;
+                }
+
+                // 간단한 버전 선택 (실제로는 UI로 구현)
+                const choice = prompt(`복원할 버전을 선택하세요 (1-${versions.length}):`);
+                const index = parseInt(choice) - 1;
+
+                if (index >= 0 && index < versions.length) {
+                    const version = versions[index];
+                    document.getElementById('systemPrompt').value = version.systemPrompt;
+                    loadExamples(version.examples);
+
+                    isDirty = true;
+                    window.GrowFitUtils.showToast('프롬프트 버전이 복원되었습니다', 'success');
+                }
+            }
+
+            // ========== AI 실습에서 사용 ==========
+            function useInPractice(agentId) {
+                // 실습 페이지로 이동하며 에이전트 선택
+                const url = `practice.html?agent=${agentId}`;
+                window.location.href = url;
+            }
+
+            // ========== 키보드 단축키 ==========
+            document.addEventListener('keydown', function (e) {
+                // Ctrl/Cmd + S: 저장
+                if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                    e.preventDefault();
+                    saveAgent();
+                }
+
+                // Ctrl/Cmd + T: 테스트
+                if ((e.ctrlKey || e.metaKey) && e.key === 't') {
+                    e.preventDefault();
+                    document.getElementById('testInput').focus();
+                }
+
+                // Ctrl/Cmd + N: 새 에이전트
+                if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+                    e.preventDefault();
+                    createNewAgent();
+                }
+
+                // Ctrl/Cmd + E: 내보내기
+                if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+                    e.preventDefault();
+                    exportAgent(currentAgent);
+                }
+            });
+
+            // ========== 페이지 나가기 전 확인 ==========
+            window.addEventListener('beforeunload', function (e) {
+                if (isDirty) {
+                    e.preventDefault();
+                    e.returnValue = '';
+                    return '저장하지 않은 변경사항이 있습니다. 페이지를 나가시겠습니까?';
+                }
+            });
+
+            // ========== 프롬프트 품질 점수 ==========
+            function calculatePromptQuality() {
+                const systemPrompt = document.getElementById('systemPrompt').value;
+                const examples = getExamples();
+
+                let score = 0;
+                let maxScore = 100;
+
+                // 길이 점수 (20점)
+                if (systemPrompt.length >= 200) score += 20;
+                else if (systemPrompt.length >= 100) score += 10;
+
+                // 구조 점수 (40점)
+                const sections = ['역할', 'Role', '전문성', 'Expertise', '톤', 'Tone', '제약', 'Constraints'];
+                const foundSections = sections.filter(s => systemPrompt.includes(s)).length;
+                score += Math.min(foundSections * 10, 40);
+
+                // 예시 점수 (20점)
+                score += Math.min(examples.length * 10, 20);
+
+                // 명확성 점수 (20점)
+                const hasListFormat = systemPrompt.includes('- ') || systemPrompt.includes('• ');
+                const hasSectionHeaders = systemPrompt.includes('[') || systemPrompt.includes('#');
+                if (hasListFormat) score += 10;
+                if (hasSectionHeaders) score += 10;
+
+                return Math.min(score, maxScore);
+            }
+
+            function showPromptQuality() {
+                const score = calculatePromptQuality();
+                let message = `프롬프트 품질 점수: ${score}/100\n\n`;
+
+                if (score >= 80) {
+                    message += '✅ 훌륭합니다! 잘 구조화된 프롬프트입니다.';
+                } else if (score >= 60) {
+                    message += '👍 괜찮습니다. 몇 가지 개선점이 있습니다.';
+                } else {
+                    message += '⚠️ 개선이 필요합니다. 최적화 제안을 확인하세요.';
+                }
+
+                alert(message);
+            }
+
+            // ========== 에이전트 태그 ==========
+            function addAgentTag(tag) {
+                // 에이전트에 태그 추가 (카테고리 분류용)
+                console.log('태그 추가:', tag);
+            }
+
+            // ========== 반응형 처리 ==========
+            function handleResize() {
+                const width = window.innerWidth;
+
+                if (width <= 1024) {
+                    console.log('태블릿 레이아웃');
+                    // 사이드바 숨김 처리
+                }
+            }
+
+            window.addEventListener('resize', handleResize);
+            handleResize();
+
+            // ========== 도움말 ==========
+            function showHelp() {
+                const helpText = `
+🤖 에이전트 빌더 도움말
+
+1️⃣ 에이전트란?
+AI에게 특정 역할과 전문성을 부여하여 일관된 방식으로 작동하도록 만드는 시스템입니다.
+
+2️⃣ 시스템 프롬프트 작성 팁
+- 역할을 명확히 정의하세요
+- 전문 분야를 구체적으로 나열하세요
+- 원하는 톤과 스타일을 지정하세요
+- 제약 조건을 명시하세요
+
+3️⃣ Few-shot 예시
+에이전트가 어떻게 답변해야 하는지 구체적인 예시를 제공하면 더 일관된 응답을 얻을 수 있습니다.
+
+4️⃣ 테스트
+반드시 다양한 질문으로 테스트하여 에이전트가 의도대로 작동하는지 확인하세요.
+
+5️⃣ 키보드 단축키
+- Ctrl+S: 저장
+- Ctrl+T: 테스트
+- Ctrl+N: 새 에이전트
+- Ctrl+E: 내보내기
+            `.trim();
+
+                alert(helpText);
+            }
+
+            // ========== 예제 프롬프트 갤러리 ==========
+            function showExampleGallery() {
+                const examples = [
+                    {
+                        name: '코드 리뷰어',
+                        icon: '👨‍💻',
+                        prompt: '당신은 시니어 개발자로서 코드를 검토하고 개선점을 제안합니다...'
+                    },
+                    {
+                        name: '이메일 작성자',
+                        icon: '✉️',
+                        prompt: '당신은 전문적이고 친근한 비즈니스 이메일을 작성합니다...'
+                    },
+                    {
+                        name: 'SQL 전문가',
+                        icon: '💾',
+                        prompt: '당신은 데이터베이스 전문가로서 최적화된 SQL 쿼리를 작성합니다...'
+                    }
+                ];
+
+                console.log('예제 갤러리:', examples);
+                window.GrowFitUtils.showToast('예제 갤러리는 개발 중입니다', 'info');
+            }
+
+            // ========== 초기화 완료 ==========
+            console.log('Agents 페이지 스크립트 로드 완료');
+            console.log('단축키: Ctrl+S(저장), Ctrl+T(테스트), Ctrl+N(새 에이전트)');
+        </script>
+
+    <!-- 추가 스타일: 애니메이션 -->
+    <style>
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 스크롤바 스타일 */
+        .agents-sidebar::-webkit-scrollbar,
+        .builder-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .agents-sidebar::-webkit-scrollbar-thumb,
+        .builder-content::-webkit-scrollbar-thumb {
+            background: var(--gray-300);
+            border-radius: var(--radius-full);
+        }
+
+        .agents-sidebar::-webkit-scrollbar-thumb:hover,
+        .builder-content::-webkit-scrollbar-thumb:hover {
+            background: var(--gray-400);
+        }
+
+        /* 프린트 스타일 */
+        @media print {
+            .header,
+            .sidebar,
+            .agents-sidebar,
+            .builder-footer,
+            .test-section {
+                display: none !important;
+            }
+
+            .agents-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .builder-content {
+                overflow: visible;
+            }
+        }
+    </style>
+</body>
+</html>

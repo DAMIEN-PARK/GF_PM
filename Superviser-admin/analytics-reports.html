@@ -1,0 +1,2197 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>분석 & 리포트 - GrowFit Platform Admin</title>
+
+    <!-- 공통 CSS -->
+    <link rel="stylesheet" href="../common/variables.css">
+    <link rel="stylesheet" href="../common/layout.css">
+    <link rel="stylesheet" href="../common/components.css">
+
+    <style>
+        /* ========== Analytics & Reports 전용 스타일 ========== */
+        :root {
+            --platform-primary: #6366f1;
+            --platform-primary-light: #818cf8;
+            --platform-primary-dark: #4f46e5;
+            --platform-secondary: #ec4899;
+            --platform-accent: #f59e0b;
+            --platform-success: #10b981;
+            --platform-warning: #f59e0b;
+            --platform-danger: #ef4444;
+            --platform-purple: #8b5cf6;
+            --platform-blue: #3b82f6;
+            --platform-teal: #14b8a6;
+            --platform-cyan: #06b6d4;
+        }
+
+        /* 페이지 헤더 */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-6);
+        }
+
+        .page-header__left h1 {
+            font-size: var(--text-3xl);
+            font-weight: var(--font-bold);
+            background: linear-gradient(135deg, var(--platform-primary), var(--platform-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: var(--space-1);
+        }
+
+        .page-header__left p {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+        }
+
+        .page-header__actions {
+            display: flex;
+            gap: var(--space-2);
+        }
+
+        /* 탭 네비게이션 */
+        .tab-nav {
+            background: var(--background);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: var(--space-2);
+            margin-bottom: var(--space-6);
+            display: flex;
+            gap: var(--space-2);
+            overflow-x: auto;
+        }
+
+        .tab-nav::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .tab-nav::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 2px;
+        }
+
+        .tab-btn {
+            padding: var(--space-3) var(--space-4);
+            border: 2px solid transparent;
+            border-radius: var(--radius-lg);
+            background: transparent;
+            font-size: var(--text-sm);
+            font-weight: var(--font-medium);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .tab-btn:hover {
+            background: var(--surface);
+            color: var(--text-primary);
+        }
+
+        .tab-btn--active {
+            background: linear-gradient(135deg, var(--platform-primary), var(--platform-purple));
+            color: white;
+            border-color: transparent;
+        }
+
+        /* 탭 컨텐츠 */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content--active {
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 통계 카드 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--space-4);
+            margin-bottom: var(--space-6);
+        }
+
+        .stat-card {
+            background: var(--background);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: var(--space-5);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.1), transparent);
+            border-radius: 50%;
+            transform: translate(30%, -30%);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(99, 102, 241, 0.15);
+            border-color: var(--platform-primary);
+        }
+
+        .stat-card__icon {
+            font-size: 32px;
+            margin-bottom: var(--space-3);
+        }
+
+        .stat-card__label {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-2);
+            font-weight: var(--font-medium);
+        }
+
+        .stat-card__value {
+            font-size: var(--text-3xl);
+            font-weight: var(--font-bold);
+            color: var(--platform-primary);
+            margin-bottom: var(--space-2);
+            letter-spacing: -0.5px;
+        }
+
+        .stat-card__change {
+            font-size: var(--text-xs);
+            font-weight: var(--font-bold);
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-1);
+        }
+
+        .stat-card__change--up {
+            color: var(--platform-success);
+        }
+
+        .stat-card__change--down {
+            color: var(--platform-danger);
+        }
+
+        /* 차트 그리드 */
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-4);
+            margin-bottom: var(--space-6);
+        }
+
+        .chart-card {
+            background: var(--background);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: var(--space-5);
+        }
+
+        .chart-card--full {
+            grid-column: 1 / -1;
+        }
+
+        .chart-card__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-4);
+        }
+
+        .chart-card__title {
+            font-size: var(--text-lg);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+        }
+
+        .chart-card__subtitle {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            margin-top: var(--space-1);
+        }
+
+        .chart-placeholder {
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(139, 92, 246, 0.05));
+            border-radius: var(--radius-lg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            font-size: var(--text-sm);
+            border: 2px dashed var(--border);
+        }
+
+        /* 메트릭 카드 */
+        .metric-card {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .metric-card:hover {
+            background: var(--border);
+            transform: translateX(4px);
+        }
+
+        .metric-card__info {
+            flex: 1;
+        }
+
+        .metric-card__label {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-1);
+        }
+
+        .metric-card__value {
+            font-size: var(--text-xl);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+        }
+
+        .metric-card__icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        /* 리포트 카드 */
+        .report-card {
+            background: var(--background);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: var(--space-5);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .report-card:hover {
+            border-color: var(--platform-primary);
+            box-shadow: 0 8px 16px rgba(99, 102, 241, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .report-card__header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            margin-bottom: var(--space-3);
+        }
+
+        .report-card__icon {
+            width: 56px;
+            height: 56px;
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+
+        .report-card__title {
+            font-size: var(--text-lg);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-1);
+        }
+
+        .report-card__desc {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-3);
+        }
+
+        .report-card__footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: var(--space-3);
+            border-top: 1px solid var(--border);
+        }
+
+        .report-card__meta {
+            font-size: var(--text-xs);
+            color: var(--text-tertiary);
+        }
+
+        /* 필터 섹션 */
+        .filter-section {
+            background: var(--background);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: var(--space-4);
+            margin-bottom: var(--space-4);
+        }
+
+        .filter-row {
+            display: flex;
+            gap: var(--space-3);
+            align-items: end;
+        }
+
+        .filter-group {
+            flex: 1;
+        }
+
+        .filter-label {
+            font-size: var(--text-sm);
+            font-weight: var(--font-medium);
+            color: var(--text-primary);
+            margin-bottom: var(--space-2);
+        }
+
+        .filter-select {
+            width: 100%;
+            padding: var(--space-3);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--platform-primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        /* 테이블 */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table thead {
+            background: var(--surface);
+        }
+
+        .data-table th {
+            padding: var(--space-4);
+            text-align: left;
+            font-size: var(--text-sm);
+            font-weight: var(--font-semibold);
+            color: var(--text-secondary);
+            border-bottom: 2px solid var(--border);
+        }
+
+        .data-table td {
+            padding: var(--space-4);
+            font-size: var(--text-sm);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .data-table tbody tr {
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .data-table tbody tr:hover {
+            background: var(--surface);
+        }
+
+        /* 프로그레스 바 */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--gray-200);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-bar__fill {
+            height: 100%;
+            background: linear-gradient(to right, var(--platform-primary), var(--platform-purple));
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        /* 배지 */
+        .badge {
+            padding: 4px 12px;
+            border-radius: var(--radius-full);
+            font-size: var(--text-xs);
+            font-weight: var(--font-bold);
+            display: inline-block;
+        }
+
+        .badge--success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--platform-success);
+        }
+
+        .badge--warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--platform-warning);
+        }
+
+        .badge--danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--platform-danger);
+        }
+
+        .badge--info {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--platform-blue);
+        }
+
+        /* 인사이트 카드 */
+        .insight-card {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+            border: 2px solid var(--platform-primary);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            margin-bottom: var(--space-4);
+        }
+
+        .insight-card__header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            margin-bottom: var(--space-3);
+        }
+
+        .insight-card__icon {
+            font-size: 24px;
+        }
+
+        .insight-card__title {
+            font-size: var(--text-base);
+            font-weight: var(--font-bold);
+            color: var(--platform-primary);
+        }
+
+        .insight-card__content {
+            font-size: var(--text-sm);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        /* 리스트 */
+        .insight-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .insight-list li {
+            padding: var(--space-2) 0;
+            padding-left: var(--space-6);
+            position: relative;
+        }
+
+        .insight-list li::before {
+            content: '•';
+            position: absolute;
+            left: var(--space-3);
+            color: var(--platform-primary);
+            font-weight: var(--font-bold);
+            font-size: var(--text-lg);
+        }
+
+        /* 반응형 */
+        @media (max-width: 1400px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .filter-row {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tab-nav {
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header__left">
+                <button id="menuToggle" class="header__icon-button hidden-desktop">
+                    <span>☰</span>
+                </button>
+                <a href="platform-dashboard.html" class="header__logo">
+                    <span class="header__logo-icon">🚀</span>
+                    <span>GrowFit Platform</span>
+                </a>
+            </div>
+
+            <div class="header__right">
+                <button class="header__icon-button" title="새로고침" onclick="refreshAnalytics()">
+                    <span>🔄</span>
+                </button>
+
+                <button id="notificationBtn" class="header__icon-button">
+                    <span>🔔</span>
+                    <span class="header__badge">5</span>
+                </button>
+
+                <div id="profileBtn" class="header__profile">
+                    <div class="header__avatar" style="background: linear-gradient(135deg, #6366f1, #ec4899);">플</div>
+                    <span class="hidden-mobile">플랫폼 관리자</span>
+                    <span class="hidden-mobile">▼</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="container">
+            <!-- Sidebar -->
+            <aside class="sidebar sidebar--open">
+                <div class="sidebar__user">
+                    <div class="sidebar__user-info">
+                        <div class="sidebar__user-avatar"
+                            style="background: linear-gradient(135deg, #6366f1, #ec4899);">플</div>
+                        <div class="sidebar__user-details">
+                            <div class="sidebar__user-name">플랫폼 관리자</div>
+                            <div class="sidebar__user-role">Platform Admin</div>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="sidebar__nav">
+                    <ul class="sidebar__menu">
+                        <li class="sidebar__menu-item">
+                            <a href="platform-dashboard.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">🏠</span>
+                                <span>플랫폼 대시보드</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="organization-management.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">🏢</span>
+                                <span>조직 관리</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="user-management.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">👥</span>
+                                <span>전체 사용자</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="revenue-billing.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">💰</span>
+                                <span>매출/과금</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="analytics-reports.html" class="sidebar__menu-link sidebar__menu-link--active">
+                                <span class="sidebar__menu-icon">📊</span>
+                                <span>분석 & 리포트</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="system-monitoring.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">🔧</span>
+                                <span>시스템 모니터링</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="platform-settings.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">⚙️</span>
+                                <span>시스템 설정</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <div class="sidebar__footer">
+                    <div
+                        style="padding: var(--space-3); background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1)); border-radius: var(--radius-md); font-size: var(--text-xs);">
+                        <div style="color: var(--text-secondary); margin-bottom: var(--space-1);">데이터 업데이트</div>
+                        <div
+                            style="font-weight: var(--font-bold); color: var(--platform-primary); font-size: var(--text-sm);">
+                            실시간</div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main">
+                <!-- 페이지 헤더 -->
+                <div class="page-header">
+                    <div class="page-header__left">
+                        <h1>📊 분석 & 리포트</h1>
+                        <p>플랫폼의 모든 데이터를 분석하고 리포트를 생성하세요</p>
+                    </div>
+                    <div class="page-header__actions">
+                        <button class="btn btn--outline" onclick="exportAllReports()">
+                            📥 전체 내보내기
+                        </button>
+                        <button class="btn btn--outline" onclick="scheduleReport()">
+                            ⏰ 예약 리포트
+                        </button>
+                        <button class="btn btn--primary" onclick="generateCustomReport()">
+                            ✨ 커스텀 리포트
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 탭 네비게이션 -->
+                <div class="tab-nav">
+                    <button class="tab-btn tab-btn--active" onclick="switchTab('overview')">
+                        <span>📈</span>
+                        <span>개요</span>
+                    </button>
+                    <button class="tab-btn" onclick="switchTab('growth')">
+                        <span>🚀</span>
+                        <span>성장 분석</span>
+                    </button>
+                    <button class="tab-btn" onclick="switchTab('engagement')">
+                        <span>👥</span>
+                        <span>사용자 참여</span>
+                    </button>
+                    <button class="tab-btn" onclick="switchTab('revenue')">
+                        <span>💰</span>
+                        <span>매출 분석</span>
+                    </button>
+                    <button class="tab-btn" onclick="switchTab('performance')">
+                        <span>⚡</span>
+                        <span>성능 지표</span>
+                    </button>
+                    <button class="tab-btn" onclick="switchTab('reports')">
+                        <span>📄</span>
+                        <span>리포트 센터</span>
+                    </button>
+                </div>
+
+                <!-- 탭 컨텐츠: 개요 -->
+                <div id="tab-overview" class="tab-content tab-content--active">
+                    <!-- 핵심 지표 -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-card__icon">🏢</div>
+                            <div class="stat-card__label">총 조직</div>
+                            <div class="stat-card__value">247</div>
+                            <div class="stat-card__change stat-card__change--up">
+                                <span>↑ 12.5%</span>
+                                <span style="color: var(--text-tertiary);">vs 지난 달</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-card__icon">👥</div>
+                            <div class="stat-card__label">총 사용자</div>
+                            <div class="stat-card__value">8,947</div>
+                            <div class="stat-card__change stat-card__change--up">
+                                <span>↑ 18.3%</span>
+                                <span style="color: var(--text-tertiary);">vs 지난 달</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-card__icon">💰</div>
+                            <div class="stat-card__label">월 매출 (MRR)</div>
+                            <div class="stat-card__value">$487K</div>
+                            <div class="stat-card__change stat-card__change--up">
+                                <span>↑ 24.7%</span>
+                                <span style="color: var(--text-tertiary);">vs 지난 달</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-card__icon">🔌</div>
+                            <div class="stat-card__label">API 호출 (월)</div>
+                            <div class="stat-card__value">12.4M</div>
+                            <div class="stat-card__change stat-card__change--up">
+                                <span>↑ 32.1%</span>
+                                <span style="color: var(--text-tertiary);">vs 지난 달</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 주요 차트 -->
+                    <div class="chart-grid">
+                        <div class="chart-card chart-card--full">
+                            <div class="chart-card__header">
+                                <div>
+                                    <h3 class="chart-card__title">📈 전체 성장 추이</h3>
+                                    <p class="chart-card__subtitle">최근 12개월 핵심 지표</p>
+                                </div>
+                                <select class="filter-select" style="width: 200px;" onchange="changeOverviewChart(this.value)">
+                                    <option value="all">전체 지표</option>
+                                    <option value="organizations">조직 수</option>
+                                    <option value="users">사용자 수</option>
+                                    <option value="revenue">매출</option>
+                                    <option value="api">API 호출</option>
+                                </select>
+                            </div>
+                            <div class="chart-placeholder">
+                                📊 전체 성장 추이 차트
+                                <br>
+                                <span style="font-size: var(--text-xs);">(Chart.js 또는 Recharts로 구현)</span>
+                            </div>
+                        </div>
+
+                        <div class="chart-card">
+                            <div class="chart-card__header">
+                                <div>
+                                    <h3 class="chart-card__title">🎯 플랜 분포</h3>
+                                    <p class="chart-card__subtitle">조직별 플랜 현황</p>
+                                </div>
+                            </div>
+                            <div class="chart-placeholder" style="height: 250px;">
+                                🥧 도넛 차트
+                            </div>
+                        </div>
+
+                        <div class="chart-card">
+                            <div class="chart-card__header">
+                                <div>
+                                    <h3 class="chart-card__title">🌍 지역 분포</h3>
+                                    <p class="chart-card__subtitle">조직 위치 현황</p>
+                                </div>
+                            </div>
+                            <div class="chart-placeholder" style="height: 250px;">
+                                🗺️ 지도 차트
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI 인사이트 -->
+                    <div class="insight-card">
+                        <div class="insight-card__header">
+                            <div class="insight-card__icon">🤖</div>
+                            <div class="insight-card__title">AI 인사이트</div>
+                        </div>
+                        <div class="insight-card__content">
+                            <ul class="insight-list">
+                                <li>이번 달 성장률이 전월 대비 24.7% 증가했습니다. 특히 Enterprise 플랜 전환이 두드러집니다.</li>
+                                <li>API 사용량이 급증하고 있어 인프라 확장을 검토해야 합니다.</li>
+                                <li>신규 가입 조직의 70%가 첫 주에 활발히 사용 중입니다. 온보딩이 효과적입니다.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 탭 컨텐츠: 성장 분석 -->
+                <div id="tab-growth" class="tab-content">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-card__icon">📈</div>
+                            <div class="stat-card__label">월간 성장률</div>
+                            <div class="stat-card__value">24.7%</div>
+                            <div class="stat-card__change stat-card__change--up">
+                                <span>↑ 3.2%p</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-card__icon">🔄</div>
+                            <div class="stat-card__label">Churn Rate</div>
+                            <div class="stat-card__value">2.3%</div>
+                            <div class="stat-card__change stat-card__change--up" style="color: var(--platform-success);">
+                                <span>↓ 0.4%p</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-card__icon">⏱️</div>
+                            <div class="stat-card__label">평균 전환 시간</div>
+                            <div class="stat-card__value">14일</div>
+                            <div class="stat-card__change stat-card__change--up" style="color: var(--platform-success);">
+                                <span>↓ 3일</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-card__icon">💎</div>
+                            <div class="stat-card__label">LTV</div>
+                            <div class="stat-card__value">$23.7K</div>
+                            <div class="stat-card__change stat-card__change--up">
+                                <span>↑ 12.8%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chart-grid">
+                        <div class="chart-card chart-card--full">
+                            <div class="chart-card__header">
+                                <div>
+                                    <h3 class="chart-card__title">🚀 사용자 획득 채널</h3>
+                                    <p class="chart-card__subtitle">채널별 전환율 및 CAC</p>
+                                </div>
+                            </div>
+                            <div class="chart-placeholder">
+                                📊 채널별 성과 차트
+                            </div>
+                        </div>
+
+                        <div class="chart-card">
+                            <div class="chart-card__header">
+                                <div>
+                                    <h3 class="chart-card__title">📊 코호트 분석</h3>
+                                    <p class="chart-card__subtitle">월별 리텐션</p>
+                                </div>
+                            </div>
+                            <div style="display: grid; gap: var(--space-3);">
+                                <div class="metric-card">
+                                    <div class="metric-card__info">
+                                        <div class="metric-card__label">1개월 리텐션</div>
+                                        <div class="metric-card__value">87%</div>
+                                    </div>
+                                    <div class="metric-card__icon" style="background: linear-gradient(135deg, #10b981, #34d399);">
+                                        📈
+                                    </div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-card__info">
+                                        <div class="metric-card__label">3개월 리텐션</div>
+                                        <div class="metric-card__value">72%</div>
+                                    </div>
+                                    <div class="metric-card__icon" style="background: linear-gradient(135deg, #3b82f6, #60a5fa);">
+                                        📊
+                                    </div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-card__info">
+                                        <div class="metric-card__label">6개월 리텐션</div>
+                                        <div class="metric-card__value">64%</div>
+                                    </div>
+                                    <div class="metric-card__icon" style="background: linear-gradient(135deg, #f59e0b, #fbbf24);">
+                                        📉
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="chart-card">
+                            <div class="chart-card__header">
+                                <div>
+                                    <h3 class="chart-card__title">💰 수익 지표</h3>
+                                    <p class="chart-card__subtitle">주요 재무 지표</p>
+                                </div>
+                            </div>
+                            <div style="display: grid; gap: var(--space-3);">
+                                <div class="metric-card">
+                                    <div class="metric-card__info">
+                                        <div class="metric-card__label">CAC</div>
+                                        <div class="metric-card__value">$3.2K</div>
+                                    </div>
+                                    <div class="metric-card__icon" style="background: linear-gradient(135deg, #ec4899, #f472b6);">
+                                        💳
+                                    </div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-card__info">
+                                        <div class="metric-card__label">LTV:CAC</div>
+                                        <div class="metric-card__value">7.4:1</div>
+                                    </div>
+                                    <div class="metric-card__icon" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
+                                        📊
+                                    </div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-card__info">
+                                        <div class="metric-card__label">Payback Period</div>
+                                        <div class="metric-card__value">4.2개월</div>
+                                    </div>
+                                    <div class="metric-card__icon" style="background: linear-gradient(135deg, #14b8a6, #5eead4);">
+                                        ⏱️
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="insight-card">
+                        <div class="insight-card__header">
+                            <div class="insight-card__icon">🎯</div>
+                            <div class="insight-card__title">성장 인사이트</div>
+                        </div>
+                        <div class="insight-card__content">
+                            <ul class="insight-list">
+                                <li>LTV:CAC 비율이 7.4:1로 매우 건강합니다. 마케팅 투자를 늘릴 여력이 있습니다.</li>
+                                <li>Churn Rate이 2.3%로 낮은 편이지만, 3개월 이내 고객의 이탈이 집중되어 있습니다.</li>
+                                <li>Enterprise 플랜으로의 업그레이드가 증가하고 있어 ARR 성장이 가속화될 것으로 예상됩니다.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 탭 컨텐츠: 사용자 참여 -->
+                <div id="tab-engagement" class="tab-content">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-card__icon">🔥</div>
+                            <div class="stat-card__label">DAU</div>
+                            <div class="stat-card__value">6,234</div>
+                            <div class="stat-card__change stat-card__change--up">
+                                <span>↑ 8.7%</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-card__icon">📅</div>
+                            <div class="stat-card__label">WAU</div>
+                            <div class="stat-card__value">7,892</div>
+                            <div class="stat-card__change stat-card__change--up">
+                                <span>↑ 12.4%</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-card__icon">📆</div>
+                            <div class="stat-card__label">MAU</div>
+                            <div class="stat-card__value">8,501</div>
+                            <div class="stat-card__change stat-card__change--up">
+                                <span>↑ 15.2%</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-card__icon">⏰</div>
+                            <div class="stat-card__label">평균 세션 시간</div>
+                            <div class="stat-card__value">2.4h</div>
+                            <div class="stat-card__change stat-card__change--up">
+                                <span>↑ 5.3%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chart-grid">
+                        <div class="chart-card chart-card--full">
+                            <div class="chart-card__header">
+                                <div>
+                                    <h3 class="chart-card__title">👥 사용자 활동 패턴</h3>
+                                    <p class="chart-card__subtitle">시간대별 활동 히트맵</p>
+                                </div>
+                            </div>
+                            <div class="chart-placeholder">
+                                🔥 히트맵 차트
+                            </div>
+                        </div>
+
+                        <div class="chart-card">
+                            <div class="chart-card__header">
+                                <div>
+                                    <h3 class="chart-card__title">🎯 기능 사용률</h3>
+                                    <p class="chart-card__subtitle">주요 기능별 사용 현황</p>
+                                </div>
+                            </div>
+                            <div style="display: grid; gap: var(--space-2);">
+                                <div>
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-1);">
+                                        <span style="font-size: var(--text-sm);">문서 분석</span>
+                                        <span style="font-size: var(--text-sm); font-weight: var(--font-bold);">89%</span>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div class="progress-bar__fill" style="width: 89%;"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-1);">
+                                        <span style="font-size: var(--text-sm);">코드 생성</span>
+                                        <span style="font-size: var(--text-sm); font-weight: var(--font-bold);">76%</span>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div class="progress-bar__fill" style="width: 76%;"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-1);">
+                                        <span style="font-size: var(--text-sm);">대화형 AI</span>
+                                        <span style="font-size: var(--text-sm); font-weight: var(--font-bold);">92%</span>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div class="progress-bar__fill" style="width: 92%;"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-1);">
+                                        <span style="font-size: var(--text-sm);">이미지 분석</span>
+                                        <span style="font-size: var(--text-sm); font-weight: var(--font-bold);">64%</span>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div class="progress-bar__fill" style="width: 64%;"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-1);">
+                                        <span style="font-size: var(--text-sm);">데이터 추출</span>
+                                        <span style="font-size: var(--text-sm); font-weight: var(--font-bold);">58%</span>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div class="progress-bar__fill" style="width: 58%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="chart-card">
+                            <div class="chart-card__header">
+                                <div>
+                                    <h3 class="chart-card__title">💬 사용자 피드백</h3>
+                                    <p class="chart-card__subtitle">만족도 점수</p>
+                                </div>
+                            </div>
+                            <div style="text-align: center; padding: var(--space-6);">
+                                <div style="font-size: 64px; font-weight: var(--font-bold); background: linear-gradient(135deg, var(--platform-primary), var(--platform-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                                    4.7
+                                </div>
+                                <div style="font-size: var(--text-lg); color: var(--text-secondary); margin-top: var(--space-2);">
+                                    ⭐⭐⭐⭐⭐
+                                </div>
+                                <div style="font-size: var(--text-sm); color: var(--text-tertiary); margin-top: var(--space-2);">
+                                    1,247개 리뷰 기준
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="insight-card">
+                        <div class="insight-card__header">
+                            <div class="insight-card__icon">💡</div>
+                            <div class="insight-card__title">참여도 인사이트</div>
+                        </div>
+                        <div class="insight-card__content">
+                            <ul class="insight-list">
+                                <li>대화형 AI 기능의 사용률이 92%로 가장 높습니다. 핵심 기능으로 자리잡았습니다.</li>
+                                <li>평균 세션 시간이 2.4시간으로, 사용자들이 집중적으로 작업하고 있습니다.</li>
+                                <li>피크 시간대는 14:00-16:00이며, 이 시간에 시스템 안정성이 중요합니다.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 탭 컨텐츠: 매출 분석 -->
+                <div id="tab-revenue" class="tab-content">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-card__icon">💵</div>
+                            <div class="stat-card__label">MRR</div>
+                            <div class="stat-card__value">$487K</div>
+                            <div class="stat-card__change stat-card__change--up">
+                                <span>↑ 24.7%</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-card__icon">📈</div>
+                            <div class="stat-card__label">ARR</div>
+                            <div class="stat-card__value">$5.84M</div>
+                            <div class="stat-card__change stat-card__change--up">
+                                <span>↑ 28.3%</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-card__icon">📊</div>
+                            <div class="stat-card__label">ARPU</div>
+                            <div class="stat-card__value">$1,972</div>
+                            <div class="stat-card__change stat-card__change--up">
+                                <span>↑ 8.9%</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-card__icon">💎</div>
+                            <div class="stat-card__label">Gross Margin</div>
+                            <div class="stat-card__value">68%</div>
+                            <div class="stat-card__change stat-card__change--up">
+                                <span>↑ 2.1%p</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chart-grid">
+                        <div class="chart-card chart-card--full">
+                            <div class="chart-card__header">
+                                <div>
+                                    <h3 class="chart-card__title">💰 매출 상세 분석</h3>
+                                    <p class="chart-card__subtitle">플랜별 & 코호트별 매출</p>
+                                </div>
+                            </div>
+                            <div class="chart-placeholder">
+                                📊 매출 분해 차트 (Waterfall Chart)
+                            </div>
+                        </div>
+
+                        <div class="chart-card">
+                            <div class="chart-card__header">
+                                <div>
+                                    <h3 class="chart-card__title">📊 매출 구성</h3>
+                                    <p class="chart-card__subtitle">플랜별 기여도</p>
+                                </div>
+                            </div>
+                            <div style="display: grid; gap: var(--space-3);">
+                                <div class="metric-card">
+                                    <div class="metric-card__info">
+                                        <div class="metric-card__label">Enterprise</div>
+                                        <div class="metric-card__value">$141K</div>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <div style="font-size: var(--text-lg); font-weight: var(--font-bold); color: var(--platform-primary);">29%</div>
+                                        <div style="font-size: var(--text-xs); color: var(--text-secondary);">47개 조직</div>
+                                    </div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-card__info">
+                                        <div class="metric-card__label">Professional</div>
+                                        <div class="metric-card__value">$89K</div>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <div style="font-size: var(--text-lg); font-weight: var(--font-bold); color: var(--platform-blue);">18%</div>
+                                        <div style="font-size: var(--text-xs); color: var(--text-secondary);">89개 조직</div>
+                                    </div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-card__info">
+                                        <div class="metric-card__label">Starter</div>
+                                        <div class="metric-card__value">$23K</div>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <div style="font-size: var(--text-lg); font-weight: var(--font-bold); color: var(--platform-success);">5%</div>
+                                        <div style="font-size: var(--text-xs); color: var(--text-secondary);">76개 조직</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="chart-card">
+                            <div class="chart-card__header">
+                                <div>
+                                    <h3 class="chart-card__title">🎯 매출 예측</h3>
+                                    <p class="chart-card__subtitle">향후 3개월</p>
+                                </div>
+                            </div>
+                            <div style="display: grid; gap: var(--space-3);">
+                                <div style="padding: var(--space-3); background: var(--surface); border-radius: var(--radius-md);">
+                                    <div style="font-size: var(--text-xs); color: var(--text-secondary); margin-bottom: var(--space-1);">다음 달 예상</div>
+                                    <div style="font-size: var(--text-xl); font-weight: var(--font-bold); color: var(--platform-success);">$542K</div>
+                                </div>
+                                <div style="padding: var(--space-3); background: var(--surface); border-radius: var(--radius-md);">
+                                    <div style="font-size: var(--text-xs); color: var(--text-secondary); margin-bottom: var(--space-1);">2개월 후</div>
+                                    <div style="font-size: var(--text-xl); font-weight: var(--font-bold); color: var(--platform-success);">$608K</div>
+                                </div>
+                                <div style="padding: var(--space-3); background: var(--surface); border-radius: var(--radius-md);">
+                                    <div style="font-size: var(--text-xs); color: var(--text-secondary); margin-bottom: var(--space-1);">3개월 후</div>
+                                    <div style="font-size: var(--text-xl); font-weight: var(--font-bold); color: var(--platform-success);">$687K</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="insight-card">
+                        <div class="insight-card__header">
+                            <div class="insight-card__icon">💰</div>
+                            <div class="insight-card__title">매출 인사이트</div>
+                        </div>
+                        <div class="insight-card__content">
+                            <ul class="insight-list">
+                                <li>Enterprise 플랜이 전체 매출의 29%를 차지하며 가장 높은 기여도를 보입니다.</li>
+                                <li>현재 성장률(24.7%)을 유지하면 3개월 내 MRR $687K 달성 예상됩니다.</li>
+                                <li>Professional 플랜의 Enterprise 전환율이 증가하고 있어 ARPU 상승이 기대됩니다.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 탭 컨텐츠: 성능 지표 -->
+                <div id="tab-performance" class="tab-content">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-card__icon">⚡</div>
+                            <div class="stat-card__label">평균 응답 시간</div>
+                            <div class="stat-card__value">0.12s</div>
+                            <div class="stat-card__change stat-card__change--up" style="color: var(--platform-success);">
+                                <span>↓ 0.03s</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-card__icon">✅</div>
+                            <div class="stat-card__label">성공률</div>
+                            <div class="stat-card__value">99.7%</div>
+                            <div class="stat-card__change stat-card__change--up">
+                                <span>↑ 0.2%p</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-card__icon">🔄</div>
+                            <div class="stat-card__label">가동률</div>
+                            <div class="stat-card__value">99.9%</div>
+                            <div class="stat-card__change stat-card__change--up">
+                                <span>↑ 0.1%p</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-card__icon">❌</div>
+                            <div class="stat-card__label">에러율</div>
+                            <div class="stat-card__value">0.3%</div>
+                            <div class="stat-card__change stat-card__change--up" style="color: var(--platform-success);">
+                                <span>↓ 0.1%p</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chart-grid">
+                        <div class="chart-card chart-card--full">
+                            <div class="chart-card__header">
+                                <div>
+                                    <h3 class="chart-card__title">⚡ 응답 시간 분포</h3>
+                                    <p class="chart-card__subtitle">API 엔드포인트별 성능</p>
+                                </div>
+                            </div>
+                            <div class="chart-placeholder">
+                                📊 응답 시간 히스토그램
+                            </div>
+                        </div>
+
+                        <div class="chart-card">
+                            <div class="chart-card__header">
+                                <div>
+                                    <h3 class="chart-card__title">🔌 API 상태</h3>
+                                    <p class="chart-card__subtitle">LLM 프로바이더별</p>
+                                </div>
+                            </div>
+                            <div style="display: grid; gap: var(--space-2);">
+                                <div style="padding: var(--space-3); background: var(--surface); border-radius: var(--radius-md); display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <div style="font-weight: var(--font-semibold);">OpenAI</div>
+                                        <div style="font-size: var(--text-xs); color: var(--text-secondary);">0.85s</div>
+                                    </div>
+                                    <span class="badge badge--success">99.9%</span>
+                                </div>
+                                <div style="padding: var(--space-3); background: var(--surface); border-radius: var(--radius-md); display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <div style="font-weight: var(--font-semibold);">Claude</div>
+                                        <div style="font-size: var(--text-xs); color: var(--text-secondary);">1.12s</div>
+                                    </div>
+                                    <span class="badge badge--success">99.7%</span>
+                                </div>
+                                <div style="padding: var(--space-3); background: var(--surface); border-radius: var(--radius-md); display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <div style="font-weight: var(--font-semibold);">Gemini</div>
+                                        <div style="font-size: var(--text-xs); color: var(--text-secondary);">0.94s</div>
+                                    </div>
+                                    <span class="badge badge--success">99.8%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="chart-card">
+                            <div class="chart-card__header">
+                                <div>
+                                    <h3 class="chart-card__title">📊 리소스 사용률</h3>
+                                    <p class="chart-card__subtitle">인프라 현황</p>
+                                </div>
+                            </div>
+                            <div style="display: grid; gap: var(--space-2);">
+                                <div>
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-1);">
+                                        <span style="font-size: var(--text-sm);">CPU</span>
+                                        <span style="font-size: var(--text-sm); font-weight: var(--font-bold);">67%</span>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div class="progress-bar__fill" style="width: 67%;"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-1);">
+                                        <span style="font-size: var(--text-sm);">메모리</span>
+                                        <span style="font-size: var(--text-sm); font-weight: var(--font-bold);">73%</span>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div class="progress-bar__fill" style="width: 73%;"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-1);">
+                                        <span style="font-size: var(--text-sm);">네트워크</span>
+                                        <span style="font-size: var(--text-sm); font-weight: var(--font-bold);">45%</span>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div class="progress-bar__fill" style="width: 45%;"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-1);">
+                                        <span style="font-size: var(--text-sm);">스토리지</span>
+                                        <span style="font-size: var(--text-sm); font-weight: var(--font-bold);">56%</span>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div class="progress-bar__fill" style="width: 56%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="insight-card">
+                        <div class="insight-card__header">
+                            <div class="insight-card__icon">⚡</div>
+                            <div class="insight-card__title">성능 인사이트</div>
+                        </div>
+                        <div class="insight-card__content">
+                            <ul class="insight-list">
+                                <li>평균 응답 시간이 0.12초로 매우 우수합니다. SLA 목표를 초과 달성 중입니다.</li>
+                                <li>99.9% 가동률을 유지하고 있으며, 지난 30일간 다운타임이 없었습니다.</li>
+                                <li>메모리 사용률이 73%로 증가 추세이므로 스케일링을 고려해야 합니다.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 탭 컨텐츠: 리포트 센터 -->
+                <div id="tab-reports" class="tab-content">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-6);">
+                        <!-- 리포트 카드 1 -->
+                        <div class="report-card" onclick="generateReport('executive')">
+                            <div class="report-card__header">
+                                <div class="report-card__icon" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
+                                    📊
+                                </div>
+                                <div>
+                                    <div class="report-card__title">경영진 리포트</div>
+                                </div>
+                            </div>
+                            <div class="report-card__desc">
+                                전체 플랫폼 현황을 한눈에 파악할 수 있는 종합 리포트
+                            </div>
+                            <div class="report-card__footer">
+                                <div class="report-card__meta">📅 월간 · 📄 PDF</div>
+                                <button class="btn btn--sm btn--outline">생성</button>
+                            </div>
+                        </div>
+
+                        <!-- 리포트 카드 2 -->
+                        <div class="report-card" onclick="generateReport('growth')">
+                            <div class="report-card__header">
+                                <div class="report-card__icon" style="background: linear-gradient(135deg, #10b981, #34d399);">
+                                    🚀
+                                </div>
+                                <div>
+                                    <div class="report-card__title">성장 분석 리포트</div>
+                                </div>
+                            </div>
+                            <div class="report-card__desc">
+                                사용자 획득, 리텐션, 전환율 등 성장 지표 상세 분석
+                            </div>
+                            <div class="report-card__footer">
+                                <div class="report-card__meta">📅 월간 · 📄 PDF</div>
+                                <button class="btn btn--sm btn--outline">생성</button>
+                            </div>
+                        </div>
+
+                        <!-- 리포트 카드 3 -->
+                        <div class="report-card" onclick="generateReport('revenue')">
+                            <div class="report-card__header">
+                                <div class="report-card__icon" style="background: linear-gradient(135deg, #f59e0b, #fbbf24);">
+                                    💰
+                                </div>
+                                <div>
+                                    <div class="report-card__title">재무 리포트</div>
+                                </div>
+                            </div>
+                            <div class="report-card__desc">
+                                MRR, ARR, 수익성 등 재무 지표 및 예측 분석
+                            </div>
+                            <div class="report-card__footer">
+                                <div class="report-card__meta">📅 월간 · 📊 Excel</div>
+                                <button class="btn btn--sm btn--outline">생성</button>
+                            </div>
+                        </div>
+
+                        <!-- 리포트 카드 4 -->
+                        <div class="report-card" onclick="generateReport('engagement')">
+                            <div class="report-card__header">
+                                <div class="report-card__icon" style="background: linear-gradient(135deg, #ec4899, #f472b6);">
+                                    👥
+                                </div>
+                                <div>
+                                    <div class="report-card__title">사용자 참여 리포트</div>
+                                </div>
+                            </div>
+                            <div class="report-card__desc">
+                                DAU/MAU, 세션 시간, 기능 사용률 등 참여도 분석
+                            </div>
+                            <div class="report-card__footer">
+                                <div class="report-card__meta">📅 주간 · 📄 PDF</div>
+                                <button class="btn btn--sm btn--outline">생성</button>
+                            </div>
+                        </div>
+
+                        <!-- 리포트 카드 5 -->
+                        <div class="report-card" onclick="generateReport('performance')">
+                            <div class="report-card__header">
+                                <div class="report-card__icon" style="background: linear-gradient(135deg, #3b82f6, #60a5fa);">
+                                    ⚡
+                                </div>
+                                <div>
+                                    <div class="report-card__title">시스템 성능 리포트</div>
+                                </div>
+                            </div>
+                            <div class="report-card__desc">
+                                API 응답 시간, 가동률, 에러율 등 시스템 성능 지표
+                            </div>
+                            <div class="report-card__footer">
+                                <div class="report-card__meta">📅 일간 · 📄 PDF</div>
+                                <button class="btn btn--sm btn--outline">생성</button>
+                            </div>
+                        </div>
+
+                        <!-- 리포트 카드 6 -->
+                        <div class="report-card" onclick="generateReport('custom')">
+                            <div class="report-card__header">
+                                <div class="report-card__icon" style="background: linear-gradient(135deg, #14b8a6, #5eead4);">
+                                    ✨
+                                </div>
+                                <div>
+                                    <div class="report-card__title">커스텀 리포트</div>
+                                </div>
+                            </div>
+                            <div class="report-card__desc">
+                                원하는 지표와 기간을 선택하여 맞춤형 리포트 생성
+                            </div>
+                            <div class="report-card__footer">
+                                <div class="report-card__meta">📅 사용자 지정</div>
+                                <button class="btn btn--sm btn--primary">설정</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 예약된 리포트 -->
+                    <div style="background: var(--background); border: 2px solid var(--border); border-radius: var(--radius-xl); padding: var(--space-5);">
+                        <h3 style="font-size: var(--text-lg); font-weight: var(--font-bold); margin-bottom: var(--space-4);">
+                            ⏰ 예약된 리포트
+                        </h3>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>리포트명</th>
+                                    <th>빈도</th>
+                                    <th>수신자</th>
+                                    <th>다음 발송</th>
+                                    <th>상태</th>
+                                    <th style="width: 100px;">액션</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr onclick="viewScheduledReport('report-1')">
+                                    <td><strong>경영진 월간 리포트</strong></td>
+                                    <td>월간 (매월 1일)</td>
+                                    <td>CEO, CFO</td>
+                                    <td>2024-11-01</td>
+                                    <td><span class="badge badge--success">활성</span></td>
+                                    <td onclick="event.stopPropagation();">
+                                        <button class="btn btn--sm btn--outline" onclick="editScheduledReport('report-1')">편집</button>
+                                    </td>
+                                </tr>
+                                <tr onclick="viewScheduledReport('report-2')">
+                                    <td><strong>성장 분석 리포트</strong></td>
+                                    <td>주간 (매주 월요일)</td>
+                                    <td>Growth Team</td>
+                                    <td>2024-10-14</td>
+                                    <td><span class="badge badge--success">활성</span></td>
+                                    <td onclick="event.stopPropagation();">
+                                        <button class="btn btn--sm btn--outline" onclick="editScheduledReport('report-2')">편집</button>
+                                    </td>
+                                </tr>
+                                <tr onclick="viewScheduledReport('report-3')">
+                                    <td><strong>시스템 성능 리포트</strong></td>
+                                    <td>일간 (매일 09:00)</td>
+                                    <td>DevOps Team</td>
+                                    <td>2024-10-10</td>
+                                    <td><span class="badge badge--success">활성</span></td>
+                                    <td onclick="event.stopPropagation();">
+                                        <button class="btn btn--sm btn--outline" onclick="editScheduledReport('report-3')">편집</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- 공통 스크립트 -->
+    <script src="../common/layout.js"></script>
+    <script src="../common/utils.js"></script>
+
+    <!-- 페이지 전용 스크립트 -->
+    <script>
+        // ========== Analytics & Reports 전용 로직 ==========
+
+        // 전역 변수
+        let currentTab = 'overview';
+        let analyticsData = {};
+
+        // ========== 초기화 ==========
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Analytics & Reports 페이지 초기화');
+            
+            initializeAnalytics();
+            loadAnalyticsData();
+        });
+
+        function initializeAnalytics() {
+            // URL 파라미터 확인
+            const urlParams = new URLSearchParams(window.location.search);
+            const tab = urlParams.get('tab');
+
+            if (tab) {
+                switchTab(tab);
+            }
+        }
+
+        function loadAnalyticsData() {
+            // 실제로는 서버에서 데이터 가져옴
+            analyticsData = {
+                organizations: 247,
+                users: 8947,
+                mrr: 487000,
+                apiCalls: 12400000,
+                dau: 6234,
+                wau: 7892,
+                mau: 8501
+            };
+
+            console.log('분석 데이터 로드 완료:', analyticsData);
+        }
+
+        // ========== 탭 전환 ==========
+        function switchTab(tabName) {
+            // 모든 탭 버튼 비활성화
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('tab-btn--active');
+            });
+
+            // 모든 탭 컨텐츠 숨김
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('tab-content--active');
+            });
+
+            // 선택된 탭 활성화
+            const selectedBtn = Array.from(document.querySelectorAll('.tab-btn')).find(btn => {
+                return btn.textContent.includes(getTabLabel(tabName));
+            });
+            if (selectedBtn) {
+                selectedBtn.classList.add('tab-btn--active');
+            }
+
+            const selectedContent = document.getElementById(`tab-${tabName}`);
+            if (selectedContent) {
+                selectedContent.classList.add('tab-content--active');
+            }
+
+            currentTab = tabName;
+            
+            // URL 업데이트 (페이지 리로드 없이)
+            const url = new URL(window.location);
+            url.searchParams.set('tab', tabName);
+            window.history.pushState({}, '', url);
+        }
+
+        function getTabLabel(tabName) {
+            const labels = {
+                'overview': '개요',
+                'growth': '성장 분석',
+                'engagement': '사용자 참여',
+                'revenue': '매출 분석',
+                'performance': '성능 지표',
+                'reports': '리포트 센터'
+            };
+            return labels[tabName] || tabName;
+        }
+
+        // ========== 차트 변경 ==========
+        function changeOverviewChart(type) {
+            window.GrowFitUtils.showToast(`${type} 차트로 변경 중...`, 'info');
+            
+            setTimeout(() => {
+                window.GrowFitUtils.showToast('차트가 업데이트되었습니다', 'success');
+            }, 500);
+        }
+
+        // ========== 리포트 생성 ==========
+        function generateReport(reportType) {
+            const reportNames = {
+                'executive': '경영진 리포트',
+                'growth': '성장 분석 리포트',
+                'revenue': '재무 리포트',
+                'engagement': '사용자 참여 리포트',
+                'performance': '시스템 성능 리포트',
+                'custom': '커스텀 리포트'
+            };
+
+            const reportName = reportNames[reportType] || '리포트';
+
+            if (reportType === 'custom') {
+                setupCustomReport();
+                return;
+            }
+
+            window.GrowFitUtils.showToast(`${reportName}를 생성하는 중...`, 'info');
+            
+            setTimeout(() => {
+                window.GrowFitUtils.showToast(`${reportName}.pdf가 다운로드되었습니다`, 'success');
+            }, 2000);
+        }
+
+        function setupCustomReport() {
+            const config = `
+✨ 커스텀 리포트 설정
+
+포함할 지표를 선택하세요:
+
+1. 조직 & 사용자 통계
+2. 매출 분석
+3. 성장 지표
+4. 참여도 지표
+5. 시스템 성능
+6. 전체 포함
+
+번호를 입력하세요 (여러 개 선택 시 쉼표로 구분):
+            `.trim();
+
+            const choice = prompt(config);
+
+            if (choice) {
+                window.GrowFitUtils.showToast('커스텀 리포트를 생성하는 중...', 'info');
+                
+                setTimeout(() => {
+                    window.GrowFitUtils.showToast('custom_report.pdf가 다운로드되었습니다', 'success');
+                }, 2000);
+            }
+        }
+
+        // ========== 예약 리포트 관리 ==========
+        function scheduleReport() {
+            const options = `
+⏰ 리포트 예약 설정
+
+1. 새 예약 추가
+2. 기존 예약 수정
+3. 예약 목록 보기
+
+번호를 입력하세요:
+            `.trim();
+
+            const choice = prompt(options);
+
+            if (choice === '1') {
+                addScheduledReport();
+            } else if (choice === '2') {
+                window.GrowFitUtils.showToast('리포트 센터 탭에서 수정할 수 있습니다', 'info');
+                switchTab('reports');
+            } else if (choice === '3') {
+                switchTab('reports');
+            }
+        }
+
+        function addScheduledReport() {
+            const reportType = prompt('리포트 종류:\n\n1. 경영진\n2. 성장 분석\n3. 재무\n4. 사용자 참여\n5. 시스템 성능');
+            
+            if (reportType && ['1', '2', '3', '4', '5'].includes(reportType)) {
+                const frequency = prompt('발송 빈도:\n\n1. 일간\n2. 주간\n3. 월간');
+                
+                if (frequency && ['1', '2', '3'].includes(frequency)) {
+                    window.GrowFitUtils.showToast('리포트 예약이 설정되었습니다', 'success');
+                }
+            }
+        }
+
+        function viewScheduledReport(reportId) {
+            const report = `
+📄 예약된 리포트 상세
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+리포트 ID: ${reportId}
+리포트명: 경영진 월간 리포트
+빈도: 월간 (매월 1일 09:00)
+
+수신자:
+- CEO (ceo@company.com)
+- CFO (cfo@company.com)
+
+포함 내용:
+- 전체 조직 & 사용자 통계
+- 매출 현황 (MRR/ARR)
+- 성장 지표
+- 주요 인사이트
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+마지막 발송: 2024-10-01
+다음 발송: 2024-11-01
+상태: 활성
+
+[편집] [일시 중지] [삭제]
+            `.trim();
+
+            alert(report);
+        }
+
+        function editScheduledReport(reportId) {
+            window.GrowFitUtils.showToast('예약 설정을 수정하는 중...', 'info');
+            
+            setTimeout(() => {
+                window.GrowFitUtils.showToast('예약 설정이 업데이트되었습니다', 'success');
+            }, 1000);
+        }
+
+        // ========== 전체 내보내기 ==========
+        function exportAllReports() {
+            const formats = `
+📥 전체 리포트 내보내기
+
+내보낼 형식:
+
+1. PDF (개별 파일)
+2. PDF (통합 파일)
+3. Excel (데이터 시트)
+4. PowerPoint (프레젠테이션)
+5. ZIP (전체 포함)
+
+번호를 입력하세요:
+            `.trim();
+
+            const choice = prompt(formats);
+
+            if (choice && ['1', '2', '3', '4', '5'].includes(choice)) {
+                handleExportAll(choice);
+            }
+        }
+
+        function handleExportAll(format) {
+            const formatMap = {
+                '1': 'reports_individual.zip',
+                '2': 'all_reports.pdf',
+                '3': 'analytics_data.xlsx',
+                '4': 'presentation.pptx',
+                '5': 'complete_analytics_package.zip'
+            };
+
+            window.GrowFitUtils.showToast('전체 리포트를 생성하는 중...', 'info');
+
+            setTimeout(() => {
+                const filename = formatMap[format];
+                window.GrowFitUtils.showToast(`${filename}이(가) 다운로드되었습니다`, 'success');
+            }, 3000);
+        }
+
+        // ========== 커스텀 리포트 ==========
+        function generateCustomReport() {
+            const builder = `
+✨ 커스텀 리포트 빌더
+
+단계별 설정을 진행합니다.
+
+1단계: 기간 선택
+- 어떤 기간의 데이터를 포함하시겠습니까?
+  - 최근 7일
+  - 최근 30일
+  - 최근 90일
+  - 사용자 지정
+
+2단계: 지표 선택
+- 어떤 지표를 포함하시겠습니까?
+  - 조직 & 사용자
+  - 매출 & 재무
+  - 성장 & 리텐션
+  - 참여도 & 활동
+  - 시스템 성능
+  - 전체 선택
+
+3단계: 형식 선택
+- 리포트 형식:
+  - PDF (읽기 전용)
+  - Excel (데이터 포함)
+  - PowerPoint (프레젠테이션)
+
+시작하시겠습니까?
+            `.trim();
+
+            if (confirm(builder)) {
+                startCustomReportWizard();
+            }
+        }
+
+        function startCustomReportWizard() {
+            // 단계 1: 기간
+            const period = prompt('기간 선택:\n\n1. 최근 7일\n2. 최근 30일\n3. 최근 90일\n4. 사용자 지정');
+            
+            if (!period || !['1', '2', '3', '4'].includes(period)) return;
+
+            // 단계 2: 지표
+            const metrics = prompt('지표 선택 (여러 개 선택 시 쉼표로 구분):\n\n1. 조직 & 사용자\n2. 매출 & 재무\n3. 성장 & 리텐션\n4. 참여도 & 활동\n5. 시스템 성능\n6. 전체 선택');
+            
+            if (!metrics) return;
+
+            // 단계 3: 형식
+            const format = prompt('형식 선택:\n\n1. PDF\n2. Excel\n3. PowerPoint');
+            
+            if (!format || !['1', '2', '3'].includes(format)) return;
+
+            window.GrowFitUtils.showToast('커스텀 리포트를 생성하는 중...', 'info');
+
+            setTimeout(() => {
+                window.GrowFitUtils.showToast('커스텀 리포트가 생성되었습니다', 'success');
+            }, 2500);
+        }
+
+        // ========== 새로고침 ==========
+        function refreshAnalytics() {
+            window.GrowFitUtils.showToast('분석 데이터를 새로고침하는 중...', 'info');
+            
+            setTimeout(() => {
+                loadAnalyticsData();
+                window.GrowFitUtils.showToast('데이터가 업데이트되었습니다', 'success');
+            }, 1000);
+        }
+
+        // ========== 상세 분석 ==========
+        function showDetailedAnalysis(type) {
+            const analyses = {
+                'growth': analyzeGrowth,
+                'engagement': analyzeEngagement,
+                'revenue': analyzeRevenue,
+                'performance': analyzePerformance
+            };
+
+            if (analyses[type]) {
+                analyses[type]();
+            }
+        }
+
+        function analyzeGrowth() {
+            const analysis = `
+🚀 성장 상세 분석
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+전체 성장률: +24.7%
+
+세부 분석:
+- 신규 조직: +28개 (+12.5%)
+- 신규 사용자: +1,384명 (+18.3%)
+- MRR 증가: +$96.3K (+24.7%)
+
+성장 동인:
+1. Enterprise 플랜 전환 증가 (↑47%)
+2. 마케팅 캠페인 효과 (ROI 3.2x)
+3. 제품 개선 (NPS +8점)
+4. 고객 추천 프로그램 (추천율 23%)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+예측:
+- 다음 달: +32개 조직 예상
+- 분기말: 총 290개 조직 예상
+- 연말: 총 340개 조직 예상
+
+리스크:
+- 경쟁 심화
+- 시장 포화 가능성
+- 가격 압력
+
+기회:
+- 신규 시장 진출
+- 제품 라인 확장
+- 전략적 파트너십
+
+[상세 리포트] [시나리오 분석]
+            `.trim();
+
+            alert(analysis);
+        }
+
+        function analyzeEngagement() {
+            const analysis = `
+👥 사용자 참여 상세 분석
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+활성 사용자:
+- DAU: 6,234명 (70% of MAU)
+- WAU: 7,892명 (93% of MAU)
+- MAU: 8,501명
+
+참여도 지표:
+- 평균 세션: 2.4시간 (+5.3%)
+- 세션/일: 3.2회
+- 주간 활동일: 4.7일
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+기능 사용률:
+- 대화형 AI: 92% (핵심 기능)
+- 문서 분석: 89%
+- 코드 생성: 76%
+- 이미지 분석: 64%
+
+사용자 세그먼트:
+- 파워 유저 (일 5회+): 23%
+- 일반 사용자 (주 3-5회): 54%
+- 라이트 유저 (주 1-2회): 23%
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+인사이트:
+- 파워 유저의 리텐션이 95%로 매우 높음
+- 신규 사용자의 첫 주 활동이 중요 (상관계수 0.83)
+- 모바일 사용이 증가 추세 (+12%)
+
+개선 방안:
+1. 파워 유저 육성 프로그램
+2. 온보딩 최적화
+3. 모바일 경험 개선
+
+[상세 리포트] [코호트 분석]
+            `.trim();
+
+            alert(analysis);
+        }
+
+        function analyzeRevenue() {
+            const analysis = `
+💰 매출 상세 분석
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+매출 현황:
+- MRR: $487K (+24.7%)
+- ARR: $5.84M (+28.3%)
+- ARPU: $1,972 (+8.9%)
+
+플랜별 기여도:
+- Enterprise: $141K (29%)
+  - 47개 조직, $2,999/월
+  - YoY 성장: +47%
+
+- Professional: $89K (18%)
+  - 89개 조직, $999/월
+  - YoY 성장: +32%
+
+- Starter: $23K (5%)
+  - 76개 조직, $299/월
+  - YoY 성장: +18%
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+수익성 지표:
+- Gross Margin: 68%
+- LTV: $23,700
+- CAC: $3,200
+- LTV:CAC: 7.4:1
+- Payback Period: 4.2개월
+
+성장 예측:
+- 다음 달: $542K (+11%)
+- 분기말: $687K (+41%)
+- 연말: $823K (+69%)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+리스크:
+- API 비용 증가 (52% of revenue)
+- 가격 경쟁 심화
+- Churn 증가 가능성
+
+기회:
+- Enterprise 전환 가속화
+- 신규 가격 tier 도입
+- 연간 계약 프로모션
+
+[상세 리포트] [재무 모델]
+            `.trim();
+
+            alert(analysis);
+        }
+
+        function analyzePerformance() {
+            const analysis = `
+⚡ 시스템 성능 상세 분석
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+전체 성능:
+- 평균 응답: 0.12초 (↓0.03초)
+- 성공률: 99.7% (↑0.2%p)
+- 가동률: 99.9% (SLA 목표 초과)
+- 에러율: 0.3% (↓0.1%p)
+
+API 프로바이더:
+- OpenAI: 0.85초 (99.9%)
+- Claude: 1.12초 (99.7%)
+- Gemini: 0.94초 (99.8%)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+인프라:
+- CPU: 67% (정상)
+- 메모리: 73% (주의)
+- 네트워크: 45% (여유)
+- 스토리지: 56% (정상)
+
+성능 추이:
+- 응답 시간: 개선 추세
+- 처리량: +32% 증가
+- 동시 접속: 최대 1,892명
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+인시던트 (30일):
+- 총 건수: 3건
+- P1 (긴급): 0건
+- P2 (높음): 1건
+- P3 (중간): 2건
+- 평균 해결: 2.4시간
+
+개선 사항:
+1. 메모리 증설 검토 (73% → 60%)
+2. 캐싱 전략 최적화
+3. 자동 스케일링 설정
+4. 모니터링 강화
+
+[상세 리포트] [성능 최적화]
+            `.trim();
+
+            alert(analysis);
+        }
+
+        // ========== 데이터 내보내기 ==========
+        function exportData(format) {
+            const exportFormats = {
+                'csv': 'analytics_data.csv',
+                'excel': 'analytics_data.xlsx',
+                'json': 'analytics_data.json',
+                'pdf': 'analytics_report.pdf'
+            };
+
+            window.GrowFitUtils.showToast('데이터를 내보내는 중...', 'info');
+
+            setTimeout(() => {
+                const filename = exportFormats[format];
+                window.GrowFitUtils.showToast(`${filename}이(가) 다운로드되었습니다`, 'success');
+            }, 1500);
+        }
+
+        // ========== 키보드 단축키 ==========
+        document.addEventListener('keydown', function(e) {
+            // Ctrl/Cmd + R: 새로고침
+            if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+                e.preventDefault();
+                refreshAnalytics();
+            }
+
+            // Ctrl/Cmd + E: 내보내기
+            if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+                e.preventDefault();
+                exportAllReports();
+            }
+
+            // Ctrl/Cmd + N: 커스텀 리포트
+            if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+                e.preventDefault();
+                generateCustomReport();
+            }
+
+            // 숫자 키: 탭 전환
+            if (e.key >= '1' && e.key <= '6') {
+                const tabs = ['overview', 'growth', 'engagement', 'revenue', 'performance', 'reports'];
+                switchTab(tabs[parseInt(e.key) - 1]);
+            }
+        });
+
+        // ========== 브라우저 뒤로가기/앞으로가기 ==========
+        window.addEventListener('popstate', function(e) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const tab = urlParams.get('tab');
+            if (tab) {
+                switchTab(tab);
+            }
+        });
+
+        // ========== 성능 모니터링 ==========
+        function logPerformance() {
+            if (window.performance) {
+                const perfData = window.performance.timing;
+                const pageLoadTime = perfData.loadEventEnd - perfData.navigationStart;
+                
+                console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+                console.log('📊 페이지 성능 메트릭');
+                console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+                console.log('페이지 로드 시간:', pageLoadTime + 'ms');
+                console.log('DOM 준비 시간:', (perfData.domContentLoadedEventEnd - perfData.navigationStart) + 'ms');
+                console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            }
+        }
+
+        // 페이지 로드 완료 후 성능 측정
+        window.addEventListener('load', function() {
+            setTimeout(logPerformance, 0);
+        });
+
+        // ========== 초기화 완료 ==========
+        console.log('✅ Analytics & Reports 완전히 로드됨');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('📊 현재 탭:', currentTab);
+        console.log('🏢 총 조직:', analyticsData.organizations);
+        console.log('👥 총 사용자:', analyticsData.users);
+        console.log('💰 MRR:', '$' + (analyticsData.mrr / 1000) + 'K');
+        console.log('🔌 API 호출:', (analyticsData.apiCalls / 1000000).toFixed(1) + 'M');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('단축키: Ctrl+R(새로고침), Ctrl+E(내보내기), Ctrl+N(커스텀), 1-6(탭전환)');
+    </script>
+</body>
+</html>

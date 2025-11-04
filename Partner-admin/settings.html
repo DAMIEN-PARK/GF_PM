@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>설정 - GrowFit Partner Admin</title>
+
+    <!-- 공통 CSS -->
+    <link rel="stylesheet" href="../common/variables.css">
+    <link rel="stylesheet" href="../common/layout.css">
+    <link rel="stylesheet" href="../common/components.css">
+
+    <style>
+        /* ========== Settings 전용 스타일 ========== */
+        :root {
+            --partner-primary: #6366f1;
+            --partner-primary-light: #818cf8;
+            --partner-primary-dark: #4f46e5;
+            --partner-secondary: #8b5cf6;
+            --partner-success: #10b981;
+            --partner-warning: #f59e0b;
+            --partner-danger: #ef4444;
+            --settings-blue: #3b82f6;
+            --settings-purple: #8b5cf6;
+        }
+
+        /* 페이지 헤더 */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-6);
+        }
+
+        .page-header__left h1 {
+            font-size: var(--text-3xl);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-1);
+        }
+
+        .page-header__left p {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+        }
+
+        /* 설정 레이아웃 */
+        .settings-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: var(--space-6);
+        }
+
+        /* 사이드 네비게이션 */
+        .settings-nav {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: var(--space-4);
+            height: fit-content;
+            position: sticky;
+            top: var(--space-4);
+        }
+
+        .settings-nav__title {
+            font-size: var(--text-xs);
+            font-weight: var(--font-bold);
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: var(--space-3);
+            padding: 0 var(--space-3);
+        }
+
+        .settings-nav__list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .settings-nav__item {
+            margin-bottom: var(--space-1);
+        }
+
+        .settings-nav__link {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-3);
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+            font-weight: var(--font-medium);
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .settings-nav__link:hover {
+            background: var(--surface);
+            color: var(--text-primary);
+        }
+
+        .settings-nav__link--active {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+            color: var(--partner-primary);
+            font-weight: var(--font-semibold);
+        }
+
+        .settings-nav__icon {
+            font-size: 18px;
+        }
+
+        /* 설정 컨텐츠 */
+        .settings-content {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-5);
+        }
+
+        /* 설정 섹션 */
+        .settings-section {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
+            display: none;
+        }
+
+        .settings-section--active {
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .settings-section__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: var(--space-5);
+            padding-bottom: var(--space-4);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .settings-section__title {
+            font-size: var(--text-2xl);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-2);
+        }
+
+        .settings-section__desc {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+        }
+
+        /* 설정 그룹 */
+        .settings-group {
+            margin-bottom: var(--space-6);
+        }
+
+        .settings-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .settings-group__title {
+            font-size: var(--text-lg);
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-4);
+        }
+
+        /* 설정 아이템 */
+        .settings-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-4);
+            border-radius: var(--radius-lg);
+            transition: all 0.2s;
+        }
+
+        .settings-item:hover {
+            background: var(--surface);
+        }
+
+        .settings-item__info {
+            flex: 1;
+        }
+
+        .settings-item__label {
+            font-size: var(--text-base);
+            font-weight: var(--font-medium);
+            color: var(--text-primary);
+            margin-bottom: var(--space-1);
+        }
+
+        .settings-item__desc {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+        }
+
+        .settings-item__control {
+            margin-left: var(--space-4);
+        }
+
+        /* 토글 스위치 */
+        .toggle-switch {
+            position: relative;
+            width: 48px;
+            height: 28px;
+            background: var(--gray-300);
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 22px;
+            height: 22px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .toggle-switch--active {
+            background: var(--partner-primary);
+        }
+
+        .toggle-switch--active::after {
+            left: 23px;
+        }
+
+        /* 입력 필드 */
+        .settings-input {
+            width: 100%;
+            padding: var(--space-3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+            transition: all 0.2s;
+        }
+
+        .settings-input:focus {
+            outline: none;
+            border-color: var(--partner-primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .settings-select {
+            width: 100%;
+            padding: var(--space-3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+            background: white;
+            cursor: pointer;
+        }
+
+        .settings-textarea {
+            width: 100%;
+            padding: var(--space-3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .settings-textarea:focus {
+            outline: none;
+            border-color: var(--partner-primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        /* API 키 디스플레이 */
+        .api-key-display {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-3);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+        }
+
+        .api-key-value {
+            flex: 1;
+            font-family: monospace;
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+        }
+
+        .api-key-actions {
+            display: flex;
+            gap: var(--space-2);
+        }
+
+        /* 업로드 영역 */
+        .upload-area {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-6);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .upload-area:hover {
+            border-color: var(--partner-primary);
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: var(--space-2);
+        }
+
+        /* 프로필 이미지 */
+        .profile-image-section {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+            padding: var(--space-4);
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+        }
+
+        .profile-image-preview {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--partner-primary), var(--partner-secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: white;
+            font-weight: var(--font-bold);
+        }
+
+        .profile-image-info {
+            flex: 1;
+        }
+
+        /* 위험 영역 */
+        .danger-zone {
+            background: rgba(239, 68, 68, 0.05);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+        }
+
+        .danger-zone__title {
+            font-size: var(--text-base);
+            font-weight: var(--font-semibold);
+            color: var(--partner-danger);
+            margin-bottom: var(--space-2);
+        }
+
+        .danger-zone__desc {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-3);
+        }
+
+        /* 반응형 */
+        @media (max-width: 1024px) {
+            .settings-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .settings-nav {
+                position: static;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .settings-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .settings-item__control {
+                margin-left: 0;
+                margin-top: var(--space-3);
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header__left">
+                <button id="menuToggle" class="header__icon-button hidden-desktop">
+                    <span>☰</span>
+                </button>
+                <a href="dashboard.html" class="header__logo">
+                    <span class="header__logo-icon">🌱</span>
+                    <span>GrowFit Partner</span>
+                </a>
+            </div>
+
+            <div class="header__right">
+                <button id="notificationBtn" class="header__icon-button">
+                    <span>🔔</span>
+                    <span class="header__badge">2</span>
+                </button>
+
+                <div id="profileBtn" class="header__profile">
+                    <div class="header__avatar"
+                        style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">박</div>
+                    <span class="hidden-mobile">박강사</span>
+                    <span class="hidden-mobile">▼</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="container">
+            <!-- Sidebar -->
+            <aside class="sidebar sidebar--open">
+                <div class="sidebar__user">
+                    <div class="sidebar__user-info">
+                        <div class="sidebar__user-avatar"
+                            style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">박</div>
+                        <div class="sidebar__user-details">
+                            <div class="sidebar__user-name">박강사</div>
+                            <div class="sidebar__user-role">교육 파트너</div>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="sidebar__nav">
+                    <ul class="sidebar__menu">
+                        <li class="sidebar__menu-item">
+                            <a href="dashboard.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">🏠</span>
+                                <span>대시보드</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="project-management.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">📁</span>
+                                <span>프로젝트 관리</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="student-management.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">👥</span>
+                                <span>학생 관리</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="ai-practice-management.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">🤖</span>
+                                <span>AI 실습 관리</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="revenue-settlement.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">💰</span>
+                                <span>수익/정산 관리</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="settings.html" class="sidebar__menu-link sidebar__menu-link--active">
+                                <span class="sidebar__menu-icon">⚙️</span>
+                                <span>설정</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <div class="sidebar__footer">
+                    <div style="padding: var(--space-3); background: var(--surface); border-radius: var(--radius-md); font-size: var(--text-xs);">
+                        <div style="color: var(--text-secondary); margin-bottom: var(--space-1);">버전</div>
+                        <div style="font-weight: var(--font-bold); color: var(--partner-primary);">v1.0.0</div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main">
+                <!-- 페이지 헤더 -->
+                <div class="page-header">
+                    <div class="page-header__left">
+                        <h1>⚙️ 설정</h1>
+                        <p>파트너 프로필 및 시스템 설정을 관리하세요</p>
+                    </div>
+                </div>
+
+                <!-- 설정 레이아웃 -->
+                <div class="settings-layout">
+                    <!-- 사이드 네비게이션 -->
+                    <nav class="settings-nav">
+                        <div class="settings-nav__title">설정 메뉴</div>
+                        <ul class="settings-nav__list">
+                            <li class="settings-nav__item">
+                                <a class="settings-nav__link settings-nav__link--active" data-section="profile"
+                                    onclick="switchSection('profile')">
+                                    <span class="settings-nav__icon">👤</span>
+                                    <span>프로필</span>
+                                </a>
+                            </li>
+                            <li class="settings-nav__item">
+                                <a class="settings-nav__link" data-section="project"
+                                    onclick="switchSection('project')">
+                                    <span class="settings-nav__icon">📁</span>
+                                    <span>프로젝트 설정</span>
+                                </a>
+                            </li>
+                            <li class="settings-nav__item">
+                                <a class="settings-nav__link" data-section="ai" onclick="switchSection('ai')">
+                                    <span class="settings-nav__icon">🤖</span>
+                                    <span>AI 설정</span>
+                                </a>
+                            </li>
+                            <li class="settings-nav__item">
+                                <a class="settings-nav__link" data-section="notification"
+                                    onclick="switchSection('notification')">
+                                    <span class="settings-nav__icon">🔔</span>
+                                    <span>알림</span>
+                                </a>
+                            </li>
+                            <li class="settings-nav__item">
+                                <a class="settings-nav__link" data-section="security"
+                                    onclick="switchSection('security')">
+                                    <span class="settings-nav__icon">🔐</span>
+                                    <span>보안</span>
+                                </a>
+                            </li>
+                            <li class="settings-nav__item">
+                                <a class="settings-nav__link" data-section="billing"
+                                    onclick="switchSection('billing')">
+                                    <span class="settings-nav__icon">💳</span>
+                                    <span>정산 정보</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+
+                    <!-- 설정 컨텐츠 -->
+                    <div class="settings-content">
+                        <!-- 1. 프로필 -->
+                        <section id="section-profile" class="settings-section settings-section--active">
+                            <div class="settings-section__header">
+                                <div>
+                                    <h2 class="settings-section__title">👤 프로필</h2>
+                                    <p class="settings-section__desc">파트너 프로필 정보를 관리하세요</p>
+                                </div>
+                            </div>
+
+                            <div class="settings-group">
+                                <h3 class="settings-group__title">프로필 이미지</h3>
+                                <div class="profile-image-section">
+                                    <div class="profile-image-preview">박</div>
+                                    <div class="profile-image-info">
+                                        <div style="font-size: var(--text-base); font-weight: var(--font-semibold); margin-bottom: var(--space-2);">
+                                            프로필 이미지
+                                        </div>
+                                        <div style="font-size: var(--text-sm); color: var(--text-secondary); margin-bottom: var(--space-3);">
+                                            JPG, PNG 파일 (최대 2MB)
+                                        </div>
+                                        <div style="display: flex; gap: var(--space-2);">
+                                            <button class="btn btn--sm btn--outline" onclick="uploadProfileImage()">
+                                                업로드
+                                            </button>
+                                            <button class="btn btn--sm btn--outline" onclick="removeProfileImage()">
+                                                제거
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="settings-group">
+                                <h3 class="settings-group__title">기본 정보</h3>
+
+                                <div class="settings-item">
+                                    <div class="settings-item__info">
+                                        <div class="settings-item__label">이름</div>
+                                        <div class="settings-item__desc">강사 이름</div>
+                                    </div>
+                                    <div class="settings-item__control" style="flex: 1; max-width: 400px;">
+                                        <input type="text" class="settings-input" value="박강사" placeholder="이름 입력">
+                                    </div>
+                                </div>
+
+                                <div class="settings-item">
+                                    <div class="settings-item__info">
+                                        <div class="settings-item__label">이메일</div>
+                                        <div class="settings-item__desc">로그인 및 연락용 이메일</div>
+                                    </div>
+                                    <div class="settings-item__control" style="flex: 1; max-width: 400px;">
+                                        <input type="email" class="settings-input" value="park@example.com"
+                                            placeholder="이메일 입력">
+                                    </div>
+                                </div>
+
+                                <div class="settings-item">
+                                    <div class="settings-item__info">
+                                        <div class="settings-item__label">전화번호</div>
+                                        <div class="settings-item__desc">연락 가능한 전화번호</div>
+                                    </div>
+                                    <div class="settings-item__control" style="flex: 1; max-width: 400px;">
+                                        <input type="tel" class="settings-input" value="010-1234-5678"
+                                            placeholder="전화번호 입력">
+                                    </div>
+                                </div>
+
+                                <div class="settings-item">
+                                    <div class="settings-item__info">
+                                        <div class="settings-item__label">소개</div>
+                                        <div class="settings-item__desc">강사 소개 및 전문 분야</div>
+                                    </div>
+                                    <div class="settings-item__control" style="flex: 1; max-width: 600px;">
+                                        <textarea class="settings-textarea"
+                                            placeholder="소개 입력">10년 경력의 AI/ML 전문 강사입니다. 기업 교육을 전문으로 하며, 실무 중심의 교육 커리큘럼을 제공합니다.</textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="settings-group">
+                                <h3 class="settings-group__title">전문 분야</h3>
+
+                                <div class="settings-item">
+                                    <div class="settings-item__info">
+                                        <div class="settings-item__label">주요 전문 분야</div>
+                                        <div class="settings-item__desc">교육 가능한 분야 (복수 선택)</div>
+                                    </div>
+                                    <div class="settings-item__control" style="flex: 1; max-width: 400px;">
+                                        <select class="settings-select" multiple size="4">
+                                            <option selected>AI/ML 기초</option>
+                                            <option selected>프롬프트 엔지니어링</option>
+                                            <option>데이터 분석</option>
+                                            <option>챗봇 개발</option>
+                                            <option>AI 코딩</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-5);">
+                                <button class="btn btn--outline" onclick="cancelChanges()">취소</button>
+                                <button class="btn btn--primary" style="background: var(--partner-primary);"
+                                    onclick="saveProfileSettings()">저장</button>
+                            </div>
+                        </section>
+
+                        <!-- 2. 프로젝트 설정 -->
+                        <section id="section-project" class="settings-section">
+                            <div class="settings-section__header">
+                                <div>
+                                    <h2 class="settings-section__title">📁 프로젝트 설정</h2>
+                                    <p class="settings-section__desc">프로젝트 기본 설정을 관리하세요</p>
+                                </div>
+                            </div>
+
+                            <div class="settings-group">
+                                <h3 class="settings-group__title">기본 설정</h3>
+
+                                <div class="settings-item">
+                                    <div class="settings-item__info">
+                                        <div class="settings-item__label">프로젝트 자동 승인</div>
+                                        <div class="settings-item__desc">신규 학생 등록 시 자동으로 승인</div>
+                                    </div>
+                                    <div class="settings-item__control">
+                                        <div class="toggle-switch toggle-switch--active"
+                                            onclick="toggleSwitch(this)"></div>
+                                    </div>
+                                </div>
+
+                                <div class="settings-item">
+                                    <div class="settings-item__info">
+                                        <div class="settings-item__label">학생 자가 등록 허용</div>
+                                        <div class="settings-item__desc">초대 링크로 학생이 직접 등록 가능</div>
+                                    </div>
+                                    <div class="settings-item__control">
+                                        <div class="toggle-switch toggle-switch--active"
+                                            onclick="toggleSwitch(this)"></div>
+                                    </div>
+                                </div>
+
+                                <div class="settings-item">
+                                    <div class="settings-item__info">
+                                        <div class="settings-item__label">기본 프로젝트 기간</div>
+                                        <div class="settings-item__desc">신규 프로젝트 생성 시 기본 기간</div>
+                                    </div>
+                                    <div class="settings-item__control">
+                                        <select class="settings-select" style="width: 200px;">
+                                            <option value="30">1개월</option>
+                                            <option value="60">2개월</option>
+                                            <option value="90" selected>3개월</option>
+                                            <option value="180">6개월</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="settings-group">
+                                <h3 class="settings-group__title">학생 관리</h3>
+
+                                <div class="settings-item">
+                                    <div class="settings-item__info">
+                                        <div class="settings-item__label">비활성 학생 자동 정리</div>
+                                        <div class="settings-item__desc">일정 기간 활동 없는 학생 자동 비활성화</div>
+                                    </div>
+                                    <div class="settings-item__control">
+                                        <div class="toggle-switch" onclick="toggleSwitch(this)"></div>
+                                    </div>
+                                </div>
+
+                                <div class="settings-item">
+                                    <div class="settings-item__info">
+                                        <div class="settings-item__label">비활성 기준 (일)</div>
+                                        <div class="settings-item__desc">미접속 기간 기준</div>
+                                    </div>
+                                    <div class="settings-item__control">
+                                        <select class="settings-select" style="width: 150px;">
+                                            <option value="30">30일</option>
+                                            <option value="60" selected>60일</option>
+                                            <option value="90">90일</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-5);">
+                                <button class="btn btn--outline" onclick="cancelChanges()">취소</button>
+                                <button class="btn btn--primary" style="background: var(--partner-primary);"
+                                    onclick="saveProjectSettings()">저장</button>
+                            </div>
+                        </section>
+
+                        <!-- 3. AI 설정 -->
+                        <section id="section-ai" class="settings-section">
+                            <div class="settings-section__header">
+                                <div>
+                                    <h2 class="settings-section__title">🤖 AI 설정</h2>
+                                    <p class="settings-section__desc">AI 모델 및 사용 정책을 설정하세요</p>
+                                </div>
+                            </div>
+
+                            <div class="settings-group">
+                                <h3 class="settings-group__title">LLM 프로바이더</h3>
+
+                                <div class="settings-item">
+                                    <div class="settings-item__info">
+                                        <div class="settings-item__label">OpenAI (GPT-4)</div>
+                                        <div class="settings-item__desc">GPT-4, GPT-3.5-turbo</div>
+                                    </div>
+                                    <div class="settings-item__control">
+                                        <div class="toggle-switch toggle-switch--active"
+                                            onclick="toggleSwitch(this)"></div>
+                                    </div>
+                                </div>
+
+                                <div class="api-key-display" style="margin: var(--space-3) 0;">
+                                    <div class="api-key-value">sk-proj-••••••••••••••••••••••••1234</div>
+                                    <div class="api-key-actions">
+                                        <button class="btn btn--sm btn--outline" onclick="editAPIKey('openai')">
+                                            편집
+                                        </button>
+                                        <button class="btn btn--sm btn--outline" onclick="testAPIKey('openai')">
+                                            테스트
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="settings-item">
+                                    <div class="settings-item__info">
+                                        <div class="settings-item__label">Anthropic (Claude)</div>
+                                        <div class="settings-item__desc">Claude 3.7 Sonnet, Claude 3 Opus</div>
+                                    </div>
+                                    <div class="settings-item__control">
+                                        <div class="toggle-switch toggle-switch--active"
+                                            onclick="toggleSwitch(this)"></div>
+                                    </div>
+                                </div>
+
+                                <div class="api-key-display" style="margin: var(--space-3) 0;">
+                                    <div class="api-key-value">sk-ant-••••••••••••••••••••••••5678</div>
+                                    <div class="api-key-actions">
+                                        <button class="btn btn--sm btn--outline" onclick="editAPIKey('claude')">
+                                            편집
+                                        </button>
+                                        <button class="btn btn--sm btn--outline" onclick="testAPIKey('claude')">
+                                            테스트
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="settings-item">
+                                    <div class="settings-item__info">
+                                        <div class="settings-item__label">Google (Gemini)</div>
+                                        <div class="settings-item__desc">Gemini Pro, Gemini Ultra</div>
+                                    </div>
+                                    <div class="settings-item__control">
+                                        <div class="toggle-switch toggle-switch--active"
+                                            onclick="toggleSwitch(this)"></div>
+                                    </div>
+                                </div>
+
+                                <div class="api-key-display" style="margin: var(--space-3) 0;">
+                                    <div class="api-key-value">AIza••••••••••••••••••••••••9012</div>
+                                    <div class="api-key-actions">
+                                        <button class="btn btn--sm btn--outline" onclick="editAPIKey('gemini')">
+                                            편집
+                                        </button>
+                                        <button class="btn btn--sm btn--outline" onclick="testAPIKey('gemini')">
+                                            테스트
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="settings-group">
+                                <h3 class="settings-group__title">기본 모델 설정</h3>
+
+                                <div class="settings-item">
+                                    <div class="settings-item__info">
+                                        <div class="settings-item__label">기본 채팅 모델</div>
+                                        <div class="settings-item__desc">일반 대화에 사용할 모델</div>
+                                    </div>
+                                    <div class="settings-item__control">
+                                        <select class="settings-select" style="width: 250px;">
+                                            <option value="gpt-4">GPT-4</option>
+                                            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                                            <option value="claude-3-opus">Claude 3 Opus</option>
+                                            <option value="claude-3-sonnet" selected>Claude 3.7 Sonnet</option>
+                                            <option value="gemini-pro">Gemini Pro</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="settings-item">
+                                    <div class="settings-item__info">
+                                        <div class="settings-item__label">병렬 비교 모드</div>
+                                        <div class="settings-item__desc">학생이 여러 모델 동시 사용 허용</div>
+                                    </div>
+                                    <div class="settings-item__control">
+                                        <div class="toggle-switch toggle-switch--active"
+                                            onclick="toggleSwitch(this)"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="settings-group">
+                                <h3 class="settings-group__title">사용량 제한</h3>
+
+                                <div class="settings-item">
+                                    <div class="settings-item__info">
+                                        <div class="settings-item__label">학생당 일일 대화 제한</div>
+                                        <div class="settings-item__desc">비용 관리를 위한 일일 사용량 제한</div>
+                                    </div>
+                                    <div class="settings-item__control">
+                                        <select class="settings-select" style="width: 150px;">
+                                            <option value="0">제한 없음</option>
+                                            <option value="50">50회</option>
+                                            <option value="100" selected>100회</option>
+                                            <option value="200">200회</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="settings-item">
+                                    <div class="settings-item__info">
+                                        <div class="settings-item__label">토큰 제한 알림</div>
+                                        <div class="settings-item__desc">일정 토큰 초과 시 알림</div>
+                                    </div>
+                                    <div class="settings-item__control">
+                                        <div class="toggle-switch toggle-switch--active"
+                                            onclick="toggleSwitch(this)"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-5);">
+                                <button class="btn btn--outline" onclick="cancelChanges()">취소</button>
+                                <button class="btn btn--primary" style="background: var(--partner-primary);"
+                                    onclick="saveAISettings()">저장</button>
+                            </div>
+                        </section>
+
+                        <!-- 4. 알림 -->
+                        <section id="section-notification" class="settings-section">
+                            <div class="settings-section__header">
+                                <div>
+                                    <h2 class="settings-section__title">🔔 알림</h2>
+                                    <p class="settings-section__desc">알림 설정을 관리하세요</p>
+                                </div>
+                            </div>
+
+                            <div class="settings-group">
+                                <h3 class="settings-group__title">이메일 알림</h3>
+
+                                <div class="settings-item">
+                                    <div class="settings-item__info">
+                                        <div class="settings-item__label">신규 학생 등록</div>
+                                        <div class="settings-item__desc">새 학생이 등록되면 알림</div>
+                                    </div>
+                                    <div class="settings-item__control">
+                                        <div class="toggle-switch toggle-switch--active"
+                                            onclick="toggleSwitch(this)"></div>
+                                    </div>
+                                </div>
+
+                                <div class="settings-item">
+                                    <div class="settings-item__info">
+                                        <div class="settings-item__label">프로젝트 마감 임박</div>
+                                        <div class="settings-item__desc">프로젝트 종료 7일 전 알림</div>
+                                    </div>
+                                    <div class="settings-item__control">
+                                        <div class="toggle-switch toggle-switch--active"
+                                            onclick="toggleSwitch(this)"></div>
+                                    </div>
+                                </div>
+
+                                <div class="settings-item">
+                                    <div class="settings-item__info">
+                                        <div class="settings-item__label">정산 완료</div>
+                                        <div class="settings-item__desc">월별 정산 완료 시 알림</div>
+                                    </div>
+                                    <div class="settings-item__control">
+                                        <div class="toggle-switch toggle-switch--active"
+                                            onclick="toggleSwitch(this)"></div>
+                                    </div>
+                                </div>
+
+                                <div class="settings-item">
+                                    <div class="settings-item__info">
+                                        <div class="settings-item__label">API 비용 경고</div>
+                                        <div class="settings-item__desc">예산 대비 80% 이상 사용 시 알림</div>
+                                    </div>
+                                    <div class="settings-item__control">
+                                        <div class="toggle-switch toggle-switch--active"
+                                            onclick="toggleSwitch(this)"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="settings-group">
+                                <h3 class="settings-group__title">시스템 알림</h3>
+
+                                <div class="settings-item">
+                                    <div class="settings-item__info">
+                                        <div class="settings-item__label">공지사항</div>
+                                        <div class="settings-item__desc">GrowFit 공지사항 및 업데이트</div>
+                                    </div>
+                                    <div class="settings-item__control">
+                                        <div class="toggle-switch toggle-switch--active"
+                                            onclick="toggleSwitch(this)"></div>
+                                    </div>
+                                </div>
+
+                                <div class="settings-item">
+                                    <div class="settings-item__info">
+                                        <div class="settings-item__label">마케팅 정보</div>
+                                        <div class="settings-item__desc">프로모션 및 이벤트 정보</div>
+                                    </div>
+                                    <div class="settings-item__control">
+                                        <div class="toggle-switch" onclick="toggleSwitch(this)"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-5);">
+                                <button class="btn btn--outline" onclick="cancelChanges()">취소</button>
+                                <button class="btn btn--primary" style="background: var(--partner-primary);"
+                                    onclick="saveNotificationSettings()">저장</button>
+                            </div>
+                        </section>
+
+                        <!-- 5. 보안 -->
+                        <section id="section-security" class="settings-section">
+                            <div class="settings-section__header">
+                                <div>
+                                    <h2 class="settings-section__title">🔐 보안</h2>
+                                    <p class="settings-section__desc">계정 보안 설정을 관리하세요</p>
+                                </div>
+                            </div>
+
+                            <div class="settings-group">
+                                <h3 class="settings-group__title">비밀번호</h3>
+
+                                <div class="settings-item">
+                                    <div class="settings-item__info">
+                                        <div class="settings-item__label">비밀번호 변경</div>
+                                        <div class="settings-item__desc">정기적인 비밀번호 변경 권장</div>
+                                    </div>
+                                    <div class="settings-item__control">
+                                        <button class="btn btn--outline" onclick="changePassword()">
+                                            변경하기
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="settings-item">
+                                    <div class="settings-item__info">
+                                        <div class="settings-item__label">마지막 변경일</div>
+                                        <div class="settings-item__desc">2024년 11월 15일</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="settings-group">
+                                <h3 class="settings-group__title">2단계 인증</h3>
+
+                                <div class="settings-item">
+                                    <div class="settings-item__info">
+                                        <div class="settings-item__label">2단계 인증 (2FA)</div>
+                                        <div class="settings-item__desc">계정 보안 강화를 위한 2FA 활성화</div>
+                                    </div>
+                                    <div class="settings-item__control">
+                                        <div class="toggle-switch toggle-switch--active"
+                                            onclick="toggleSwitch(this)"></div>
+                                    </div>
+                                </div>
+
+                                <div class="settings-item">
+                                    <div class="settings-item__info">
+                                        <div class="settings-item__label">인증 방법</div>
+                                        <div class="settings-item__desc">사용 중인 인증 수단</div>
+                                    </div>
+                                    <div class="settings-item__control">
+                                        <span
+                                            style="padding: 6px 12px; background: var(--surface); border-radius: var(--radius-md); font-size: var(--text-sm);">인증
+                                            앱 (Google Authenticator)</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="settings-group">
+                                <h3 class="settings-group__title">활성 세션</h3>
+
+                                <div class="settings-item">
+                                    <div class="settings-item__info">
+                                        <div class="settings-item__label">로그인 기록</div>
+                                        <div class="settings-item__desc">최근 로그인 정보 확인</div>
+                                    </div>
+                                    <div class="settings-item__control">
+                                        <button class="btn btn--outline" onclick="viewLoginHistory()">
+                                            보기
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="settings-item">
+                                    <div class="settings-item__info">
+                                        <div class="settings-item__label">모든 디바이스 로그아웃</div>
+                                        <div class="settings-item__desc">현재 디바이스 제외 모두 로그아웃</div>
+                                    </div>
+                                    <div class="settings-item__control">
+                                        <button class="btn btn--outline" onclick="logoutAllDevices()">
+                                            로그아웃
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-5);">
+                                <button class="btn btn--outline" onclick="cancelChanges()">취소</button>
+                                <button class="btn btn--primary" style="background: var(--partner-primary);"
+                                    onclick="saveSecuritySettings()">저장</button>
+                            </div>
+                        </section>
+
+                        <!-- 6. 정산 정보 -->
+                        <section id="section-billing" class="settings-section">
+                            <div class="settings-section__header">
+                                <div>
+                                    <h2 class="settings-section__title">💳 정산 정보</h2>
+                                    <p class="settings-section__desc">정산 계좌 및 세금계산서 정보를 관리하세요</p>
+                                </div>
+                            </div>
+
+                            <div class="settings-group">
+                                <h3 class="settings-group__title">정산 계좌</h3>
+
+                                <div class="settings-item">
+                                    <div class="settings-item__info">
+                                        <div class="settings-item__label">은행</div>
+                                        <div class="settings-item__desc">입금 받을 은행</div>
+                                    </div>
+                                    <div class="settings-item__control" style="flex: 1; max-width: 300px;">
+                                        <select class="settings-select">
+                                            <option value="kb">국민은행</option>
+                                            <option value="shinhan" selected>신한은행</option>
+                                            <option value="woori">우리은행</option>
+                                            <option value="hana">하나은행</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="settings-item">
+                                    <div class="settings-item__info">
+                                        <div class="settings-item__label">계좌번호</div>
+                                        <div class="settings-item__desc">입금 계좌</div>
+                                    </div>
+                                    <div class="settings-item__control" style="flex: 1; max-width: 400px;">
+                                        <input type="text" class="settings-input" value="110-123-456789"
+                                            placeholder="계좌번호 입력">
+                                    </div>
+                                </div>
+
+                                <div class="settings-item">
+                                    <div class="settings-item__info">
+                                        <div class="settings-item__label">예금주</div>
+                                        <div class="settings-item__desc">계좌 소유자 이름</div>
+                                    </div>
+                                    <div class="settings-item__control" style="flex: 1; max-width: 400px;">
+                                        <input type="text" class="settings-input" value="박강사" placeholder="예금주 입력">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="settings-group">
+                                <h3 class="settings-group__title">세금계산서 정보</h3>
+
+                                <div class="settings-item">
+                                    <div class="settings-item__info">
+                                        <div class="settings-item__label">사업자 등록번호</div>
+                                        <div class="settings-item__desc">사업자 등록증 번호</div>
+                                    </div>
+                                    <div class="settings-item__control" style="flex: 1; max-width: 400px;">
+                                        <input type="text" class="settings-input" value="123-45-67890"
+                                            placeholder="사업자 등록번호 입력">
+                                    </div>
+                                </div>
+
+                                <div class="settings-item">
+                                    <div class="settings-item__info">
+                                        <div class="settings-item__label">상호명</div>
+                                        <div class="settings-item__desc">사업자 상호</div>
+                                    </div>
+                                    <div class="settings-item__control" style="flex: 1; max-width: 400px;">
+                                        <input type="text" class="settings-input" value="박강사 교육센터"
+                                            placeholder="상호명 입력">
+                                    </div>
+                                </div>
+
+                                <div class="settings-item">
+                                    <div class="settings-item__info">
+                                        <div class="settings-item__label">대표자명</div>
+                                        <div class="settings-item__desc">사업자 대표 이름</div>
+                                    </div>
+                                    <div class="settings-item__control" style="flex: 1; max-width: 400px;">
+                                        <input type="text" class="settings-input" value="박강사" placeholder="대표자명 입력">
+                                    </div>
+                                </div>
+
+                                <div class="settings-item">
+                                    <div class="settings-item__info">
+                                        <div class="settings-item__label">사업장 주소</div>
+                                        <div class="settings-item__desc">세금계산서 발행 주소</div>
+                                    </div>
+                                    <div class="settings-item__control" style="flex: 1; max-width: 500px;">
+                                        <input type="text" class="settings-input" value="서울시 강남구 테헤란로 123"
+                                            placeholder="주소 입력">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-5);">
+                                <button class="btn btn--outline" onclick="cancelChanges()">취소</button>
+                                <button class="btn btn--primary" style="background: var(--partner-primary);"
+                                    onclick="saveBillingSettings()">저장</button>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- 공통 스크립트 -->
+    <script src="../common/layout.js"></script>
+    <script src="../common/utils.js"></script>
+
+    <!-- 페이지 전용 스크립트 -->
+    <script>
+        let currentSection = 'profile';
+
+        // ========== 섹션 전환 ==========
+        function switchSection(sectionName) {
+            currentSection = sectionName;
+
+            // 네비게이션 활성화
+            document.querySelectorAll('.settings-nav__link').forEach(link => {
+                link.classList.remove('settings-nav__link--active');
+            });
+            document.querySelector(`[data-section="${sectionName}"]`).classList.add('settings-nav__link--active');
+
+            // 섹션 표시
+            document.querySelectorAll('.settings-section').forEach(section => {
+                section.classList.remove('settings-section--active');
+            });
+            document.getElementById(`section-${sectionName}`).classList.add('settings-section--active');
+
+            console.log('섹션 전환:', sectionName);
+        }
+
+        // ========== 토글 스위치 ==========
+        function toggleSwitch(element) {
+            element.classList.toggle('toggle-switch--active');
+            console.log('토글 전환:', element.classList.contains('toggle-switch--active'));
+        }
+
+        // ========== 프로필 이미지 ==========
+        function uploadProfileImage() {
+            console.log('프로필 이미지 업로드');
+            window.GrowFitUtils.showToast('프로필 이미지를 업로드합니다', 'info');
+        }
+
+        function removeProfileImage() {
+            console.log('프로필 이미지 제거');
+            window.GrowFitUtils.showToast('프로필 이미지를 제거했습니다', 'success');
+        }
+
+        // ========== API 키 관리 ==========
+        function editAPIKey(provider) {
+            console.log('API 키 편집:', provider);
+            window.GrowFitUtils.showToast(`${provider} API 키 편집 모달이 열립니다`, 'info');
+        }
+
+        function testAPIKey(provider) {
+            console.log('API 키 테스트:', provider);
+            window.GrowFitUtils.showToast(`${provider} API 키를 테스트합니다`, 'info');
+        }
+
+        // ========== 보안 ==========
+        function changePassword() {
+            console.log('비밀번호 변경');
+            window.GrowFitUtils.showToast('비밀번호 변경 모달이 열립니다', 'info');
+        }
+
+        function viewLoginHistory() {
+            console.log('로그인 기록 보기');
+            window.GrowFitUtils.showToast('로그인 기록 페이지로 이동합니다', 'info');
+        }
+
+        function logoutAllDevices() {
+            if (confirm('모든 디바이스에서 로그아웃하시겠습니까?')) {
+                console.log('모든 디바이스 로그아웃');
+                window.GrowFitUtils.showToast('모든 디바이스에서 로그아웃했습니다', 'success');
+            }
+        }
+
+        // ========== 저장 ==========
+        function saveProfileSettings() {
+            console.log('프로필 설정 저장');
+            window.GrowFitUtils.showToast('프로필이 저장되었습니다', 'success');
+        }
+
+        function saveProjectSettings() {
+            console.log('프로젝트 설정 저장');
+            window.GrowFitUtils.showToast('프로젝트 설정이 저장되었습니다', 'success');
+        }
+
+        function saveAISettings() {
+            console.log('AI 설정 저장');
+            window.GrowFitUtils.showToast('AI 설정이 저장되었습니다', 'success');
+        }
+
+        function saveNotificationSettings() {
+            console.log('알림 설정 저장');
+            window.GrowFitUtils.showToast('알림 설정이 저장되었습니다', 'success');
+        }
+
+        function saveSecuritySettings() {
+            console.log('보안 설정 저장');
+            window.GrowFitUtils.showToast('보안 설정이 저장되었습니다', 'success');
+        }
+
+        function saveBillingSettings() {
+            console.log('정산 정보 저장');
+            window.GrowFitUtils.showToast('정산 정보가 저장되었습니다', 'success');
+        }
+
+        function cancelChanges() {
+            console.log('변경 취소');
+            window.GrowFitUtils.showToast('변경사항이 취소되었습니다', 'info');
+        }
+
+        console.log('✅ Settings 로드 완료');
+    </script>
+</body>
+
+</html>

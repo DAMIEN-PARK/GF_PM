@@ -1,0 +1,2362 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>내 기록 - GrowFit Employee</title>
+
+    <!-- 공통 CSS -->
+    <link rel="stylesheet" href="../common/variables.css">
+    <link rel="stylesheet" href="../common/layout.css">
+    <link rel="stylesheet" href="../common/components.css">
+
+    <style>
+        /* ========== History 전용 스타일 ========== */
+        :root {
+            --employee-primary: #10b981;
+            --employee-primary-light: #34d399;
+            --employee-primary-dark: #059669;
+            --employee-secondary: #06b6d4;
+            --employee-accent: #f59e0b;
+        }
+
+        /* 페이지 헤더 */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-6);
+        }
+
+        .page-header__left h1 {
+            font-size: var(--text-3xl);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-1);
+        }
+
+        .page-header__left p {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+        }
+
+        .page-header__actions {
+            display: flex;
+            gap: var(--space-2);
+        }
+
+        /* 통계 카드 그리드 */
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--space-4);
+            margin-bottom: var(--space-6);
+        }
+
+        .stat-card {
+            background: var(--background);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+            transition: all 0.2s;
+        }
+
+        .stat-card:hover {
+            border-color: var(--employee-primary);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .stat-card__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: var(--space-3);
+        }
+
+        .stat-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+
+        .stat-icon--primary {
+            background: linear-gradient(135deg, var(--employee-primary-light), var(--employee-primary));
+            color: white;
+        }
+
+        .stat-icon--secondary {
+            background: linear-gradient(135deg, #06b6d4, #0891b2);
+            color: white;
+        }
+
+        .stat-icon--accent {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+        }
+
+        .stat-icon--purple {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: white;
+        }
+
+        .stat-trend {
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            font-size: var(--text-xs);
+            font-weight: var(--font-bold);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stat-trend--up {
+            background: var(--success-light);
+            color: var(--success-dark);
+        }
+
+        .stat-trend--down {
+            background: var(--error-light);
+            color: var(--error-dark);
+        }
+
+        .stat-card__label {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-2);
+        }
+
+        .stat-card__value {
+            font-size: var(--text-4xl);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-2);
+        }
+
+        .stat-card__detail {
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+        }
+
+        /* 탭 네비게이션 */
+        .history-tabs {
+            display: flex;
+            gap: var(--space-2);
+            margin-bottom: var(--space-6);
+            border-bottom: 2px solid var(--border);
+        }
+
+        .history-tab {
+            padding: var(--space-3) var(--space-5);
+            border: none;
+            background: none;
+            font-size: var(--text-base);
+            font-weight: var(--font-semibold);
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .history-tab:hover {
+            color: var(--employee-primary);
+        }
+
+        .history-tab--active {
+            color: var(--employee-primary);
+            border-bottom-color: var(--employee-primary);
+        }
+
+        /* 타임라인 */
+        .timeline-container {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-5);
+        }
+
+        .timeline-title {
+            font-size: var(--text-xl);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+        }
+
+        .timeline-filters {
+            display: flex;
+            gap: var(--space-2);
+        }
+
+        .filter-btn {
+            padding: var(--space-2) var(--space-3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            background: white;
+            font-size: var(--text-sm);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--employee-primary);
+            color: var(--employee-primary);
+        }
+
+        .filter-btn--active {
+            background: var(--employee-primary);
+            border-color: var(--employee-primary);
+            color: white;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: var(--space-8);
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--border);
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: var(--space-6);
+            padding-bottom: var(--space-6);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .timeline-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .timeline-marker {
+            position: absolute;
+            left: -58px;
+            top: 4px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            box-shadow: 0 0 0 4px var(--background);
+        }
+
+        .timeline-marker--conversation {
+            background: linear-gradient(135deg, var(--employee-primary), var(--employee-primary-dark));
+        }
+
+        .timeline-marker--document {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+        }
+
+        .timeline-marker--agent {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        }
+
+        .timeline-marker--project {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .timeline-content {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            transition: all 0.2s;
+        }
+
+        .timeline-content:hover {
+            border-color: var(--employee-primary);
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);
+        }
+
+        .timeline-content__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: var(--space-3);
+        }
+
+        .timeline-content__title {
+            font-size: var(--text-base);
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-1);
+        }
+
+        .timeline-content__time {
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+        }
+
+        .timeline-content__badge {
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            font-size: var(--text-xs);
+            font-weight: var(--font-semibold);
+        }
+
+        .timeline-content__body {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: var(--space-3);
+        }
+
+        .timeline-content__meta {
+            display: flex;
+            gap: var(--space-4);
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+        }
+
+        .timeline-content__actions {
+            display: flex;
+            gap: var(--space-2);
+            margin-top: var(--space-3);
+            padding-top: var(--space-3);
+            border-top: 1px solid var(--border);
+        }
+
+        /* 차트 컨테이너 */
+        .chart-container {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+            margin-bottom: var(--space-6);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-4);
+        }
+
+        .chart-title {
+            font-size: var(--text-xl);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+        }
+
+        .chart-period {
+            display: flex;
+            gap: var(--space-1);
+            background: var(--surface);
+            border-radius: var(--radius-md);
+            padding: 2px;
+        }
+
+        .period-btn {
+            padding: var(--space-2) var(--space-3);
+            border: none;
+            border-radius: var(--radius-sm);
+            background: transparent;
+            font-size: var(--text-sm);
+            font-weight: var(--font-semibold);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .period-btn:hover {
+            background: white;
+        }
+
+        .period-btn--active {
+            background: var(--employee-primary);
+            color: white;
+        }
+
+        .chart-canvas {
+            height: 300px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            gap: var(--space-2);
+            padding: var(--space-4);
+            background: var(--surface);
+            border-radius: var(--radius-md);
+        }
+
+        .chart-bar {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .bar-fill {
+            width: 100%;
+            border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+            transition: all 0.3s ease-out;
+        }
+
+        .bar-label {
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+            font-weight: var(--font-semibold);
+        }
+
+        /* 프로그레스 링 */
+        .progress-rings {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-4);
+            margin-bottom: var(--space-6);
+        }
+
+        .progress-card {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+            text-align: center;
+        }
+
+        .progress-ring {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto var(--space-3);
+            position: relative;
+        }
+
+        .progress-ring svg {
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring__circle {
+            fill: none;
+            stroke-width: 8;
+        }
+
+        .progress-ring__circle--bg {
+            stroke: var(--gray-200);
+        }
+
+        .progress-ring__circle--progress {
+            stroke-linecap: round;
+            transition: stroke-dashoffset 1s ease-out;
+        }
+
+        .progress-ring__text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: var(--text-2xl);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+        }
+
+        .progress-card__title {
+            font-size: var(--text-base);
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-1);
+        }
+
+        .progress-card__subtitle {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+        }
+
+        /* 반응형 */
+        @media (max-width: 1400px) {
+            .stats-overview {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .progress-rings {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-overview {
+                grid-template-columns: 1fr;
+            }
+
+            .history-tabs {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .timeline {
+                padding-left: var(--space-6);
+            }
+
+            .timeline::before {
+                left: 12px;
+            }
+
+            .timeline-marker {
+                left: -50px;
+                width: 32px;
+                height: 32px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header__left">
+                <button id="menuToggle" class="header__icon-button hidden-desktop">
+                    <span>☰</span>
+                </button>
+                <a href="dashboard.html" class="header__logo">
+                    <span class="header__logo-icon">🌱</span>
+                    <span>GrowFit</span>
+                </a>
+            </div>
+
+            <div class="header__right">
+                <button id="notificationBtn" class="header__icon-button">
+                    <span>🔔</span>
+                    <span class="header__badge">3</span>
+                </button>
+
+                <div id="profileBtn" class="header__profile">
+                    <div class="header__avatar" style="background: linear-gradient(135deg, #10b981, #06b6d4);">김</div>
+                    <span class="hidden-mobile">김직원</span>
+                    <span class="hidden-mobile">▼</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="container">
+            <!-- Sidebar -->
+            <aside class="sidebar sidebar--open">
+                <div class="sidebar__user">
+                    <div class="sidebar__user-info">
+                        <div class="sidebar__user-avatar"
+                            style="background: linear-gradient(135deg, #10b981, #06b6d4);">김</div>
+                        <div class="sidebar__user-details">
+                            <div class="sidebar__user-name">김직원</div>
+                            <div class="sidebar__user-role">AI 실습생</div>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="sidebar__nav">
+                    <ul class="sidebar__menu">
+                        <li class="sidebar__menu-item">
+                            <a href="dashboard.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">🏠</span>
+                                <span>대시보드</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="practice.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">💬</span>
+                                <span>AI 실습</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="my-projects.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">📁</span>
+                                <span>내 프로젝트</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="my-agents.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">🤖</span>
+                                <span>내 에이전트</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="my-documents.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">📚</span>
+                                <span>내 문서</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="history.html" class="sidebar__menu-link sidebar__menu-link--active">
+                                <span class="sidebar__menu-icon">📊</span>
+                                <span>내 기록</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="profile.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">⚙️</span>
+                                <span>설정</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <div class="sidebar__footer">
+                    <div
+                        style="padding: var(--space-3); background: var(--surface); border-radius: var(--radius-md); font-size: var(--text-xs);">
+                        <div style="color: var(--text-secondary); margin-bottom: var(--space-1);">이번 주 실습</div>
+                        <div style="font-weight: var(--font-bold); color: var(--employee-primary);">12시간 24분</div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main">
+                <!-- 페이지 헤더 -->
+                <div class="page-header">
+                    <div class="page-header__left">
+                        <h1>📊 내 기록</h1>
+                        <p>AI 실습 활동 내역과 성장 과정을 확인하세요</p>
+                    </div>
+                    <div class="page-header__actions">
+                        <button class="btn btn--outline" onclick="exportHistory()">
+                            📥 내보내기
+                        </button>
+                        <button class="btn btn--outline" onclick="generateReport()">
+                            📄 보고서 생성
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 통계 카드 -->
+                <div class="stats-overview">
+                    <div class="stat-card">
+                        <div class="stat-card__header">
+                            <div class="stat-icon stat-icon--primary">💬</div>
+                            <div class="stat-trend stat-trend--up">
+                                <span>↑</span>
+                                <span>15%</span>
+                            </div>
+                        </div>
+                        <div class="stat-card__label">총 대화 수</div>
+                        <div class="stat-card__value">847</div>
+                        <div class="stat-card__detail">이번 주 +89개 (전주 대비)</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-card__header">
+                            <div class="stat-icon stat-icon--secondary">⏱️</div>
+                            <div class="stat-trend stat-trend--up">
+                                <span>↑</span>
+                                <span>8%</span>
+                            </div>
+                        </div>
+                        <div class="stat-card__label">총 실습 시간</div>
+                        <div class="stat-card__value">127.5h</div>
+                        <div class="stat-card__detail">이번 주 12.4시간</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-card__header">
+                            <div class="stat-icon stat-icon--accent">🎯</div>
+                            <div class="stat-trend stat-trend--up">
+                                <span>↑</span>
+                                <span>23%</span>
+                            </div>
+                        </div>
+                        <div class="stat-card__label">병렬 비교 사용</div>
+                        <div class="stat-card__value">578</div>
+                        <div class="stat-card__detail">전체의 68% 활용</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-card__header">
+                            <div class="stat-icon stat-icon--purple">🤖</div>
+                            <div class="stat-trend stat-trend--up">
+                                <span>↑</span>
+                                <span>12%</span>
+                            </div>
+                        </div>
+                        <div class="stat-card__label">에이전트 활용</div>
+                        <div class="stat-card__value">234</div>
+                        <div class="stat-card__detail">5개 에이전트 사용 중</div>
+                    </div>
+                </div>
+
+                <!-- 프로그레스 링 -->
+                <div class="progress-rings">
+                    <div class="progress-card">
+                        <div class="progress-ring">
+                            <svg width="120" height="120">
+                                <circle class="progress-ring__circle progress-ring__circle--bg" cx="60" cy="60" r="52"></circle>
+                                <circle class="progress-ring__circle progress-ring__circle--progress" 
+                                        cx="60" cy="60" r="52" 
+                                        stroke="#10b981"
+                                        stroke-dasharray="326.73"
+                                        stroke-dashoffset="98.02"
+                                        id="progressCircle1"></circle>
+                            </svg>
+                            <div class="progress-ring__text">70%</div>
+                        </div>
+                        <div class="progress-card__title">이번 주 목표 달성률</div>
+                        <div class="progress-card__subtitle">목표: 15시간 / 달성: 10.5시간</div>
+                    </div>
+
+                    <div class="progress-card">
+                        <div class="progress-ring">
+                            <svg width="120" height="120">
+                                <circle class="progress-ring__circle progress-ring__circle--bg" cx="60" cy="60" r="52"></circle>
+                                <circle class="progress-ring__circle progress-ring__circle--progress" 
+                                        cx="60" cy="60" r="52" 
+                                        stroke="#06b6d4"
+                                        stroke-dasharray="326.73"
+                                        stroke-dashoffset="32.67"
+                                        id="progressCircle2"></circle>
+                            </svg>
+                            <div class="progress-ring__text">90%</div>
+                        </div>
+                        <div class="progress-card__title">프로젝트 진행률</div>
+                        <div class="progress-card__subtitle">8개 중 7개 프로젝트 활성</div>
+                    </div>
+
+                    <div class="progress-card">
+                        <div class="progress-ring">
+                            <svg width="120" height="120">
+                                <circle class="progress-ring__circle progress-ring__circle--bg" cx="60" cy="60" r="52"></circle>
+                                <circle class="progress-ring__circle progress-ring__circle--progress" 
+                                        cx="60" cy="60" r="52" 
+                                        stroke="#8b5cf6"
+                                        stroke-dasharray="326.73"
+                                        stroke-dashoffset="130.69"
+                                        id="progressCircle3"></circle>
+                            </svg>
+                            <div class="progress-ring__text">60%</div>
+                        </div>
+                        <div class="progress-card__title">학습 성취도</div>
+                        <div class="progress-card__subtitle">23개 토픽 중 14개 완료</div>
+                    </div>
+                </div>
+
+                <!-- 활동 차트 -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h2 class="chart-title">📈 주간 활동 추이</h2>
+                        <div class="chart-period">
+                            <button class="period-btn" onclick="changePeriod('week')">주간</button>
+                            <button class="period-btn period-btn--active" onclick="changePeriod('month')">월간</button>
+                            <button class="period-btn" onclick="changePeriod('quarter')">분기</button>
+                        </div>
+                    </div>
+                    <div class="chart-canvas" id="activityChart">
+                        <div class="chart-bar">
+                            <div class="bar-fill" style="height: 45%; background: linear-gradient(to top, #10b981, #34d399);"></div>
+                            <div class="bar-label">월</div>
+                        </div>
+                        <div class="chart-bar">
+                            <div class="bar-fill" style="height: 78%; background: linear-gradient(to top, #10b981, #34d399);"></div>
+                            <div class="bar-label">화</div>
+                        </div>
+                        <div class="chart-bar">
+                            <div class="bar-fill" style="height: 92%; background: linear-gradient(to top, #10b981, #34d399);"></div>
+                            <div class="bar-label">수</div>
+                        </div>
+                        <div class="chart-bar">
+                            <div class="bar-fill" style="height: 65%; background: linear-gradient(to top, #10b981, #34d399);"></div>
+                            <div class="bar-label">목</div>
+                        </div>
+                        <div class="chart-bar">
+                            <div class="bar-fill" style="height: 88%; background: linear-gradient(to top, #10b981, #34d399);"></div>
+                            <div class="bar-label">금</div>
+                        </div>
+                        <div class="chart-bar">
+                            <div class="bar-fill" style="height: 15%; background: linear-gradient(to top, #10b981, #34d399);"></div>
+                            <div class="bar-label">토</div>
+                        </div>
+                        <div class="chart-bar">
+                            <div class="bar-fill" style="height: 8%; background: linear-gradient(to top, #10b981, #34d399);"></div>
+                            <div class="bar-label">일</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 탭 네비게이션 -->
+                <div class="history-tabs">
+                    <button class="history-tab history-tab--active" data-tab="timeline" onclick="switchHistoryTab('timeline')">
+                        <span>📅</span>
+                        <span>타임라인</span>
+                    </button>
+                    <button class="history-tab" data-tab="conversations" onclick="switchHistoryTab('conversations')">
+                        <span>💬</span>
+                        <span>대화 기록</span>
+                    </button>
+                    <button class="history-tab" data-tab="models" onclick="switchHistoryTab('models')">
+                        <span>🤖</span>
+                        <span>모델별 통계</span>
+                    </button>
+                    <button class="history-tab" data-tab="achievements" onclick="switchHistoryTab('achievements')">
+                        <span>🏆</span>
+                        <span>성취 기록</span>
+                    </button>
+                </div>
+
+                <!-- 타임라인 탭 -->
+                <div id="timelineTab" class="tab-content">
+                    <div class="timeline-container">
+                        <div class="timeline-header">
+                            <h2 class="timeline-title">📅 활동 타임라인</h2>
+                            <div class="timeline-filters">
+                                <button class="filter-btn filter-btn--active" onclick="filterTimeline('all')">전체</button>
+                                <button class="filter-btn" onclick="filterTimeline('conversation')">대화</button>
+                                <button class="filter-btn" onclick="filterTimeline('document')">문서</button>
+                                <button class="filter-btn" onclick="filterTimeline('agent')">에이전트</button>
+                                <button class="filter-btn" onclick="filterTimeline('project')">프로젝트</button>
+                            </div>
+                        </div>
+
+                        <div class="timeline">
+                            <!-- 타임라인 아이템 1 -->
+                            <div class="timeline-item" data-type="conversation">
+                                <div class="timeline-marker timeline-marker--conversation">💬</div>
+                                <div class="timeline-content">
+                                    <div class="timeline-content__header">
+                                        <div>
+                                            <div class="timeline-content__title">병렬 비교로 Python 리스트 정렬 학습</div>
+                                            <div class="timeline-content__time">2시간 전 • Python 학습 프로젝트</div>
+                                        </div>
+                                        <span class="timeline-content__badge" style="background: rgba(16, 185, 129, 0.1); color: var(--employee-primary);">
+                                            완료
+                                        </span>
+                                    </div>
+                                    <div class="timeline-content__body">
+                                        GPT-4, Claude, Gemini를 병렬 비교하며 Python 리스트 정렬 방법을 학습했습니다. 
+                                        sort()와 sorted()의 차이점을 명확히 이해하게 되었습니다.
+                                    </div>
+                                    <div class="timeline-content__meta">
+                                        <span>🤖 3개 모델 사용</span>
+                                        <span>💬 12개 대화</span>
+                                        <span>⏱️ 23분 소요</span>
+                                        <span>👍 만족도: 높음</span>
+                                    </div>
+                                    <div class="timeline-content__actions">
+                                        <button class="btn btn--sm btn--outline" onclick="viewConversation('conv-1')">
+                                            대화 보기
+                                        </button>
+                                        <button class="btn btn--sm btn--outline" onclick="continueConversation('conv-1')">
+                                            이어하기
+                                        </button>
+                                        <button class="btn btn--sm btn--outline" onclick="shareConversation('conv-1')">
+                                            공유
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 타임라인 아이템 2 -->
+                            <div class="timeline-item" data-type="document">
+                                <div class="timeline-marker timeline-marker--document">📄</div>
+                                <div class="timeline-content">
+                                    <div class="timeline-content__header">
+                                        <div>
+                                            <div class="timeline-content__title">Python 기초 가이드.pdf 업로드</div>
+                                            <div class="timeline-content__time">5시간 전 • Python 학습 프로젝트</div>
+                                        </div>
+                                        <span class="timeline-content__badge" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6;">
+                                            RAG 준비
+                                        </span>
+                                    </div>
+                                    <div class="timeline-content__body">
+                                        2.3MB PDF 문서를 업로드하고 RAG 처리를 완료했습니다. 
+                                        156개 청크로 분할되어 AI 대화에서 활용할 수 있습니다.
+                                    </div>
+                                    <div class="timeline-content__meta">
+                                        <span>📄 2.3 MB</span>
+                                        <span>🧩 156 청크</span>
+                                        <span>⏱️ 처리 시간: 15초</span>
+                                    </div>
+                                    <div class="timeline-content__actions">
+                                        <button class="btn btn--sm btn--outline" onclick="viewDocument('doc-1')">
+                                            문서 보기
+                                        </button>
+                                        <button class="btn btn--sm btn--outline" onclick="chatWithDocument('doc-1')">
+                                            AI와 대화
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 타임라인 아이템 3 -->
+                            <div class="timeline-item" data-type="agent">
+                                <div class="timeline-marker timeline-marker--agent">🤖</div>
+                                <div class="timeline-content">
+                                    <div class="timeline-content__header">
+                                        <div>
+                                            <div class="timeline-content__title">코딩 튜터 에이전트 생성</div>
+                                            <div class="timeline-content__time">어제 • 내 에이전트</div>
+                                        </div>
+                                        <span class="timeline-content__badge" style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6;">
+                                            활성
+                                        </span>
+                                    </div>
+                                    <div class="timeline-content__body">
+                                        시니어 개발자 역할의 코딩 튜터 에이전트를 생성했습니다. 
+                                        친절한 톤과 단계별 설명으로 프로그래밍 학습을 지원합니다.
+                                    </div>
+                                    <div class="timeline-content__meta">
+                                        <span>💬 23회 사용</span>
+                                        <span>⭐ 만족도: 4.8/5.0</span>
+                                        <span>🎯 Python 특화</span>
+                                    </div>
+                                    <div class="timeline-content__actions">
+                                        <button class="btn btn--sm btn--outline" onclick="viewAgent('agent-1')">
+                                            에이전트 보기
+                                        </button>
+                                        <button class="btn btn--sm btn--outline" onclick="useAgent('agent-1')">
+                                            사용하기
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 타임라인 아이템 4 -->
+                            <div class="timeline-item" data-type="project">
+                                <div class="timeline-marker timeline-marker--project">📁</div>
+                                <div class="timeline-content">
+                                    <div class="timeline-content__header">
+                                        <div>
+                                            <div class="timeline-content__title">Python 학습 프로젝트 생성</div>
+                                            <div class="timeline-content__time">3일 전 • 내 프로젝트</div>
+                                        </div>
+                                        <span class="timeline-content__badge" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;">
+                                            진행 중
+                                        </span>
+                                    </div>
+                                    <div class="timeline-content__body">
+                                        Python 프로그래밍 학습을 위한 프로젝트를 시작했습니다. 
+                                        기초부터 고급 개념까지 체계적으로 학습할 계획입니다.
+                                    </div>
+                                    <div class="timeline-content__meta">
+                                        <span>💬 45개 대화</span>
+                                        <span>⏱️ 12.5시간</span>
+                                        <span>📊 진행률: 85%</span>
+                                    </div>
+                                    <div class="timeline-content__actions">
+                                        <button class="btn btn--sm btn--outline" onclick="viewProject('proj-1')">
+                                            프로젝트 보기
+                                        </button>
+                                        <button class="btn btn--sm btn--outline" onclick="continueProject('proj-1')">
+                                            계속하기
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 타임라인 아이템 5 -->
+                            <div class="timeline-item" data-type="conversation">
+                                <div class="timeline-marker timeline-marker--conversation">💬</div>
+                                <div class="timeline-content">
+                                    <div class="timeline-content__header">
+                                        <div>
+                                            <div class="timeline-content__title">데이터 분석 실습 - Pandas 활용</div>
+                                            <div class="timeline-content__time">5일 전 • 데이터 분석 프로젝트</div>
+                                        </div>
+                                        <span class="timeline-content__badge" style="background: rgba(16, 185, 129, 0.1); color: var(--employee-primary);">
+                                            완료
+                                        </span>
+                                    </div>
+                                    <div class="timeline-content__body">
+                                        Claude를 활용하여 Pandas 데이터프레임 조작 방법을 학습했습니다. 
+                                        실제 CSV 데이터를 분석하며 실습했습니다.
+                                    </div>
+                                    <div class="timeline-content__meta">
+                                        <span>🤖 Claude</span>
+                                        <span>💬 8개 대화</span>
+                                        <span>⏱️ 35분 소요</span>
+                                        <span>👍 만족도: 높음</span>
+                                    </div>
+                                    <div class="timeline-content__actions">
+                                        <button class="btn btn--sm btn--outline" onclick="viewConversation('conv-5')">
+                                            대화 보기
+                                        </button>
+                                        <button class="btn btn--sm btn--outline" onclick="continueConversation('conv-5')">
+                                            이어하기
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 대화 기록 탭 (숨김) -->
+                <div id="conversationsTab" class="tab-content" style="display: none;">
+                    <div class="timeline-container">
+                        <div class="timeline-header">
+                            <h2 class="timeline-title">💬 전체 대화 기록 (847개)</h2>
+                            <div class="timeline-filters">
+                                <input type="text" placeholder="🔍 대화 검색..." style="padding: var(--space-2) var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-md);">
+                                <select class="filter-btn" style="padding: var(--space-2) var(--space-3);">
+                                    <option>모든 프로젝트</option>
+                                    <option>Python 학습</option>
+                                    <option>데이터 분석</option>
+                                    <option>마케팅</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="text-align: center; padding: var(--space-8); color: var(--text-secondary);">
+                            <div style="font-size: 48px; margin-bottom: var(--space-3);">💬</div>
+                            <div style="font-size: var(--text-lg); font-weight: var(--font-semibold); margin-bottom: var(--space-2);">
+                                대화 기록이 여기에 표시됩니다
+                            </div>
+                            <div>총 847개의 대화 기록을 보관 중입니다</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 모델별 통계 탭 (숨김) -->
+                <div id="modelsTab" class="tab-content" style="display: none;">
+                    <div class="timeline-container">
+                        <div class="timeline-header">
+                            <h2 class="timeline-title">🤖 모델별 사용 통계</h2>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); padding: var(--space-4);">
+                            <div style="padding: var(--space-4); background: var(--surface); border-radius: var(--radius-lg); text-align: center;">
+                                <div style="font-size: 48px; margin-bottom: var(--space-3);">🟢</div>
+                                <div style="font-size: var(--text-lg); font-weight: var(--font-bold); margin-bottom: var(--space-2);">GPT-4 Turbo</div>
+                                <div style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: #10a37f; margin-bottom: var(--space-2);">342</div>
+                                <div style="font-size: var(--text-sm); color: var(--text-secondary);">사용 횟수 (40%)</div>
+                                <div style="margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--border);">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-1);">
+                                        <span style="font-size: var(--text-xs); color: var(--text-secondary);">평균 응답</span>
+                                        <span style="font-size: var(--text-xs); font-weight: var(--font-semibold);">2.3초</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span style="font-size: var(--text-xs); color: var(--text-secondary);">만족도</span>
+                                        <span style="font-size: var(--text-xs); font-weight: var(--font-semibold);">⭐ 4.5</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="padding: var(--space-4); background: var(--surface); border-radius: var(--radius-lg); text-align: center;">
+                                <div style="font-size: 48px; margin-bottom: var(--space-3);">🟠</div>
+                                <div style="font-size: var(--text-lg); font-weight: var(--font-bold); margin-bottom: var(--space-2);">Claude 3.7 Sonnet</div>
+                                <div style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: #d97757; margin-bottom: var(--space-2);">389</div>
+                                <div style="font-size: var(--text-sm); color: var(--text-secondary);">사용 횟수 (46%)</div>
+                                <div style="margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--border);">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-1);">
+                                        <span style="font-size: var(--text-xs); color: var(--text-secondary);">평균 응답</span>
+                                        <span style="font-size: var(--text-xs); font-weight: var(--font-semibold);">1.8초</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span style="font-size: var(--text-xs); color: var(--text-secondary);">만족도</span>
+                                        <span style="font-size: var(--text-xs); font-weight: var(--font-semibold);">⭐ 4.7</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="padding: var(--space-4); background: var(--surface); border-radius: var(--radius-lg); text-align: center;">
+                                <div style="font-size: 48px; margin-bottom: var(--space-3);">🔵</div>
+                                <div style="font-size: var(--text-lg); font-weight: var(--font-bold); margin-bottom: var(--space-2);">Gemini Pro</div>
+                                <div style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: #4285f4; margin-bottom: var(--space-2);">116</div>
+                                <div style="font-size: var(--text-sm); color: var(--text-secondary);">사용 횟수 (14%)</div>
+                                <div style="margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--border);">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-1);">
+                                        <span style="font-size: var(--text-xs); color: var(--text-secondary);">평균 응답</span>
+                                        <span style="font-size: var(--text-xs); font-weight: var(--font-semibold);">3.1초</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span style="font-size: var(--text-xs); color: var(--text-secondary);">만족도</span>
+                                        <span style="font-size: var(--text-xs); font-weight: var(--font-semibold);">⭐ 4.3</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 성취 기록 탭 (숨김) -->
+                <div id="achievementsTab" class="tab-content" style="display: none;">
+                    <div class="timeline-container">
+                        <div class="timeline-header">
+                            <h2 class="timeline-title">🏆 성취 기록 및 배지</h2>
+                        </div>
+                        <div style="text-align: center; padding: var(--space-8); color: var(--text-secondary);">
+                            <div style="font-size: 48px; margin-bottom: var(--space-3);">🏆</div>
+                            <div style="font-size: var(--text-lg); font-weight: var(--font-semibold); margin-bottom: var(--space-2);">
+                                성취 시스템 준비 중
+                            </div>
+                            <div>열심히 학습하고 배지를 획득하세요!</div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- 공통 스크립트 -->
+    <script src="../common/layout.js"></script>
+    <script src="../common/utils.js"></script>
+    
+    <!-- 페이지 전용 스크립트 -->
+    <script>
+        // ========== History 전용 로직 ==========
+
+        // 전역 변수
+        let currentHistoryTab = 'timeline';
+        let currentPeriod = 'month';
+        let currentFilter = 'all';
+
+        // 통계 데이터 (시뮬레이션)
+        const statsData = {
+            totalConversations: 847,
+            totalHours: 127.5,
+            parallelUsage: 578,
+            agentUsage: 234,
+            weeklyGrowth: {
+                conversations: 15,
+                hours: 8,
+                parallel: 23,
+                agent: 12
+            }
+        };
+
+        // 타임라인 데이터
+        const timelineData = [
+            {
+                id: 'conv-1',
+                type: 'conversation',
+                title: '병렬 비교로 Python 리스트 정렬 학습',
+                project: 'Python 학습',
+                time: '2시간 전',
+                status: '완료',
+                description: 'GPT-4, Claude, Gemini를 병렬 비교하며 Python 리스트 정렬 방법을 학습했습니다.',
+                models: 3,
+                messages: 12,
+                duration: 23,
+                satisfaction: 'high'
+            },
+            {
+                id: 'doc-1',
+                type: 'document',
+                title: 'Python 기초 가이드.pdf 업로드',
+                project: 'Python 학습',
+                time: '5시간 전',
+                status: 'RAG 준비',
+                description: '2.3MB PDF 문서를 업로드하고 RAG 처리를 완료했습니다.',
+                size: '2.3 MB',
+                chunks: 156,
+                processingTime: 15
+            },
+            {
+                id: 'agent-1',
+                type: 'agent',
+                title: '코딩 튜터 에이전트 생성',
+                project: '내 에이전트',
+                time: '어제',
+                status: '활성',
+                description: '시니어 개발자 역할의 코딩 튜터 에이전트를 생성했습니다.',
+                usageCount: 23,
+                rating: 4.8,
+                specialty: 'Python'
+            },
+            {
+                id: 'proj-1',
+                type: 'project',
+                title: 'Python 학습 프로젝트 생성',
+                project: '내 프로젝트',
+                time: '3일 전',
+                status: '진행 중',
+                description: 'Python 프로그래밍 학습을 위한 프로젝트를 시작했습니다.',
+                conversations: 45,
+                hours: 12.5,
+                progress: 85
+            }
+        ];
+
+        // ========== 초기화 ==========
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('History 페이지 초기화');
+
+            initializeHistory();
+            animateStats();
+            animateProgressRings();
+            animateChart();
+        });
+
+        function initializeHistory() {
+            // 통계 카운터 애니메이션
+            animateCounters();
+        }
+
+        function animateCounters() {
+            const counters = document.querySelectorAll('.stat-card__value');
+
+            counters.forEach(counter => {
+                const target = parseInt(counter.textContent.replace(/[^0-9.]/g, ''));
+                const duration = 1000;
+                const step = target / (duration / 16);
+                let current = 0;
+
+                const timer = setInterval(() => {
+                    current += step;
+                    if (current >= target) {
+                        counter.textContent = formatStatValue(target, counter.textContent);
+                        clearInterval(timer);
+                    } else {
+                        counter.textContent = formatStatValue(Math.floor(current), counter.textContent);
+                    }
+                }, 16);
+            });
+        }
+
+        function formatStatValue(value, original) {
+            if (original.includes('h')) {
+                return value + 'h';
+            }
+            return value.toString();
+        }
+
+        function animateStats() {
+            const cards = document.querySelectorAll('.stat-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+
+                setTimeout(() => {
+                    card.style.transition = 'all 0.4s ease-out';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        }
+
+        function animateProgressRings() {
+            // SVG 원형 프로그레스바 애니메이션
+            const rings = document.querySelectorAll('.progress-ring__circle--progress');
+
+            rings.forEach((ring, index) => {
+                setTimeout(() => {
+                    const currentOffset = ring.getAttribute('stroke-dashoffset');
+                    ring.style.strokeDashoffset = '326.73'; // 시작점
+
+                    setTimeout(() => {
+                        ring.style.transition = 'stroke-dashoffset 1s ease-out';
+                        ring.style.strokeDashoffset = currentOffset;
+                    }, 50);
+                }, index * 200);
+            });
+        }
+
+        function animateChart() {
+            const bars = document.querySelectorAll('.bar-fill');
+
+            bars.forEach((bar, index) => {
+                const finalHeight = bar.style.height;
+                bar.style.height = '0%';
+
+                setTimeout(() => {
+                    bar.style.transition = 'height 0.8s ease-out';
+                    bar.style.height = finalHeight;
+                }, index * 100);
+            });
+        }
+
+        // ========== 탭 전환 ==========
+        function switchHistoryTab(tab) {
+            currentHistoryTab = tab;
+
+            // 탭 버튼 상태 업데이트
+            document.querySelectorAll('.history-tab').forEach(btn => {
+                btn.classList.remove('history-tab--active');
+            });
+            document.querySelector(`[data-tab="${tab}"]`).classList.add('history-tab--active');
+
+            // 탭 컨텐츠 표시/숨김
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.style.display = 'none';
+            });
+
+            const tabMap = {
+                'timeline': 'timelineTab',
+                'conversations': 'conversationsTab',
+                'models': 'modelsTab',
+                'achievements': 'achievementsTab'
+            };
+
+            const targetTab = document.getElementById(tabMap[tab]);
+            if (targetTab) {
+                targetTab.style.display = 'block';
+            }
+
+            console.log('탭 전환:', tab);
+        }
+
+        // ========== 기간 변경 ==========
+        function changePeriod(period) {
+            currentPeriod = period;
+
+            // 버튼 상태 업데이트
+            document.querySelectorAll('.period-btn').forEach(btn => {
+                btn.classList.remove('period-btn--active');
+            });
+            event.target.classList.add('period-btn--active');
+
+            // 차트 데이터 업데이트
+            updateChart(period);
+
+            window.GrowFitUtils.showToast(`${getPeriodName(period)} 데이터로 전환했습니다`, 'info');
+        }
+
+        function getPeriodName(period) {
+            const names = {
+                'week': '주간',
+                'month': '월간',
+                'quarter': '분기'
+            };
+            return names[period] || '월간';
+        }
+
+        function updateChart(period) {
+            // 실제로는 API에서 데이터 가져와서 차트 업데이트
+            console.log('차트 업데이트:', period);
+
+            // 차트 재애니메이션
+            animateChart();
+        }
+
+        // ========== 타임라인 필터 ==========
+        function filterTimeline(type) {
+            currentFilter = type;
+
+            // 필터 버튼 상태 업데이트
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('filter-btn--active');
+            });
+            event.target.classList.add('filter-btn--active');
+
+            // 타임라인 아이템 필터링
+            const items = document.querySelectorAll('.timeline-item');
+
+            items.forEach(item => {
+                const itemType = item.getAttribute('data-type');
+
+                if (type === 'all' || itemType === type) {
+                    item.style.display = 'block';
+                    // 재애니메이션
+                    item.style.opacity = '0';
+                    setTimeout(() => {
+                        item.style.transition = 'opacity 0.3s';
+                        item.style.opacity = '1';
+                    }, 50);
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            const filterName = type === 'all' ? '전체' :
+                type === 'conversation' ? '대화' :
+                    type === 'document' ? '문서' :
+                        type === 'agent' ? '에이전트' : '프로젝트';
+
+            window.GrowFitUtils.showToast(`${filterName} 활동만 표시합니다`, 'info');
+        }
+
+        // ========== 대화 보기 ==========
+        function viewConversation(convId) {
+            const conversation = timelineData.find(item => item.id === convId);
+            if (!conversation) return;
+
+            const details = `
+    대화 상세 정보: ${convId}
+    
+    📝 제목: ${conversation.title}
+    📁 프로젝트: ${conversation.project}
+    ⏱️ 시간: ${conversation.time}
+    
+    💬 대화 정보:
+    - 사용 모델: ${conversation.models}개
+    - 메시지 수: ${conversation.messages}개
+    - 소요 시간: ${conversation.duration}분
+    - 만족도: ${conversation.satisfaction === 'high' ? '높음' : '보통'}
+    
+    📄 설명:
+    ${conversation.description}
+                `.trim();
+
+            alert(details);
+        }
+
+        function continueConversation(convId) {
+            window.GrowFitUtils.showToast('대화를 이어갑니다...', 'info');
+
+            setTimeout(() => {
+                location.href = `practice.html?continue=${convId}`;
+            }, 500);
+        }
+
+        function shareConversation(convId) {
+            const shareUrl = `${window.location.origin}/share/conversation/${convId}`;
+
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(shareUrl).then(() => {
+                    window.GrowFitUtils.showToast('공유 링크가 복사되었습니다', 'success');
+                });
+            } else {
+                prompt('공유 링크:', shareUrl);
+            }
+        }
+
+        // ========== 문서 보기 ==========
+        function viewDocument(docId) {
+            window.GrowFitUtils.showToast('문서를 여는 중...', 'info');
+
+            setTimeout(() => {
+                location.href = `my-documents.html?doc=${docId}`;
+            }, 500);
+        }
+
+        function chatWithDocument(docId) {
+            window.GrowFitUtils.showToast('문서 기반 대화를 시작합니다...', 'info');
+
+            setTimeout(() => {
+                location.href = `practice.html?doc=${docId}`;
+            }, 500);
+        }
+
+        // ========== 에이전트 보기 ==========
+        function viewAgent(agentId) {
+            window.GrowFitUtils.showToast('에이전트를 여는 중...', 'info');
+
+            setTimeout(() => {
+                location.href = `my-agents.html?agent=${agentId}`;
+            }, 500);
+        }
+
+        function useAgent(agentId) {
+            window.GrowFitUtils.showToast('에이전트로 대화를 시작합니다...', 'info');
+
+            setTimeout(() => {
+                location.href = `practice.html?agent=${agentId}`;
+            }, 500);
+        }
+
+        // ========== 프로젝트 보기 ==========
+        function viewProject(projId) {
+            window.GrowFitUtils.showToast('프로젝트를 여는 중...', 'info');
+
+            setTimeout(() => {
+                location.href = `my-projects.html?project=${projId}`;
+            }, 500);
+        }
+
+        function continueProject(projId) {
+            window.GrowFitUtils.showToast('프로젝트를 계속합니다...', 'info');
+
+            setTimeout(() => {
+                location.href = `practice.html?project=${projId}`;
+            }, 500);
+        }
+
+        // ========== 기록 내보내기 ==========
+        function exportHistory() {
+            const exportOptions = [
+                '내보내기 형식 선택:',
+                '',
+                '1. JSON (전체 데이터)',
+                '2. CSV (통계만)',
+                '3. PDF (보고서)',
+                '',
+                '번호를 입력하세요:'
+            ].join('\n');
+
+            const choice = prompt(exportOptions);
+
+            if (choice) {
+                switch (choice) {
+                    case '1':
+                        exportAsJSON();
+                        break;
+                    case '2':
+                        exportAsCSV();
+                        break;
+                    case '3':
+                        exportAsPDF();
+                        break;
+                    default:
+                        window.GrowFitUtils.showToast('올바른 번호를 선택하세요', 'warning');
+                }
+            }
+        }
+
+        function exportAsJSON() {
+            const exportData = {
+                exportDate: new Date().toISOString(),
+                stats: statsData,
+                timeline: timelineData,
+                period: currentPeriod
+            };
+
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `history_${Date.now()}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+
+            window.GrowFitUtils.showToast('JSON 파일이 다운로드되었습니다', 'success');
+        }
+
+        function exportAsCSV() {
+            window.GrowFitUtils.showToast('CSV 내보내기는 개발 중입니다', 'info');
+        }
+
+        function exportAsPDF() {
+            window.GrowFitUtils.showToast('PDF 보고서를 생성하는 중...', 'info');
+
+            setTimeout(() => {
+                window.GrowFitUtils.showToast('PDF 보고서가 생성되었습니다', 'success');
+            }, 2000);
+        }
+
+        // ========== 보고서 생성 ==========
+        function generateReport() {
+            const reportOptions = [
+                '보고서 유형 선택:',
+                '',
+                '1. 📊 주간 활동 보고서',
+                '2. 📈 월간 성장 보고서',
+                '3. 🎯 프로젝트별 분석',
+                '4. 🤖 모델 사용 분석',
+                '',
+                '번호를 입력하세요:'
+            ].join('\n');
+
+            const choice = prompt(reportOptions);
+
+            if (choice) {
+                window.GrowFitUtils.showToast('보고서를 생성하는 중...', 'info');
+
+                setTimeout(() => {
+                    showReport(choice);
+                }, 1500);
+            }
+        }
+
+        function showReport(type) {
+            let report = '';
+
+            switch (type) {
+                case '1':
+                    report = generateWeeklyReport();
+                    break;
+                case '2':
+                    report = generateMonthlyReport();
+                    break;
+                case '3':
+                    report = generateProjectReport();
+                    break;
+                case '4':
+                    report = generateModelReport();
+                    break;
+                default:
+                    return;
+            }
+
+            alert(report);
+            window.GrowFitUtils.showToast('보고서가 생성되었습니다', 'success');
+        }
+
+        function generateWeeklyReport() {
+            return `
+    📊 주간 활동 보고서
+    
+    기간: ${new Date().toLocaleDateString('ko-KR')} 기준 최근 7일
+    
+    📈 핵심 지표:
+    - 총 대화 수: 89개 (+15% ↑)
+    - 실습 시간: 12.4시간 (+8% ↑)
+    - 병렬 비교: 61회 (+23% ↑)
+    - 에이전트 사용: 18회 (+12% ↑)
+    
+    🎯 주요 활동:
+    - Python 리스트 학습 (23분)
+    - 데이터 분석 실습 (35분)
+    - 코딩 튜터 에이전트 생성
+    - PDF 문서 3개 업로드
+    
+    ⭐ 가장 많이 사용한 모델:
+    1. Claude (46%)
+    2. GPT-4 (40%)
+    3. Gemini (14%)
+    
+    💡 다음 주 목표:
+    - 15시간 실습 목표 달성
+    - 새 프로젝트 시작
+    - 문서 활용도 증가
+                `.trim();
+        }
+
+        function generateMonthlyReport() {
+            return `
+    📈 월간 성장 보고서
+    
+    기간: ${new Date().getMonth() + 1}월
+    
+    📊 전체 통계:
+    - 총 대화 수: 847개
+    - 총 실습 시간: 127.5시간
+    - 병렬 비교: 578회
+    - 에이전트: 234회 사용
+    
+    📈 성장 추이:
+    - 대화 수: +15% (지난달 대비)
+    - 실습 시간: +8%
+    - 병렬 활용: +23%
+    - 만족도: 4.6/5.0
+    
+    🏆 주요 성과:
+    - 8개 프로젝트 진행
+    - 5개 에이전트 생성
+    - 24개 문서 업로드
+    - 학습 성취도 60%
+    
+    🎯 다음 달 계획:
+    - 프로젝트 완료율 90% 달성
+    - 신규 에이전트 3개 생성
+    - 고급 기능 학습 시작
+                `.trim();
+        }
+
+        function generateProjectReport() {
+            return `
+    🎯 프로젝트별 분석
+    
+    📁 활성 프로젝트 (8개):
+    
+    1. Python 학습
+       • 진행률: 85%
+       • 대화: 45개
+       • 시간: 12.5h
+       • 상태: ✓ 순조로움
+    
+    2. 데이터 분석
+       • 진행률: 60%
+       • 대화: 23개
+       • 시간: 8.2h
+       • 상태: ✓ 정상
+    
+    3. 마케팅 콘텐츠
+       • 진행률: 92%
+       • 대화: 156개
+       • 시간: 34.5h
+       • 상태: ✓ 거의 완료
+    
+    💡 인사이트:
+    - 가장 활발한 프로젝트: 마케팅 콘텐츠
+    - 가장 효율적: 데이터 분석
+    - 추천 다음 단계: Python 학습 완료
+                `.trim();
+        }
+
+        function generateModelReport() {
+            return `
+    🤖 모델 사용 분석
+    
+    📊 사용 현황:
+    
+    GPT-4 Turbo (40%)
+    - 사용: 342회
+    - 평균 응답: 2.3초
+    - 만족도: ⭐ 4.5
+    - 주 용도: 코드 생성
+    
+    Claude 3.7 Sonnet (46%)
+    - 사용: 389회
+    - 평균 응답: 1.8초
+    - 만족도: ⭐ 4.7
+    - 주 용도: 문서 작성
+    
+    Gemini Pro (14%)
+    - 사용: 116회
+    - 평균 응답: 3.1초
+    - 만족도: ⭐ 4.3
+    - 주 용도: 번역
+    
+    💡 추천:
+    - 코드 작성: GPT-4
+    - 문서 작성: Claude
+    - 번역/요약: Gemini
+    - 복잡한 분석: 병렬 비교
+                `.trim();
+        }
+
+        // ========== 통계 분석 ==========
+        function analyzeStats() {
+            const analysis = `
+    📊 상세 통계 분석
+    
+    활동 패턴:
+    - 가장 활발한 시간: 오후 2-4시
+    - 가장 활발한 요일: 수요일
+    - 평균 세션 시간: 28분
+    - 평균 대화 길이: 8.7개 메시지
+    
+    학습 효율:
+    - 대화당 평균 시간: 9분
+    - 병렬 비교 활용률: 68%
+    - 에이전트 활용률: 28%
+    - 문서 참조율: 15%
+    
+    성장 지표:
+    - 주간 성장률: +15%
+    - 월간 성장률: +42%
+    - 분기 성장률: +127%
+    
+    💡 개선 제안:
+    - 문서 활용도 증가 권장
+    - 오전 시간대 활용 고려
+    - 에이전트 다양화 추천
+                `.trim();
+
+            alert(analysis);
+        }
+
+        // ========== 목표 설정 ==========
+        function setGoals() {
+            const goals = prompt(`
+    이번 주 학습 목표를 설정하세요:
+    
+    현재 목표: 15시간 실습
+    달성률: 70% (10.5/15시간)
+    
+    새 목표 시간을 입력하세요 (시간):
+                `.trim());
+
+            if (goals && !isNaN(goals)) {
+                window.GrowFitUtils.showToast(`목표가 ${goals}시간으로 설정되었습니다`, 'success');
+            }
+        }
+
+        // ========== 비교 분석 ==========
+        function compareWithPrevious() {
+            const comparison = `
+    📊 기간별 비교 분석
+    
+    이번 주 vs 지난 주:
+    - 대화 수: 89개 vs 77개 (+15.6% ↑)
+    - 실습 시간: 12.4h vs 11.5h (+7.8% ↑)
+    - 병렬 비교: 61회 vs 50회 (+22.0% ↑)
+    - 만족도: 4.6 vs 4.4 (+4.5% ↑)
+    
+    이번 달 vs 지난 달:
+    - 대화 수: 847개 vs 735개 (+15.2% ↑)
+    - 실습 시간: 127.5h vs 118.2h (+7.9% ↑)
+    - 프로젝트: 8개 vs 6개 (+33.3% ↑)
+    
+    분기 추이:
+    - Q3: 2,145개 대화
+    - Q2: 1,687개 대화 (+27.2% ↑)
+    
+    💡 인사이트:
+    꾸준한 성장세를 보이고 있습니다!
+    병렬 비교 활용이 크게 증가했습니다.
+                `.trim();
+
+            alert(comparison);
+        }
+
+        // ========== 키보드 단축키 ==========
+        document.addEventListener('keydown', function (e) {
+            // Ctrl/Cmd + E: 내보내기
+            if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+                e.preventDefault();
+                exportHistory();
+            }
+
+            // Ctrl/Cmd + R: 보고서 생성
+            if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+                e.preventDefault();
+                generateReport();
+            }
+
+            // Ctrl/Cmd + 1~4: 탭 전환
+            if ((e.ctrlKey || e.metaKey) && ['1', '2', '3', '4'].includes(e.key)) {
+                e.preventDefault();
+                const tabs = ['timeline', 'conversations', 'models', 'achievements'];
+                switchHistoryTab(tabs[parseInt(e.key) - 1]);
+            }
+        });
+
+        // ========== 초기화 완료 ==========
+        console.log('History 페이지 스크립트 로드 완료');
+        console.log('단축키: Ctrl+E(내보내기), Ctrl+R(보고서), Ctrl+1~4(탭 전환)');
+
+        // ========== 상세 통계 보기 ==========
+        function viewDetailedStats() {
+            const details = `
+📊 상세 통계 대시보드
+
+📈 활동 분석:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+시간대별 활동:
+- 09:00-12:00  ████████░░ 35%
+- 12:00-15:00  ██████░░░░ 25%
+- 15:00-18:00  ██████████ 40%
+
+프로젝트별 시간:
+1. Python 학습     12.5h (30%)
+2. 마케팅 콘텐츠   34.5h (45%)
+3. 데이터 분석      8.2h (15%)
+4. 기타            4.3h (10%)
+
+모델 선호도:
+- Claude: 46% (가장 선호)
+- GPT-4:  40%
+- Gemini: 14%
+
+💬 대화 품질:
+- 평균 메시지 수: 8.7개
+- 평균 세션 시간: 28분
+- 재시도 비율: 12%
+- 만족 비율: 87%
+
+📚 문서 활용:
+- 업로드: 24개
+- 참조율: 15%
+- RAG 활용: 23회
+
+🎯 목표 달성:
+- 주간 목표: 70% 달성
+- 월간 목표: 85% 달성
+- 분기 목표: 진행 중
+            `.trim();
+
+            alert(details);
+        }
+
+        // ========== 학습 패턴 분석 ==========
+        function analyzeLearningPattern() {
+            window.GrowFitUtils.showToast('학습 패턴을 분석하는 중...', 'info');
+
+            setTimeout(() => {
+                const pattern = `
+🧠 학습 패턴 분석
+
+📖 학습 스타일:
+- 유형: 실습 중심형
+- 선호 시간: 오후 (2-6시)
+- 집중 시간: 평균 28분
+- 휴식 주기: 1시간마다
+
+💪 강점:
+- 병렬 비교 적극 활용 (68%)
+- 꾸준한 학습 습관
+- 다양한 프로젝트 진행
+- 문서 기반 학습 시도
+
+📈 개선 영역:
+- 오전 시간 활용 (현재 35%)
+- 문서 참조율 증가 (현재 15%)
+- 에이전트 다양화
+- 복습 주기 설정
+
+🎯 맞춤 추천:
+1. 오전 집중 학습 시도
+2. 문서 기반 심화 학습
+3. 주간 복습 세션 추가
+4. 프로젝트 회고 작성
+
+📊 학습 효율:
+- 이해도: 85/100
+- 활용도: 78/100
+- 지속성: 92/100
+- 종합: A- 등급
+                `.trim();
+
+                alert(pattern);
+                window.GrowFitUtils.showToast('분석이 완료되었습니다', 'success');
+            }, 2000);
+        }
+
+        // ========== 성장 그래프 ==========
+        function showGrowthGraph() {
+            const graph = `
+📈 성장 그래프 (최근 3개월)
+
+대화 수:
+9월  ████████░░ 735
+10월 ██████████ 847 ↑
+11월 예상: 975
+
+실습 시간:
+9월  ████████░░ 118h
+10월 ██████████ 127h ↑
+11월 예상: 140h
+
+병렬 비교:
+9월  ███████░░░ 470
+10월 ██████████ 578 ↑
+11월 예상: 680
+
+📊 성장률:
+- 월평균: +12.5%
+- 최고 증가: 병렬 비교 (+23%)
+- 안정 지표: 일관성 92%
+
+🎯 예측:
+현재 추세로 3개월 후:
+- 월 1,200+ 대화
+- 180+ 시간
+- 프로젝트 12개
+            `.trim();
+
+            alert(graph);
+        }
+
+        // ========== 랭킹 확인 ==========
+        function checkRanking() {
+            const ranking = `
+🏆 나의 랭킹
+
+전체 직원 중 (45명):
+- 실습 시간: 3위 (상위 7%)
+- 대화 수: 5위 (상위 11%)
+- 병렬 비교: 2위 (상위 4%) ⭐
+- 에이전트: 7위 (상위 16%)
+
+부서 내 (개발팀 20명):
+- 종합: 2위 🥈
+- 실습 시간: 1위 🥇
+- 활용도: 3위 🥉
+
+월간 MVP 후보: ✓
+
+🎖️ 획득 배지:
+- 🔥 7일 연속 학습
+- ⚡ 병렬 비교 마스터
+- 📚 문서왕 (24개 업로드)
+- 🤖 에이전트 크리에이터
+
+다음 목표:
+- 🏆 월간 1위 달성
+- 💯 100시간 돌파
+- 🎯 프로젝트 10개 완료
+            `.trim();
+
+            alert(ranking);
+        }
+
+        // ========== 배지 시스템 ==========
+        function showBadges() {
+            const badges = `
+🏅 획득한 배지
+
+🔥 연속 학습:
+- 7일 연속 ✓
+- 14일 연속 (진행 중: 9일)
+- 30일 연속 (잠김)
+
+⚡ 활동량:
+- 대화 100개 ✓
+- 대화 500개 ✓
+- 대화 1000개 (진행: 847/1000)
+
+📊 전문성:
+- 병렬 비교 마스터 ✓
+- 에이전트 크리에이터 ✓
+- 문서 관리자 ✓
+- RAG 전문가 (진행: 60%)
+
+🎯 프로젝트:
+- 첫 프로젝트 ✓
+- 5개 프로젝트 ✓
+- 10개 프로젝트 (진행: 8/10)
+
+⏱️ 시간:
+- 10시간 ✓
+- 50시간 ✓
+- 100시간 ✓
+- 200시간 (진행: 127.5/200)
+
+🏆 특별 배지:
+- 얼리어답터
+- 베타테스터
+- 피드백 마스터
+            `.trim();
+
+            alert(badges);
+        }
+
+        // ========== 하이라이트 ==========
+        function showHighlights() {
+            const highlights = `
+✨ 이번 주 하이라이트
+
+🌟 주요 성과:
+- 병렬 비교로 Python 완벽 이해
+- 코딩 튜터 에이전트 첫 생성
+- 3개 문서 활용한 심화 학습
+- 주간 목표 70% 달성
+
+💬 베스트 대화:
+"Python 리스트 정렬 완벽 가이드"
+- 3개 모델 비교 분석
+- 23분 집중 학습
+- 만족도: 높음 ⭐⭐⭐⭐⭐
+
+📚 주요 학습:
+- sort() vs sorted() 차이
+- 리스트 컴프리헨션
+- Lambda 함수 활용
+- 성능 최적화 기법
+
+🎯 다음 주 계획:
+- 딕셔너리 심화 학습
+- 파일 입출력 실습
+- 에러 핸들링 마스터
+- 프로젝트 완료
+
+💡 AI 추천:
+"지금까지 훌륭한 진전을 보이고 있습니다!
+다음 단계로 실전 프로젝트를 시작해보세요."
+            `.trim();
+
+            alert(highlights);
+        }
+
+        // ========== 복습 알림 ==========
+        function setReviewReminder() {
+            const topics = [
+                'Python 리스트 정렬',
+                '데이터프레임 조작',
+                '에이전트 시스템 프롬프트'
+            ];
+
+            const reminder = `
+🔔 복습 알림 설정
+
+학습한 지 3일이 지난 주제들:
+${topics.map((topic, i) => `${i + 1}. ${topic}`).join('\n')}
+
+복습 알림을 받으시겠습니까?
+- 일일 알림 (오전 9시)
+- 주간 알림 (월요일)
+- 맞춤 알림 (설정)
+            `.trim();
+
+            if (confirm(reminder)) {
+                window.GrowFitUtils.showToast('복습 알림이 설정되었습니다', 'success');
+            }
+        }
+
+        // ========== 학습 노트 ==========
+        function viewLearningNotes() {
+            const notes = `
+📝 학습 노트
+
+최근 메모 (5개):
+
+1. Python 리스트 정렬 ⭐
+   "sort()는 원본 수정, sorted()는 새 리스트 반환
+   key 파라미터로 정렬 기준 커스터마이징 가능"
+   
+2. 병렬 비교 활용법
+   "3개 모델 동시 실행으로 최적 답변 선택
+   각 모델의 장단점 파악에 효과적"
+   
+3. RAG 시스템 이해
+   "문서 업로드 → 청크 분할 → 임베딩
+   대화 시 자동으로 관련 내용 검색"
+   
+4. 에이전트 설계 팁
+   "시스템 프롬프트가 핵심
+   역할, 전문성, 톤을 명확히 정의"
+   
+5. 효율적인 프롬프트
+   "구체적이고 맥락 제공
+   예시 포함하면 더 좋은 결과"
+
+[새 메모 추가] [전체 보기]
+            `.trim();
+
+            alert(notes);
+        }
+
+        // ========== 피드백 제공 ==========
+        function provideFeedback() {
+            const feedback = prompt(`
+💬 피드백 보내기
+
+GrowFit을 사용하면서 느낀 점을 자유롭게 적어주세요:
+
+- 좋았던 점
+- 개선이 필요한 점
+- 새로운 기능 제안
+- 기타 의견
+
+여러분의 피드백이 서비스 개선에 큰 도움이 됩니다!
+            `.trim());
+
+            if (feedback && feedback.trim()) {
+                window.GrowFitUtils.showToast('소중한 피드백 감사합니다!', 'success');
+                console.log('피드백:', feedback);
+            }
+        }
+
+        // ========== 데이터 동기화 ==========
+        function syncData() {
+            window.GrowFitUtils.showToast('데이터를 동기화하는 중...', 'info');
+
+            setTimeout(() => {
+                window.GrowFitUtils.showToast('동기화가 완료되었습니다', 'success');
+                location.reload();
+            }, 2000);
+        }
+
+        // ========== 기록 삭제 ==========
+        function clearHistory() {
+            const options = [
+                '기록 삭제 옵션:',
+                '',
+                '1. 최근 7일 기록',
+                '2. 최근 30일 기록',
+                '3. 전체 기록',
+                '',
+                '⚠️ 이 작업은 되돌릴 수 없습니다!',
+                '',
+                '번호를 입력하세요:'
+            ].join('\n');
+
+            const choice = prompt(options);
+
+            if (choice && ['1', '2', '3'].includes(choice)) {
+                const confirmText = '정말로 삭제하시겠습니까?\n\n삭제하려면 "삭제"를 입력하세요:';
+                const confirmation = prompt(confirmText);
+
+                if (confirmation === '삭제') {
+                    window.GrowFitUtils.showToast('기록이 삭제되었습니다', 'success');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    window.GrowFitUtils.showToast('취소되었습니다', 'info');
+                }
+            }
+        }
+
+        // ========== 즐겨찾기 ==========
+        function toggleFavorite(itemId) {
+            console.log('즐겨찾기 토글:', itemId);
+            window.GrowFitUtils.showToast('즐겨찾기에 추가되었습니다', 'success');
+        }
+
+        // ========== 캘린더 뷰 ==========
+        function showCalendarView() {
+            const calendar = `
+📅 학습 캘린더 (10월)
+
+일 월 화 수 목 금 토
+──────────────────
+ 1  2  3  4  5  6  7
+🟢 🟢 🟢 🟢 🟢 ⚪ ⚪
+
+ 8  9 10 11 12 13 14
+⚪ 🟢 🟢 🟢 🟢 🟢 ⚪
+
+15 16 17 18 19 20 21
+⚪ 🟢 🟢 🟢 🟢 🟢 ⚪
+
+22 23 24 25 26 27 28
+⚪ 🟢 🟢 🟢 🟢 🟢 ⚪
+
+29 30 31
+⚪ 🟢 🟢
+
+🟢 활동한 날: 23일
+⚪ 휴식한 날: 8일
+🔥 최장 연속: 9일
+
+평균 활동:
+- 주중: 2.3시간/일
+- 주말: 0.5시간/일
+            `.trim();
+
+            alert(calendar);
+        }
+
+        // ========== 목표 추적 ==========
+        function trackGoals() {
+            const goals = `
+🎯 목표 추적
+
+이번 주 목표:
+━━━━━━━━━━━━━━━━━━━━━
+- 15시간 실습       [██████████░░] 70%
+- 50개 대화         [████████████] 100% ✓
+- 3개 문서 업로드    [████████████] 100% ✓
+- 에이전트 1개 생성  [████████████] 100% ✓
+
+이번 달 목표:
+━━━━━━━━━━━━━━━━━━━━━
+- 50시간 실습       [██████████░░] 85%
+- 200개 대화        [████████████] 100% ✓
+- 8개 프로젝트      [████████████] 100% ✓
+- 20개 문서         [████████████] 100% ✓
+
+분기 목표:
+━━━━━━━━━━━━━━━━━━━━━
+- 150시간 실습      [█████████░░░] 75%
+- 2000개 대화       [███████░░░░░] 58%
+- 15개 프로젝트     [█████████░░░] 73%
+
+🏆 달성 가능한 목표:
+- 이번 주: 2.5시간 더 필요
+- 이번 달: 순조롭게 진행 중
+- 분기: 노력 필요
+            `.trim();
+
+            alert(goals);
+        }
+
+        // ========== 학습 추천 ==========
+        function getRecommendations() {
+            window.GrowFitUtils.showToast('AI가 추천을 생성하는 중...', 'info');
+
+            setTimeout(() => {
+                const recommendations = `
+💡 AI 맞춤 추천
+
+📚 다음 학습 주제:
+1. Python 딕셔너리 고급 활용
+   현재 수준에 적합하며 프로젝트에 도움됨
+   
+2. 파일 입출력 & 예외 처리
+   실전 프로젝트를 위한 필수 기술
+   
+3. 객체 지향 프로그래밍 기초
+   다음 단계로 넘어가기 전 필수
+
+🎯 프로젝트 제안:
+- 간단한 할 일 관리 앱
+- CSV 데이터 분석 도구
+- 자동화 스크립트 작성
+
+🤖 추천 에이전트:
+- 디버깅 도우미 (에러 해결)
+- 코드 리뷰어 (품질 개선)
+- 학습 플래너 (계획 수립)
+
+📄 추천 문서:
+- Python 공식 튜토리얼
+- 실전 예제 모음집
+- 베스트 프랙티스 가이드
+
+⏰ 최적 학습 시간:
+- 오후 2-4시 (집중도 최고)
+- 1회 30분 단위 추천
+- 1시간마다 10분 휴식
+                `.trim();
+
+                alert(recommendations);
+                window.GrowFitUtils.showToast('추천이 생성되었습니다', 'success');
+            }, 1500);
+        }
+
+        // ========== 도움말 ==========
+        function showHistoryHelp() {
+            const help = `
+📊 내 기록 도움말
+
+📈 통계 카드:
+- 총 대화 수, 실습 시간, 활용도 등
+- 전주 대비 증감률 표시
+- 클릭하면 상세 정보 확인
+
+📅 타임라인:
+- 모든 활동을 시간순 표시
+- 필터로 유형별 분류 가능
+- 클릭하면 해당 항목으로 이동
+
+📊 차트:
+- 주간/월간/분기별 전환
+- 활동 추이를 시각화
+- 성장 패턴 파악
+
+🏆 성취 기록:
+- 획득한 배지 확인
+- 랭킹 및 비교
+- 다음 목표 안내
+
+⌨️ 단축키:
+- Ctrl+E: 내보내기
+- Ctrl+R: 보고서 생성
+- Ctrl+1~4: 탭 전환
+
+💡 팁:
+- 정기적으로 기록 확인
+- 목표 설정으로 동기부여
+- 복습 알림 활용
+- 성장 추이 분석
+            `.trim();
+
+            alert(help);
+        }
+
+        // ========== 자동 새로고침 ==========
+        let autoRefreshTimer = null;
+
+        function enableAutoRefresh() {
+            if (autoRefreshTimer) return;
+
+            autoRefreshTimer = setInterval(() => {
+                console.log('통계 자동 업데이트');
+                // 실제로는 API에서 최신 데이터 가져오기
+            }, 60000); // 1분마다
+        }
+
+        function disableAutoRefresh() {
+            if (autoRefreshTimer) {
+                clearInterval(autoRefreshTimer);
+                autoRefreshTimer = null;
+            }
+        }
+
+        // 페이지 나가기 전 정리
+        window.addEventListener('beforeunload', function() {
+            disableAutoRefresh();
+        });
+
+        // 자동 새로고침 활성화
+        enableAutoRefresh();
+
+        // ========== 반응형 처리 ==========
+        function handleResize() {
+            const width = window.innerWidth;
+            
+            if (width <= 768) {
+                console.log('모바일 레이아웃');
+                // 차트 간소화 등
+            }
+        }
+
+        window.addEventListener('resize', handleResize);
+        handleResize();
+
+        console.log('🎉 History 페이지 완전 로드 완료');
+    </script>
+</body>
+</html>

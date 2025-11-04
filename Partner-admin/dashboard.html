@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>파트너 대시보드 - GrowFit Partner Admin</title>
+
+    <!-- 공통 CSS -->
+    <link rel="stylesheet" href="../common/variables.css">
+    <link rel="stylesheet" href="../common/layout.css">
+    <link rel="stylesheet" href="../common/components.css">
+
+    <style>
+        /* ========== Partner Dashboard 전용 스타일 ========== */
+        :root {
+            --partner-primary: #0ea5e9;
+            --partner-primary-light: #38bdf8;
+            --partner-primary-dark: #0284c7;
+            --partner-secondary: #8b5cf6;
+            --partner-accent: #ec4899;
+            --partner-success: #10b981;
+            --partner-warning: #f59e0b;
+            --partner-danger: #ef4444;
+        }
+
+        /* 페이지 헤더 */
+        .dashboard-header {
+            margin-bottom: var(--space-6);
+        }
+
+        .dashboard-header h1 {
+            font-size: var(--text-3xl);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-1);
+        }
+
+        .dashboard-header p {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+        }
+
+        /* 알림 배너 */
+        .alert-banner {
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.05), rgba(139, 92, 246, 0.05));
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--partner-primary);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            margin-bottom: var(--space-6);
+        }
+
+        .alert-banner__content {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+        }
+
+        .alert-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-3);
+            background: white;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+        }
+
+        /* KPI 카드 그리드 */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--space-5);
+            margin-bottom: var(--space-6);
+        }
+
+        .kpi-card {
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.05), rgba(139, 92, 246, 0.05));
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: var(--space-5);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, rgba(14, 165, 233, 0.1), transparent);
+            border-radius: 50%;
+            transform: translate(30%, -30%);
+        }
+
+        .kpi-card:hover {
+            border-color: var(--partner-primary);
+            box-shadow: 0 8px 24px rgba(14, 165, 233, 0.15);
+            transform: translateY(-4px);
+        }
+
+        .kpi-card__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: var(--space-4);
+        }
+
+        .kpi-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: var(--radius-xl);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .kpi-icon--primary {
+            background: linear-gradient(135deg, var(--partner-primary), var(--partner-primary-light));
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+        }
+
+        .kpi-icon--secondary {
+            background: linear-gradient(135deg, var(--partner-secondary), #a78bfa);
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        }
+
+        .kpi-icon--success {
+            background: linear-gradient(135deg, var(--partner-success), #34d399);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .kpi-icon--warning {
+            background: linear-gradient(135deg, var(--partner-warning), #fbbf24);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
+
+        .kpi-trend {
+            padding: 6px 12px;
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+            font-weight: var(--font-bold);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .kpi-trend--up {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--partner-success);
+        }
+
+        .kpi-trend--down {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--partner-danger);
+        }
+
+        .kpi-card__body {
+            position: relative;
+            z-index: 1;
+        }
+
+        .kpi-label {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-2);
+            font-weight: var(--font-medium);
+        }
+
+        .kpi-value {
+            font-size: var(--text-4xl);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-3);
+            line-height: 1;
+        }
+
+        .kpi-detail {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: space-between;
+            padding-top: var(--space-3);
+            border-top: 1px solid var(--border);
+        }
+
+        .kpi-detail__item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .kpi-detail__label {
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+        }
+
+        .kpi-detail__value {
+            font-size: var(--text-sm);
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+        }
+
+        /* 차트 섹션 */
+        .charts-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: var(--space-5);
+            margin-bottom: var(--space-6);
+        }
+
+        .chart-card {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
+            transition: all 0.2s;
+        }
+
+        .chart-card:hover {
+            border-color: var(--partner-primary);
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.1);
+        }
+
+        .chart-card__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-5);
+        }
+
+        .chart-card__title {
+            font-size: var(--text-xl);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+        }
+
+        .chart-card__subtitle {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            margin-top: var(--space-1);
+        }
+
+        .chart-controls {
+            display: flex;
+            gap: var(--space-2);
+        }
+
+        .chart-control-btn {
+            padding: var(--space-2) var(--space-3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            background: white;
+            font-size: var(--text-sm);
+            font-weight: var(--font-semibold);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .chart-control-btn:hover {
+            border-color: var(--partner-primary);
+            color: var(--partner-primary);
+        }
+
+        .chart-control-btn--active {
+            background: var(--partner-primary);
+            border-color: var(--partner-primary);
+            color: white;
+        }
+
+        .chart-canvas {
+            height: 320px;
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            gap: var(--space-2);
+        }
+
+        .chart-bar-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .chart-bars {
+            width: 100%;
+            display: flex;
+            gap: 4px;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .chart-bar {
+            flex: 1;
+            min-width: 20px;
+            max-width: 40px;
+            border-radius: 4px 4px 0 0;
+            transition: all 0.3s;
+        }
+
+        .chart-bar:hover {
+            opacity: 0.8;
+            transform: scaleY(1.05);
+        }
+
+        .chart-bar-label {
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+            font-weight: var(--font-medium);
+        }
+
+        /* 도넛 차트 */
+        .donut-chart {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-4);
+        }
+
+        .donut-svg {
+            width: 100%;
+            max-width: 200px;
+            margin: 0 auto;
+        }
+
+        .donut-legend {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+        }
+
+        .donut-legend-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-2);
+            background: var(--surface);
+            border-radius: var(--radius-md);
+        }
+
+        .donut-legend-item__left {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .donut-legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: var(--radius-sm);
+        }
+
+        .donut-legend-label {
+            font-size: var(--text-sm);
+            color: var(--text-primary);
+            font-weight: var(--font-medium);
+        }
+
+        .donut-legend-value {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+        }
+
+        /* 활동 섹션 */
+        .activity-section {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-5);
+            margin-bottom: var(--space-6);
+        }
+
+        .activity-card {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+        }
+
+        .activity-card__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-4);
+        }
+
+        .activity-card__title {
+            font-size: var(--text-lg);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+        }
+
+        .activity-card__content {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+        }
+
+        .activity-item {
+            display: flex;
+            gap: var(--space-3);
+            padding: var(--space-3);
+            background: var(--surface);
+            border-radius: var(--radius-md);
+            transition: all 0.2s;
+        }
+
+        .activity-item:hover {
+            background: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .activity-icon--success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--partner-success);
+        }
+
+        .activity-icon--primary {
+            background: rgba(14, 165, 233, 0.1);
+            color: var(--partner-primary);
+        }
+
+        .activity-icon--warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--partner-warning);
+        }
+
+        .activity-info {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-size: var(--text-sm);
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+
+        .activity-description {
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+        }
+
+        .activity-time {
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+        }
+
+        /* 프로젝트 카드 */
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-4);
+            margin-bottom: var(--space-6);
+        }
+
+        .project-card {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            transition: all 0.2s;
+        }
+
+        .project-card:hover {
+            border-color: var(--partner-primary);
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .project-card__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: var(--space-3);
+        }
+
+        .project-status {
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            font-size: var(--text-xs);
+            font-weight: var(--font-bold);
+        }
+
+        .project-status--active {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--partner-success);
+        }
+
+        .project-name {
+            font-size: var(--text-base);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-1);
+        }
+
+        .project-client {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-3);
+        }
+
+        .project-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-2);
+            padding-top: var(--space-3);
+            border-top: 1px solid var(--border);
+        }
+
+        .project-stat {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .project-stat__label {
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+        }
+
+        .project-stat__value {
+            font-size: var(--text-sm);
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+        }
+
+        /* 반응형 */
+        @media (max-width: 1400px) {
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .projects-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+
+            .activity-section {
+                grid-template-columns: 1fr;
+            }
+
+            .projects-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header__left">
+                <button id="menuToggle" class="header__icon-button hidden-desktop">
+                    <span>☰</span>
+                </button>
+                <a href="dashboard.html" class="header__logo">
+                    <span class="header__logo-icon">🌱</span>
+                    <span>GrowFit Partner</span>
+                </a>
+            </div>
+
+            <div class="header__right">
+                <button id="notificationBtn" class="header__icon-button">
+                    <span>🔔</span>
+                    <span class="header__badge">3</span>
+                </button>
+
+                <div id="profileBtn" class="header__profile">
+                    <div class="header__avatar"
+                        style="background: linear-gradient(135deg, #0ea5e9, #38bdf8);">박</div>
+                    <span class="hidden-mobile">박강사</span>
+                    <span class="hidden-mobile">▼</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="container">
+            <!-- Sidebar -->
+            <aside class="sidebar sidebar--open">
+                <div class="sidebar__user">
+                    <div class="sidebar__user-info">
+                        <div class="sidebar__user-avatar"
+                            style="background: linear-gradient(135deg, #0ea5e9, #38bdf8);">박</div>
+                        <div class="sidebar__user-details">
+                            <div class="sidebar__user-name">박강사</div>
+                            <div class="sidebar__user-role">교육 파트너</div>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="sidebar__nav">
+                    <ul class="sidebar__menu">
+                        <li class="sidebar__menu-item">
+                            <a href="dashboard.html" class="sidebar__menu-link sidebar__menu-link--active">
+                                <span class="sidebar__menu-icon">🏠</span>
+                                <span>대시보드</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="project-management.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">📁</span>
+                                <span>프로젝트 관리</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="student-management.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">👥</span>
+                                <span>학생 관리</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="ai-practice-management.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">🤖</span>
+                                <span>AI 실습 관리</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="revenue-settlement.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">💰</span>
+                                <span>수익/정산 관리</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="settings.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">⚙️</span>
+                                <span>설정</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <div class="sidebar__footer">
+                    <div style="padding: var(--space-3); background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(139, 92, 246, 0.1)); border-radius: var(--radius-md); font-size: var(--text-xs);">
+                        <div style="color: var(--text-secondary); margin-bottom: var(--space-1);">이번 달 수익 (75%)</div>
+                        <div style="font-weight: var(--font-bold); color: var(--partner-primary);">45,000,000원</div>
+                        <div style="height: 4px; background: var(--gray-200); border-radius: 2px; margin-top: var(--space-2); overflow: hidden;">
+                            <div style="height: 100%; width: 75%; background: linear-gradient(to right, var(--partner-primary), var(--partner-secondary));"></div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main">
+                <!-- 페이지 헤더 -->
+                <div class="dashboard-header">
+                    <h1>🏠 대시보드</h1>
+                    <p>전체 프로젝트 및 교육 현황을 한눈에 확인하세요</p>
+                </div>
+
+                <!-- 알림 배너 -->
+                <div class="alert-banner">
+                    <div class="alert-banner__content">
+                        <div class="alert-item">
+                            <div>
+                                <span style="font-weight: var(--font-semibold);">💰 정산 완료</span>
+                                <span style="color: var(--text-secondary); margin-left: var(--space-2);">
+                                    지난 달 39,000,000원이 입금되었습니다
+                                </span>
+                            </div>
+                            <button class="btn btn--sm btn--outline" onclick="location.href='revenue-settlement.html'">
+                                확인
+                            </button>
+                        </div>
+                        <div class="alert-item">
+                            <div>
+                                <span style="font-weight: var(--font-semibold);">📊 신규 학생 등록</span>
+                                <span style="color: var(--text-secondary); margin-left: var(--space-2);">
+                                    현대자동차 프로젝트 학생 25명 추가
+                                </span>
+                            </div>
+                            <button class="btn btn--sm btn--outline" onclick="location.href='student-management.html'">
+                                확인
+                            </button>
+                        </div>
+                        <div class="alert-item">
+                            <div>
+                                <span style="font-weight: var(--font-semibold);">⚠️ API 비용 증가</span>
+                                <span style="color: var(--text-secondary); margin-left: var(--space-2);">
+                                    학생당 평균 비용이 지난 달 대비 12% 증가
+                                </span>
+                            </div>
+                            <button class="btn btn--sm btn--outline" onclick="location.href='ai-practice-management.html'">
+                                최적화
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI 카드 -->
+                <div class="kpi-grid">
+                    <!-- 진행 중 프로젝트 -->
+                    <div class="kpi-card">
+                        <div class="kpi-card__header">
+                            <div class="kpi-icon kpi-icon--primary">📁</div>
+                            <div class="kpi-trend kpi-trend--up">
+                                <span>↑</span>
+                                <span>50%</span>
+                            </div>
+                        </div>
+                        <div class="kpi-card__body">
+                            <div class="kpi-label">진행 중 프로젝트</div>
+                            <div class="kpi-value">3</div>
+                            <div class="kpi-detail">
+                                <div class="kpi-detail__item">
+                                    <span class="kpi-detail__label">총 계약금</span>
+                                    <span class="kpi-detail__value">64,100,000원</span>
+                                </div>
+                                <div class="kpi-detail__item">
+                                    <span class="kpi-detail__label">파트너 수익</span>
+                                    <span class="kpi-detail__value">48,075,000원</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 총 학생 수 -->
+                    <div class="kpi-card">
+                        <div class="kpi-card__header">
+                            <div class="kpi-icon kpi-icon--secondary">👥</div>
+                            <div class="kpi-trend kpi-trend--up">
+                                <span>↑</span>
+                                <span>24%</span>
+                            </div>
+                        </div>
+                        <div class="kpi-card__body">
+                            <div class="kpi-label">총 학생 수</div>
+                            <div class="kpi-value">127</div>
+                            <div class="kpi-detail">
+                                <div class="kpi-detail__item">
+                                    <span class="kpi-detail__label">활성 학생</span>
+                                    <span class="kpi-detail__value">123</span>
+                                </div>
+                                <div class="kpi-detail__item">
+                                    <span class="kpi-detail__label">이번 달 신규</span>
+                                    <span class="kpi-detail__value">+25</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 총 대화 수 -->
+                    <div class="kpi-card">
+                        <div class="kpi-card__header">
+                            <div class="kpi-icon kpi-icon--success">💬</div>
+                            <div class="kpi-trend kpi-trend--up">
+                                <span>↑</span>
+                                <span>18%</span>
+                            </div>
+                        </div>
+                        <div class="kpi-card__body">
+                            <div class="kpi-label">총 대화 수</div>
+                            <div class="kpi-value">31,234</div>
+                            <div class="kpi-detail">
+                                <div class="kpi-detail__item">
+                                    <span class="kpi-detail__label">학생당 평균</span>
+                                    <span class="kpi-detail__value">246</span>
+                                </div>
+                                <div class="kpi-detail__item">
+                                    <span class="kpi-detail__label">일 평균</span>
+                                    <span class="kpi-detail__value">1,038</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 이번 달 수익 -->
+                    <div class="kpi-card">
+                        <div class="kpi-card__header">
+                            <div class="kpi-icon kpi-icon--warning">💰</div>
+                            <div class="kpi-trend kpi-trend--up">
+                                <span>↑</span>
+                                <span>24%</span>
+                            </div>
+                        </div>
+                        <div class="kpi-card__body">
+                            <div class="kpi-label">이번 달 예상 수익</div>
+                            <div class="kpi-value">45.0M</div>
+                            <div class="kpi-detail">
+                                <div class="kpi-detail__item">
+                                    <span class="kpi-detail__label">파트너 수익률</span>
+                                    <span class="kpi-detail__value">75%</span>
+                                </div>
+                                <div class="kpi-detail__item">
+                                    <span class="kpi-detail__label">GrowFit 수수료</span>
+                                    <span class="kpi-detail__value">25%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 차트 섹션 -->
+                <div class="charts-section">
+                    <!-- 주간 활동 추이 -->
+                    <div class="chart-card">
+                        <div class="chart-card__header">
+                            <div>
+                                <h2 class="chart-card__title">📊 주간 활동 추이</h2>
+                                <p class="chart-card__subtitle">일별 대화 수 및 사용 시간</p>
+                            </div>
+                            <div class="chart-controls">
+                                <button class="chart-control-btn chart-control-btn--active">주간</button>
+                                <button class="chart-control-btn">월간</button>
+                            </div>
+                        </div>
+                        <div class="chart-canvas">
+                            <div class="chart-bar-group">
+                                <div class="chart-bars">
+                                    <div class="chart-bar" style="height: 82%; background: linear-gradient(to top, #0ea5e9, #38bdf8);"></div>
+                                    <div class="chart-bar" style="height: 75%; background: linear-gradient(to top, #8b5cf6, #a78bfa);"></div>
+                                </div>
+                                <div class="chart-bar-label">월</div>
+                            </div>
+                            <div class="chart-bar-group">
+                                <div class="chart-bars">
+                                    <div class="chart-bar" style="height: 88%; background: linear-gradient(to top, #0ea5e9, #38bdf8);"></div>
+                                    <div class="chart-bar" style="height: 82%; background: linear-gradient(to top, #8b5cf6, #a78bfa);"></div>
+                                </div>
+                                <div class="chart-bar-label">화</div>
+                            </div>
+                            <div class="chart-bar-group">
+                                <div class="chart-bars">
+                                    <div class="chart-bar" style="height: 95%; background: linear-gradient(to top, #0ea5e9, #38bdf8);"></div>
+                                    <div class="chart-bar" style="height: 90%; background: linear-gradient(to top, #8b5cf6, #a78bfa);"></div>
+                                </div>
+                                <div class="chart-bar-label">수</div>
+                            </div>
+                            <div class="chart-bar-group">
+                                <div class="chart-bars">
+                                    <div class="chart-bar" style="height: 78%; background: linear-gradient(to top, #0ea5e9, #38bdf8);"></div>
+                                    <div class="chart-bar" style="height: 72%; background: linear-gradient(to top, #8b5cf6, #a78bfa);"></div>
+                                </div>
+                                <div class="chart-bar-label">목</div>
+                            </div>
+                            <div class="chart-bar-group">
+                                <div class="chart-bars">
+                                    <div class="chart-bar" style="height: 92%; background: linear-gradient(to top, #0ea5e9, #38bdf8);"></div>
+                                    <div class="chart-bar" style="height: 85%; background: linear-gradient(to top, #8b5cf6, #a78bfa);"></div>
+                                </div>
+                                <div class="chart-bar-label">금</div>
+                            </div>
+                            <div class="chart-bar-group">
+                                <div class="chart-bars">
+                                    <div class="chart-bar" style="height: 25%; background: linear-gradient(to top, #0ea5e9, #38bdf8);"></div>
+                                    <div class="chart-bar" style="height: 20%; background: linear-gradient(to top, #8b5cf6, #a78bfa);"></div>
+                                </div>
+                                <div class="chart-bar-label">토</div>
+                            </div>
+                            <div class="chart-bar-group">
+                                <div class="chart-bars">
+                                    <div class="chart-bar" style="height: 15%; background: linear-gradient(to top, #0ea5e9, #38bdf8);"></div>
+                                    <div class="chart-bar" style="height: 10%; background: linear-gradient(to top, #8b5cf6, #a78bfa);"></div>
+                                </div>
+                                <div class="chart-bar-label">일</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; justify-content: center; gap: var(--space-4); margin-top: var(--space-4);">
+                            <div style="display: flex; align-items: center; gap: var(--space-2);">
+                                <div style="width: 16px; height: 16px; background: linear-gradient(to right, #0ea5e9, #38bdf8); border-radius: 4px;"></div>
+                                <span style="font-size: var(--text-sm); color: var(--text-secondary);">대화 수</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: var(--space-2);">
+                                <div style="width: 16px; height: 16px; background: linear-gradient(to right, #8b5cf6, #a78bfa); border-radius: 4px;"></div>
+                                <span style="font-size: var(--text-sm); color: var(--text-secondary);">사용 시간</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 모델별 사용 분포 -->
+                    <div class="chart-card">
+                        <div class="chart-card__header">
+                            <div>
+                                <h2 class="chart-card__title">🤖 모델별 사용 분포</h2>
+                                <p class="chart-card__subtitle">전체 대화 중 비율</p>
+                            </div>
+                        </div>
+                        <div class="donut-chart">
+                            <svg class="donut-svg" viewBox="0 0 200 200">
+                                <!-- 배경 원 -->
+                                <circle cx="100" cy="100" r="80" fill="none" stroke="#f3f4f6" stroke-width="40"/>
+                                
+                                <!-- GPT-4: 40% -->
+                                <circle cx="100" cy="100" r="80" fill="none" 
+                                        stroke="#10a37f" stroke-width="40"
+                                        stroke-dasharray="201 502"
+                                        stroke-dashoffset="0"
+                                        transform="rotate(-90 100 100)"/>
+                                
+                                <!-- Claude: 45% -->
+                                <circle cx="100" cy="100" r="80" fill="none" 
+                                        stroke="#d97757" stroke-width="40"
+                                        stroke-dasharray="226 502"
+                                        stroke-dashoffset="-201"
+                                        transform="rotate(-90 100 100)"/>
+                                
+                                <!-- Gemini: 15% -->
+                                <circle cx="100" cy="100" r="80" fill="none" 
+                                        stroke="#4285f4" stroke-width="40"
+                                        stroke-dasharray="75 502"
+                                        stroke-dashoffset="-427"
+                                        transform="rotate(-90 100 100)"/>
+                                
+                                <!-- 중앙 텍스트 -->
+                                <text x="100" y="95" text-anchor="middle" font-size="24" font-weight="bold" fill="#1f2937">
+                                    31,234
+                                </text>
+                                <text x="100" y="115" text-anchor="middle" font-size="12" fill="#6b7280">
+                                    총 대화
+                                </text>
+                            </svg>
+                            
+                            <div class="donut-legend">
+                                <div class="donut-legend-item">
+                                    <div class="donut-legend-item__left">
+                                        <div class="donut-legend-color" style="background: #d97757;"></div>
+                                        <span class="donut-legend-label">Claude</span>
+                                    </div>
+                                    <span class="donut-legend-value">45% (14,055)</span>
+                                </div>
+                                <div class="donut-legend-item">
+                                    <div class="donut-legend-item__left">
+                                        <div class="donut-legend-color" style="background: #10a37f;"></div>
+                                        <span class="donut-legend-label">GPT-4</span>
+                                    </div>
+                                    <span class="donut-legend-value">40% (12,494)</span>
+                                </div>
+                                <div class="donut-legend-item">
+                                    <div class="donut-legend-item__left">
+                                        <div class="donut-legend-color" style="background: #4285f4;"></div>
+                                        <span class="donut-legend-label">Gemini</span>
+                                    </div>
+                                    <span class="donut-legend-value">15% (4,685)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 수익 구조 투명성 -->
+                <div style="background: linear-gradient(135deg, rgba(14, 165, 233, 0.05), rgba(139, 92, 246, 0.05)); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: var(--space-5); margin-bottom: var(--space-6);">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: var(--space-4);">
+                        <div>
+                            <h2 style="font-size: var(--text-xl); font-weight: var(--font-bold); color: var(--text-primary); margin-bottom: var(--space-1);">
+                                💎 수익 구조 (투명성)
+                            </h2>
+                            <p style="font-size: var(--text-sm); color: var(--text-secondary);">
+                                하이브리드 25% 모델 - API 비용 포함, 추가 비용 없음
+                            </p>
+                        </div>
+                        <div style="padding: 8px 16px; background: linear-gradient(135deg, #10b981, #059669); border-radius: var(--radius-md); color: white; font-size: var(--text-sm); font-weight: var(--font-bold);">
+                            파트너 75%
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-5);">
+                        <!-- 좌측: 수익 분배 -->
+                        <div>
+                            <div style="background: white; border-radius: var(--radius-lg); padding: var(--space-4); margin-bottom: var(--space-3);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-2);">
+                                    <span style="font-size: var(--text-sm); color: var(--text-secondary);">총 계약금</span>
+                                    <span style="font-size: var(--text-xl); font-weight: var(--font-bold); color: var(--text-primary);">60,000,000원</span>
+                                </div>
+                                
+                                <div style="height: 2px; background: var(--border); margin: var(--space-3) 0;"></div>
+                                
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-2);">
+                                    <div style="display: flex; align-items: center; gap: var(--space-2);">
+                                        <div style="width: 12px; height: 12px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 50%;"></div>
+                                        <span style="font-size: var(--text-sm); font-weight: var(--font-semibold);">파트너 수익 (75%)</span>
+                                    </div>
+                                    <span style="font-size: var(--text-lg); font-weight: var(--font-bold); color: #10b981;">45,000,000원</span>
+                                </div>
+                                
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div style="display: flex; align-items: center; gap: var(--space-2);">
+                                        <div style="width: 12px; height: 12px; background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 50%;"></div>
+                                        <span style="font-size: var(--text-sm); font-weight: var(--font-semibold);">GrowFit 수수료 (25%)</span>
+                                    </div>
+                                    <span style="font-size: var(--text-lg); font-weight: var(--font-bold); color: #6366f1;">15,000,000원</span>
+                                </div>
+
+                                <!-- 프로그레스 바 -->
+                                <div style="height: 24px; background: var(--surface); border-radius: var(--radius-md); margin-top: var(--space-3); overflow: hidden; display: flex;">
+                                    <div style="width: 75%; background: linear-gradient(90deg, #10b981, #059669); display: flex; align-items: center; justify-content: center; color: white; font-size: var(--text-xs); font-weight: var(--font-bold);">
+                                        75%
+                                    </div>
+                                    <div style="width: 25%; background: linear-gradient(90deg, #6366f1, #8b5cf6); display: flex; align-items: center; justify-content: center; color: white; font-size: var(--text-xs); font-weight: var(--font-bold);">
+                                        25%
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- GrowFit 수수료 상세 -->
+                            <div style="background: white; border-radius: var(--radius-lg); padding: var(--space-4);">
+                                <div style="font-size: var(--text-sm); font-weight: var(--font-semibold); margin-bottom: var(--space-3); color: var(--text-primary);">
+                                    📊 GrowFit 수수료 구성 (참고)
+                                </div>
+                                <div style="display: flex; flex-direction: column; gap: var(--space-2);">
+                                    <div style="display: flex; justify-content: space-between; font-size: var(--text-sm);">
+                                        <span style="color: var(--text-secondary);">• API 비용 (예상)</span>
+                                        <span style="font-weight: var(--font-semibold);">6,000,000원</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; font-size: var(--text-sm);">
+                                        <span style="color: var(--text-secondary);">• 플랫폼 운영</span>
+                                        <span style="font-weight: var(--font-semibold);">5,000,000원</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; font-size: var(--text-sm);">
+                                        <span style="color: var(--text-secondary);">• 순이익</span>
+                                        <span style="font-weight: var(--font-semibold);">4,000,000원</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 우측: 핵심 메시지 -->
+                        <div>
+                            <div style="background: linear-gradient(135deg, #10b981, #059669); border-radius: var(--radius-lg); padding: var(--space-5); color: white; height: 100%;">
+                                <div style="font-size: var(--text-2xl); margin-bottom: var(--space-3);">✨</div>
+                                <div style="font-size: var(--text-lg); font-weight: var(--font-bold); margin-bottom: var(--space-3);">
+                                    간단하고 명확한 수익 구조
+                                </div>
+                                <div style="font-size: var(--text-sm); line-height: 1.6; margin-bottom: var(--space-4); opacity: 0.95;">
+                                    프로젝트 수익의 75%를 가져가세요. API 비용, 시스템 비용 모두 포함. 추가 비용 전혀 없습니다.
+                                </div>
+                                
+                                <div style="background: rgba(255, 255, 255, 0.2); border-radius: var(--radius-md); padding: var(--space-3); margin-bottom: var(--space-3);">
+                                    <div style="font-size: var(--text-xs); opacity: 0.9; margin-bottom: var(--space-1);">✓ API 무제한 사용</div>
+                                    <div style="font-size: var(--text-xs); opacity: 0.9; margin-bottom: var(--space-1);">✓ 예측 가능한 수익</div>
+                                    <div style="font-size: var(--text-xs); opacity: 0.9;">✓ 비용 걱정 없음</div>
+                                </div>
+
+                                <div style="background: rgba(255, 255, 255, 0.15); border-radius: var(--radius-md); padding: var(--space-3); border: 1px solid rgba(255, 255, 255, 0.3);">
+                                    <div style="font-size: var(--text-xs); font-weight: var(--font-bold); margin-bottom: var(--space-1);">
+                                        💡 향후 개선 예정
+                                    </div>
+                                    <div style="font-size: var(--text-xs); opacity: 0.9; line-height: 1.5;">
+                                        API 비용 최적화 성공 시 파트너 수익률을 80%로 상향 조정 예정입니다!
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 프로젝트 현황 -->
+                <div style="margin-bottom: var(--space-4);">
+                    <h2 style="font-size: var(--text-xl); font-weight: var(--font-bold); color: var(--text-primary);">
+                        📁 진행 중 프로젝트
+                    </h2>
+                </div>
+
+                <div class="projects-grid">
+                    <!-- 프로젝트 1 -->
+                    <div class="project-card">
+                        <div class="project-card__header">
+                            <div class="project-status project-status--active">진행 중</div>
+                        </div>
+                        <div class="project-name">Samsung 마케팅팀 AI 교육</div>
+                        <div class="project-client">삼성전자</div>
+                        <div class="project-stats">
+                            <div class="project-stat">
+                                <span class="project-stat__label">계약금</span>
+                                <span class="project-stat__value">21.0M</span>
+                            </div>
+                            <div class="project-stat">
+                                <span class="project-stat__label">파트너 수익</span>
+                                <span class="project-stat__value">15.8M</span>
+                            </div>
+                            <div class="project-stat">
+                                <span class="project-stat__label">학생 수</span>
+                                <span class="project-stat__value">42명</span>
+                            </div>
+                            <div class="project-stat">
+                                <span class="project-stat__label">진행률</span>
+                                <span class="project-stat__value">45%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 프로젝트 2 -->
+                    <div class="project-card">
+                        <div class="project-card__header">
+                            <div class="project-status project-status--active">진행 중</div>
+                        </div>
+                        <div class="project-name">LG 개발팀 AI 코딩 실습</div>
+                        <div class="project-client">LG전자</div>
+                        <div class="project-stats">
+                            <div class="project-stat">
+                                <span class="project-stat__label">계약금</span>
+                                <span class="project-stat__value">15.8M</span>
+                            </div>
+                            <div class="project-stat">
+                                <span class="project-stat__label">파트너 수익</span>
+                                <span class="project-stat__value">11.9M</span>
+                            </div>
+                            <div class="project-stat">
+                                <span class="project-stat__label">학생 수</span>
+                                <span class="project-stat__value">35명</span>
+                            </div>
+                            <div class="project-stat">
+                                <span class="project-stat__label">진행률</span>
+                                <span class="project-stat__value">30%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 프로젝트 3 -->
+                    <div class="project-card">
+                        <div class="project-card__header">
+                            <div class="project-status project-status--active">진행 중</div>
+                        </div>
+                        <div class="project-name">현대자동차 AI 활용 교육</div>
+                        <div class="project-client">현대자동차</div>
+                        <div class="project-stats">
+                            <div class="project-stat">
+                                <span class="project-stat__label">계약금</span>
+                                <span class="project-stat__value">27.3M</span>
+                            </div>
+                            <div class="project-stat">
+                                <span class="project-stat__label">파트너 수익</span>
+                                <span class="project-stat__value">20.5M</span>
+                            </div>
+                            <div class="project-stat">
+                                <span class="project-stat__label">학생 수</span>
+                                <span class="project-stat__value">50명</span>
+                            </div>
+                            <div class="project-stat">
+                                <span class="project-stat__label">진행률</span>
+                                <span class="project-stat__value">15%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 활동 피드 -->
+                <div class="activity-section">
+                    <!-- 최근 활동 -->
+                    <div class="activity-card">
+                        <div class="activity-card__header">
+                            <h2 class="activity-card__title">🔔 최근 활동</h2>
+                            <button class="btn btn--sm btn--outline" onclick="viewAllActivities()">
+                                전체 보기
+                            </button>
+                        </div>
+                        <div class="activity-card__content">
+                            <div class="activity-item">
+                                <div class="activity-icon activity-icon--success">✓</div>
+                                <div class="activity-info">
+                                    <div class="activity-title">신규 학생 등록</div>
+                                    <div class="activity-description">현대자동차 프로젝트에 25명 추가</div>
+                                </div>
+                                <div class="activity-time">2시간 전</div>
+                            </div>
+                            <div class="activity-item">
+                                <div class="activity-icon activity-icon--primary">💰</div>
+                                <div class="activity-info">
+                                    <div class="activity-title">정산 완료</div>
+                                    <div class="activity-description">지난 달 39,000,000원 입금</div>
+                                </div>
+                                <div class="activity-time">1일 전</div>
+                            </div>
+                            <div class="activity-item">
+                                <div class="activity-icon activity-icon--success">📊</div>
+                                <div class="activity-info">
+                                    <div class="activity-title">프로젝트 진행률 업데이트</div>
+                                    <div class="activity-description">Samsung 프로젝트 45% 완료</div>
+                                </div>
+                                <div class="activity-time">2일 전</div>
+                            </div>
+                            <div class="activity-item">
+                                <div class="activity-icon activity-icon--warning">⚠️</div>
+                                <div class="activity-info">
+                                    <div class="activity-title">API 사용량 증가</div>
+                                    <div class="activity-description">평균 비용 12% 상승</div>
+                                </div>
+                                <div class="activity-time">3일 전</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 학생 활동 Top 5 -->
+                    <div class="activity-card">
+                        <div class="activity-card__header">
+                            <h2 class="activity-card__title">🏆 활동 Top 5 학생</h2>
+                            <button class="btn btn--sm btn--outline" onclick="location.href='student-management.html'">
+                                전체 보기
+                            </button>
+                        </div>
+                        <div class="activity-card__content">
+                            <div class="activity-item">
+                                <div class="activity-icon activity-icon--success">1</div>
+                                <div class="activity-info">
+                                    <div class="activity-title">박개발 (LG)</div>
+                                    <div class="activity-description">412대화 · 31.7시간</div>
+                                </div>
+                            </div>
+                            <div class="activity-item">
+                                <div class="activity-icon activity-icon--success">2</div>
+                                <div class="activity-info">
+                                    <div class="activity-title">정코더 (LG)</div>
+                                    <div class="activity-description">378대화 · 29.4시간</div>
+                                </div>
+                            </div>
+                            <div class="activity-item">
+                                <div class="activity-icon activity-icon--success">3</div>
+                                <div class="activity-info">
+                                    <div class="activity-title">김학생 (Samsung)</div>
+                                    <div class="activity-description">347대화 · 28.5시간</div>
+                                </div>
+                            </div>
+                            <div class="activity-item">
+                                <div class="activity-icon activity-icon--primary">4</div>
+                                <div class="activity-info">
+                                    <div class="activity-title">이사원 (Samsung)</div>
+                                    <div class="activity-description">289대화 · 23.2시간</div>
+                                </div>
+                            </div>
+                            <div class="activity-item">
+                                <div class="activity-icon activity-icon--primary">5</div>
+                                <div class="activity-info">
+                                    <div class="activity-title">최직원 (현대)</div>
+                                    <div class="activity-description">156대화 · 12.8시간</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- 공통 스크립트 -->
+    <script src="../common/layout.js"></script>
+    <script src="../common/utils.js"></script>
+
+    <!-- 페이지 전용 스크립트 -->
+    <script>
+        // ========== 초기화 ==========
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Partner Dashboard 페이지 초기화');
+            animateKPICards();
+        });
+
+        function animateKPICards() {
+            const cards = document.querySelectorAll('.kpi-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                
+                setTimeout(() => {
+                    card.style.transition = 'all 0.4s ease-out';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        }
+
+        // ========== 액션 함수들 ==========
+        function viewAllActivities() {
+            console.log('전체 활동 보기');
+            window.GrowFitUtils.showToast('활동 로그 페이지로 이동합니다', 'info');
+        }
+
+        console.log('✅ Partner Dashboard 로드 완료');
+    </script>
+</body>
+
+</html>

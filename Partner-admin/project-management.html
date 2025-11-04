@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>프로젝트 관리 - GrowFit Partner Admin</title>
+
+    <!-- 공통 CSS -->
+    <link rel="stylesheet" href="../common/variables.css">
+    <link rel="stylesheet" href="../common/layout.css">
+    <link rel="stylesheet" href="../common/components.css">
+
+    <style>
+        /* ========== Project Management 전용 스타일 ========== */
+        :root {
+            --partner-primary: #0ea5e9;
+            --partner-primary-light: #38bdf8;
+            --partner-primary-dark: #0284c7;
+            --partner-secondary: #8b5cf6;
+            --partner-accent: #ec4899;
+            --partner-success: #10b981;
+            --partner-warning: #f59e0b;
+            --partner-danger: #ef4444;
+        }
+
+        /* 페이지 헤더 */
+        .page-header {
+            margin-bottom: var(--space-6);
+        }
+
+        .page-title {
+            font-size: var(--text-3xl);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-2);
+        }
+
+        .page-subtitle {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+        }
+
+        /* 통계 카드 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--space-4);
+            margin-bottom: var(--space-6);
+        }
+
+        .stat-card {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            transition: all 0.2s;
+        }
+
+        .stat-card:hover {
+            border-color: var(--partner-primary);
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .stat-card__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: var(--space-3);
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .stat-icon--primary {
+            background: linear-gradient(135deg, var(--partner-primary), var(--partner-primary-light));
+            color: white;
+        }
+
+        .stat-icon--success {
+            background: linear-gradient(135deg, var(--partner-success), #34d399);
+            color: white;
+        }
+
+        .stat-icon--warning {
+            background: linear-gradient(135deg, var(--partner-warning), #fbbf24);
+            color: white;
+        }
+
+        .stat-icon--secondary {
+            background: linear-gradient(135deg, var(--partner-secondary), #a78bfa);
+            color: white;
+        }
+
+        .stat-card__label {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-2);
+        }
+
+        .stat-card__value {
+            font-size: var(--text-3xl);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+        }
+
+        .stat-card__change {
+            font-size: var(--text-sm);
+            color: var(--partner-success);
+            margin-top: var(--space-2);
+        }
+
+        /* 탭 네비게이션 */
+        .tabs {
+            display: flex;
+            gap: var(--space-2);
+            margin-bottom: var(--space-6);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tab {
+            padding: var(--space-3) var(--space-5);
+            border: none;
+            background: none;
+            font-size: var(--text-base);
+            font-weight: var(--font-semibold);
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .tab:hover {
+            color: var(--partner-primary);
+        }
+
+        .tab--active {
+            color: var(--partner-primary);
+            border-bottom-color: var(--partner-primary);
+        }
+
+        .tab-count {
+            background: var(--surface);
+            padding: 2px 8px;
+            border-radius: var(--radius-sm);
+            font-size: var(--text-xs);
+        }
+
+        .tab--active .tab-count {
+            background: rgba(14, 165, 233, 0.1);
+            color: var(--partner-primary);
+        }
+
+        /* 프로젝트 그리드 */
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: var(--space-5);
+        }
+
+        /* 프로젝트 카드 */
+        .project-card {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: var(--space-5);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .project-card:hover {
+            border-color: var(--partner-primary);
+            box-shadow: 0 8px 24px rgba(14, 165, 233, 0.15);
+            transform: translateY(-4px);
+        }
+
+        .project-card__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: var(--space-4);
+        }
+
+        .project-card__icon {
+            width: 56px;
+            height: 56px;
+            border-radius: var(--radius-lg);
+            background: linear-gradient(135deg, var(--partner-primary), var(--partner-primary-light));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+
+        .project-card__status {
+            padding: 6px 12px;
+            border-radius: var(--radius-md);
+            font-size: var(--text-xs);
+            font-weight: var(--font-bold);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .project-card__status--active {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--partner-success);
+        }
+
+        .project-card__status--completed {
+            background: rgba(139, 92, 246, 0.1);
+            color: var(--partner-secondary);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .project-card__title {
+            font-size: var(--text-xl);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-2);
+            line-height: 1.3;
+        }
+
+        .project-card__meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-3);
+            margin-bottom: var(--space-4);
+            padding-bottom: var(--space-4);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .project-card__meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+        }
+
+        .project-card__meta-icon {
+            font-size: 16px;
+        }
+
+        /* 정산 정보 */
+        .project-settlement {
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.05), rgba(139, 92, 246, 0.05));
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            margin-bottom: var(--space-4);
+        }
+
+        .settlement-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-2);
+            font-size: var(--text-sm);
+        }
+
+        .settlement-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .settlement-label {
+            color: var(--text-secondary);
+        }
+
+        .settlement-value {
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+        }
+
+        .settlement-row--total {
+            padding-top: var(--space-3);
+            border-top: 1px solid var(--border);
+            margin-top: var(--space-2);
+        }
+
+        .settlement-row--total .settlement-label {
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+            font-size: var(--text-base);
+        }
+
+        .settlement-row--total .settlement-value {
+            font-size: var(--text-xl);
+            font-weight: var(--font-bold);
+            color: var(--partner-primary);
+        }
+
+        .settlement-row--api {
+            color: var(--partner-warning);
+        }
+
+        /* 프로젝트 액션 버튼 */
+        .project-card__actions {
+            display: flex;
+            gap: var(--space-2);
+        }
+
+        .project-action-btn {
+            flex: 1;
+            padding: var(--space-2) var(--space-3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            background: white;
+            font-size: var(--text-sm);
+            font-weight: var(--font-semibold);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-1);
+        }
+
+        .project-action-btn:hover {
+            border-color: var(--partner-primary);
+            color: var(--partner-primary);
+            transform: translateY(-1px);
+        }
+
+        .project-action-btn--primary {
+            background: var(--partner-primary);
+            color: white;
+            border-color: var(--partner-primary);
+        }
+
+        .project-action-btn--primary:hover {
+            background: var(--partner-primary-dark);
+            border-color: var(--partner-primary-dark);
+            color: white;
+        }
+
+        /* 모달 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-4);
+        }
+
+        .modal--active {
+            display: flex;
+        }
+
+        .modal__content {
+            background: white;
+            border-radius: var(--radius-xl);
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal__header {
+            padding: var(--space-5);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal__title {
+            font-size: var(--text-2xl);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+        }
+
+        .modal__close {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: var(--surface);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .modal__close:hover {
+            background: var(--border);
+            transform: rotate(90deg);
+        }
+
+        .modal__body {
+            padding: var(--space-5);
+        }
+
+        .form-group {
+            margin-bottom: var(--space-4);
+        }
+
+        .form-group label {
+            display: block;
+            font-size: var(--text-sm);
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-2);
+        }
+
+        .form-group label .required {
+            color: var(--partner-danger);
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: var(--space-3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: var(--text-base);
+            transition: all 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--partner-primary);
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-group--inline {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-3);
+        }
+
+        .form-hint {
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+            margin-top: var(--space-1);
+        }
+
+        .modal__footer {
+            padding: var(--space-5);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: var(--space-2);
+        }
+
+        /* 빈 상태 */
+        .empty-state {
+            text-align: center;
+            padding: var(--space-10) var(--space-4);
+        }
+
+        .empty-state__icon {
+            font-size: 64px;
+            margin-bottom: var(--space-4);
+            opacity: 0.3;
+        }
+
+        .empty-state__title {
+            font-size: var(--text-xl);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-2);
+        }
+
+        .empty-state__description {
+            font-size: var(--text-base);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-5);
+        }
+
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .projects-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-group--inline {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header__left">
+                <button id="menuToggle" class="header__icon-button hidden-desktop">
+                    <span>☰</span>
+                </button>
+                <a href="dashboard.html" class="header__logo">
+                    <span class="header__logo-icon">🌱</span>
+                    <span>GrowFit Partner</span>
+                </a>
+            </div>
+
+            <div class="header__right">
+                <button id="notificationBtn" class="header__icon-button">
+                    <span>🔔</span>
+                    <span class="header__badge">2</span>
+                </button>
+
+                <div id="profileBtn" class="header__profile">
+                    <div class="header__avatar"
+                        style="background: linear-gradient(135deg, #0ea5e9, #38bdf8);">박</div>
+                    <span class="hidden-mobile">박강사</span>
+                    <span class="hidden-mobile">▼</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="container">
+            <!-- Sidebar -->
+            <aside class="sidebar sidebar--open">
+                <div class="sidebar__user">
+                    <div class="sidebar__user-info">
+                        <div class="sidebar__user-avatar"
+                            style="background: linear-gradient(135deg, #0ea5e9, #38bdf8);">박</div>
+                        <div class="sidebar__user-details">
+                            <div class="sidebar__user-name">박강사</div>
+                            <div class="sidebar__user-role">교육 파트너</div>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="sidebar__nav">
+                    <ul class="sidebar__menu">
+                        <li class="sidebar__menu-item">
+                            <a href="dashboard.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">🏠</span>
+                                <span>대시보드</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="project-management.html" class="sidebar__menu-link sidebar__menu-link--active">
+                                <span class="sidebar__menu-icon">📁</span>
+                                <span>프로젝트 관리</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="student-management.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">👥</span>
+                                <span>학생 관리</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="ai-practice-management.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">🤖</span>
+                                <span>AI 실습 관리</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="revenue-settlement.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">💰</span>
+                                <span>수익/정산 관리</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="settings.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">⚙️</span>
+                                <span>설정</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <div class="sidebar__footer">
+                    <div style="padding: var(--space-3); background: var(--surface); border-radius: var(--radius-md); font-size: var(--text-xs);">
+                        <div style="color: var(--text-secondary); margin-bottom: var(--space-1);">이번 달 수익</div>
+                        <div style="font-weight: var(--font-bold); color: var(--partner-primary);">48,200,000원</div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main">
+                <!-- 페이지 헤더 -->
+                <div class="page-header">
+                    <h1 class="page-title">📁 프로젝트 관리</h1>
+                    <p class="page-subtitle">교육 프로젝트 생성 및 관리</p>
+                </div>
+
+                <!-- 상단 액션 버튼 -->
+                <div style="display: flex; justify-content: flex-end; margin-bottom: var(--space-6);">
+                    <button class="btn btn--primary" onclick="openCreateProjectModal()">
+                        <span>➕</span>
+                        <span>신규 프로젝트 생성</span>
+                    </button>
+                </div>
+
+                <!-- 통계 카드 -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-card__header">
+                            <div class="stat-icon stat-icon--primary">📁</div>
+                        </div>
+                        <div class="stat-card__label">전체 프로젝트</div>
+                        <div class="stat-card__value">8개</div>
+                        <div class="stat-card__change">↑ 2개 증가 (이번 달)</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-card__header">
+                            <div class="stat-icon stat-icon--success">🚀</div>
+                        </div>
+                        <div class="stat-card__label">진행 중</div>
+                        <div class="stat-card__value">3개</div>
+                        <div class="stat-card__change">→ 변동 없음</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-card__header">
+                            <div class="stat-icon stat-icon--secondary">✅</div>
+                        </div>
+                        <div class="stat-card__label">종료됨</div>
+                        <div class="stat-card__value">5개</div>
+                        <div class="stat-card__change">↑ 2개 완료 (이번 달)</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-card__header">
+                            <div class="stat-icon stat-icon--warning">👥</div>
+                        </div>
+                        <div class="stat-card__label">총 학생 수</div>
+                        <div class="stat-card__value">127명</div>
+                        <div class="stat-card__change">↑ 35명 증가</div>
+                    </div>
+                </div>
+
+                <!-- 탭 네비게이션 -->
+                <div class="tabs">
+                    <button class="tab tab--active" data-tab="active" onclick="switchTab('active')">
+                        <span>진행 중</span>
+                        <span class="tab-count">3</span>
+                    </button>
+                    <button class="tab" data-tab="completed" onclick="switchTab('completed')">
+                        <span>종료됨</span>
+                        <span class="tab-count">5</span>
+                    </button>
+                    <button class="tab" data-tab="all" onclick="switchTab('all')">
+                        <span>전체</span>
+                        <span class="tab-count">8</span>
+                    </button>
+                </div>
+
+                <!-- 프로젝트 그리드 -->
+                <div id="projectsContainer">
+                    <div class="projects-grid">
+                        <!-- 프로젝트 1: Samsung 마케팅팀 -->
+                        <div class="project-card" data-project-id="proj-1" data-status="active">
+                            <div class="project-card__header">
+                                <div class="project-card__icon">🏢</div>
+                                <div class="project-card__status project-card__status--active">
+                                    <span class="status-dot"></span>
+                                    진행 중
+                                </div>
+                            </div>
+
+                            <h3 class="project-card__title">Samsung 마케팅팀 AI 교육</h3>
+
+                            <div class="project-card__meta">
+                                <div class="project-card__meta-item">
+                                    <span class="project-card__meta-icon">💰</span>
+                                    <span>20,000,000원</span>
+                                </div>
+                                <div class="project-card__meta-item">
+                                    <span class="project-card__meta-icon">👥</span>
+                                    <span>20명</span>
+                                </div>
+                                <div class="project-card__meta-item">
+                                    <span class="project-card__meta-icon">📅</span>
+                                    <span>2025-01-01 ~ 2025-02-28</span>
+                                </div>
+                                <div class="project-card__meta-item">
+                                    <span class="project-card__meta-icon">⏰</span>
+                                    <span>D-15 남음</span>
+                                </div>
+                            </div>
+
+                            <div class="project-settlement">
+                                <div class="settlement-row">
+                                    <span class="settlement-label">계약금</span>
+                                    <span class="settlement-value">20,000,000원</span>
+                                </div>
+                                <div class="settlement-row">
+                                    <span class="settlement-label">플랫폼 수수료 (15%)</span>
+                                    <span class="settlement-value">-3,000,000원</span>
+                                </div>
+                                <div class="settlement-row settlement-row--api">
+                                    <span class="settlement-label">현재 API 비용</span>
+                                    <span class="settlement-value">-1,200,000원</span>
+                                </div>
+                                <div class="settlement-row settlement-row--total">
+                                    <span class="settlement-label">예상 실수령</span>
+                                    <span class="settlement-value">15,800,000원</span>
+                                </div>
+                            </div>
+
+                            <div class="project-card__actions">
+                                <button class="project-action-btn project-action-btn--primary"
+                                    onclick="viewProjectDetail('proj-1')">
+                                    📊 상세보기
+                                </button>
+                                <button class="project-action-btn" onclick="manageStudents('proj-1')">
+                                    👥 학생관리
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 프로젝트 2: LG 개발팀 -->
+                        <div class="project-card" data-project-id="proj-2" data-status="active">
+                            <div class="project-card__header">
+                                <div class="project-card__icon">🏢</div>
+                                <div class="project-card__status project-card__status--active">
+                                    <span class="status-dot"></span>
+                                    진행 중
+                                </div>
+                            </div>
+
+                            <h3 class="project-card__title">LG 개발팀 AI 코딩 실습</h3>
+
+                            <div class="project-card__meta">
+                                <div class="project-card__meta-item">
+                                    <span class="project-card__meta-icon">💰</span>
+                                    <span>15,000,000원</span>
+                                </div>
+                                <div class="project-card__meta-item">
+                                    <span class="project-card__meta-icon">👥</span>
+                                    <span>15명</span>
+                                </div>
+                                <div class="project-card__meta-item">
+                                    <span class="project-card__meta-icon">📅</span>
+                                    <span>2025-01-15 ~ 2025-03-15</span>
+                                </div>
+                                <div class="project-card__meta-item">
+                                    <span class="project-card__meta-icon">⏰</span>
+                                    <span>D-48 남음</span>
+                                </div>
+                            </div>
+
+                            <div class="project-settlement">
+                                <div class="settlement-row">
+                                    <span class="settlement-label">계약금</span>
+                                    <span class="settlement-value">15,000,000원</span>
+                                </div>
+                                <div class="settlement-row">
+                                    <span class="settlement-label">플랫폼 수수료 (15%)</span>
+                                    <span class="settlement-value">-2,250,000원</span>
+                                </div>
+                                <div class="settlement-row settlement-row--api">
+                                    <span class="settlement-label">현재 API 비용</span>
+                                    <span class="settlement-value">-850,000원</span>
+                                </div>
+                                <div class="settlement-row settlement-row--total">
+                                    <span class="settlement-label">예상 실수령</span>
+                                    <span class="settlement-value">11,900,000원</span>
+                                </div>
+                            </div>
+
+                            <div class="project-card__actions">
+                                <button class="project-action-btn project-action-btn--primary"
+                                    onclick="viewProjectDetail('proj-2')">
+                                    📊 상세보기
+                                </button>
+                                <button class="project-action-btn" onclick="manageStudents('proj-2')">
+                                    👥 학생관리
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 프로젝트 3: 현대자동차 -->
+                        <div class="project-card" data-project-id="proj-3" data-status="active">
+                            <div class="project-card__header">
+                                <div class="project-card__icon">🏢</div>
+                                <div class="project-card__status project-card__status--active">
+                                    <span class="status-dot"></span>
+                                    진행 중
+                                </div>
+                            </div>
+
+                            <h3 class="project-card__title">현대자동차 AI 활용 교육</h3>
+
+                            <div class="project-card__meta">
+                                <div class="project-card__meta-item">
+                                    <span class="project-card__meta-icon">💰</span>
+                                    <span>25,000,000원</span>
+                                </div>
+                                <div class="project-card__meta-item">
+                                    <span class="project-card__meta-icon">👥</span>
+                                    <span>30명</span>
+                                </div>
+                                <div class="project-card__meta-item">
+                                    <span class="project-card__meta-icon">📅</span>
+                                    <span>2025-02-01 ~ 2025-04-30</span>
+                                </div>
+                                <div class="project-card__meta-item">
+                                    <span class="project-card__meta-icon">⏰</span>
+                                    <span>D-95 남음</span>
+                                </div>
+                            </div>
+
+                            <div class="project-settlement">
+                                <div class="settlement-row">
+                                    <span class="settlement-label">계약금</span>
+                                    <span class="settlement-value">25,000,000원</span>
+                                </div>
+                                <div class="settlement-row">
+                                    <span class="settlement-label">플랫폼 수수료 (15%)</span>
+                                    <span class="settlement-value">-3,750,000원</span>
+                                </div>
+                                <div class="settlement-row settlement-row--api">
+                                    <span class="settlement-label">현재 API 비용</span>
+                                    <span class="settlement-value">-650,000원</span>
+                                </div>
+                                <div class="settlement-row settlement-row--total">
+                                    <span class="settlement-label">예상 실수령</span>
+                                    <span class="settlement-value">20,600,000원</span>
+                                </div>
+                            </div>
+
+                            <div class="project-card__actions">
+                                <button class="project-action-btn project-action-btn--primary"
+                                    onclick="viewProjectDetail('proj-3')">
+                                    📊 상세보기
+                                </button>
+                                <button class="project-action-btn" onclick="manageStudents('proj-3')">
+                                    👥 학생관리
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- 프로젝트 생성 모달 -->
+    <div id="createProjectModal" class="modal">
+        <div class="modal__content">
+            <div class="modal__header">
+                <h2 class="modal__title">📁 신규 프로젝트 생성</h2>
+                <button class="modal__close" onclick="closeCreateProjectModal()">✕</button>
+            </div>
+            <div class="modal__body">
+                <form id="createProjectForm">
+                    <div class="form-group">
+                        <label for="projectName">프로젝트명 <span class="required">*</span></label>
+                        <input type="text" id="projectName" placeholder="예: Samsung 마케팅팀 AI 교육"
+                            required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="contractAmount">계약금 (원) <span class="required">*</span></label>
+                        <input type="number" id="contractAmount" placeholder="20000000" required>
+                        <p class="form-hint">기업과 계약한 총 금액을 입력하세요</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="studentCount">예상 학생 수</label>
+                        <input type="number" id="studentCount" placeholder="20">
+                        <p class="form-hint">교육에 참여할 예상 인원을 입력하세요</p>
+                    </div>
+
+                    <div class="form-group form-group--inline">
+                        <div>
+                            <label for="startDate">시작일 <span class="required">*</span></label>
+                            <input type="date" id="startDate" required>
+                        </div>
+                        <div>
+                            <label for="endDate">종료일 <span class="required">*</span></label>
+                            <input type="date" id="endDate" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="projectDescription">프로젝트 설명 (선택)</label>
+                        <textarea id="projectDescription"
+                            placeholder="프로젝트에 대한 간단한 설명을 입력하세요..."></textarea>
+                    </div>
+
+                    <!-- 예상 정산 미리보기 -->
+                    <div class="project-settlement">
+                        <h4 style="margin-bottom: var(--space-3); font-weight: var(--font-bold);">💰 예상 정산 내역</h4>
+                        <div class="settlement-row">
+                            <span class="settlement-label">계약금</span>
+                            <span class="settlement-value" id="previewContractAmount">0원</span>
+                        </div>
+                        <div class="settlement-row">
+                            <span class="settlement-label">플랫폼 수수료 (15%)</span>
+                            <span class="settlement-value" id="previewPlatformFee">0원</span>
+                        </div>
+                        <div class="settlement-row settlement-row--total">
+                            <span class="settlement-label">예상 수익 (API 비용 제외)</span>
+                            <span class="settlement-value" id="previewRevenue">0원</span>
+                        </div>
+                        <p class="form-hint" style="margin-top: var(--space-2);">
+                            * API 비용은 실제 사용량에 따라 차감됩니다
+                        </p>
+                    </div>
+                </form>
+            </div>
+            <div class="modal__footer">
+                <button class="btn btn--outline" onclick="closeCreateProjectModal()">취소</button>
+                <button class="btn btn--primary" onclick="createProject()">프로젝트 생성</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 공통 스크립트 -->
+    <script src="../common/layout.js"></script>
+    <script src="../common/utils.js"></script>
+
+    <!-- 페이지 전용 스크립트 -->
+    <script>
+        // ========== 탭 전환 ==========
+        function switchTab(tabName) {
+            // 탭 버튼 활성화
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('tab--active');
+            });
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('tab--active');
+
+            // 프로젝트 카드 필터링
+            const cards = document.querySelectorAll('.project-card');
+            cards.forEach(card => {
+                const status = card.getAttribute('data-status');
+                if (tabName === 'all') {
+                    card.style.display = 'block';
+                } else if (tabName === 'active' && status === 'active') {
+                    card.style.display = 'block';
+                } else if (tabName === 'completed' && status === 'completed') {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        // ========== 프로젝트 생성 모달 ==========
+        function openCreateProjectModal() {
+            document.getElementById('createProjectModal').classList.add('modal--active');
+        }
+
+        function closeCreateProjectModal() {
+            document.getElementById('createProjectModal').classList.remove('modal--active');
+            document.getElementById('createProjectForm').reset();
+            updateSettlementPreview();
+        }
+
+        // ========== 정산 미리보기 업데이트 ==========
+        function updateSettlementPreview() {
+            const contractAmount = parseInt(document.getElementById('contractAmount').value) || 0;
+            const platformFee = Math.floor(contractAmount * 0.15);
+            const revenue = contractAmount - platformFee;
+
+            document.getElementById('previewContractAmount').textContent = contractAmount.toLocaleString() + '원';
+            document.getElementById('previewPlatformFee').textContent = '-' + platformFee.toLocaleString() + '원';
+            document.getElementById('previewRevenue').textContent = revenue.toLocaleString() + '원';
+        }
+
+        // 계약금 입력 시 실시간 업데이트
+        document.addEventListener('DOMContentLoaded', function () {
+            const contractAmountInput = document.getElementById('contractAmount');
+            if (contractAmountInput) {
+                contractAmountInput.addEventListener('input', updateSettlementPreview);
+            }
+        });
+
+        // ========== 프로젝트 생성 ==========
+        function createProject() {
+            const form = document.getElementById('createProjectForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            const projectData = {
+                name: document.getElementById('projectName').value,
+                contractAmount: parseInt(document.getElementById('contractAmount').value),
+                studentCount: parseInt(document.getElementById('studentCount').value) || 0,
+                startDate: document.getElementById('startDate').value,
+                endDate: document.getElementById('endDate').value,
+                description: document.getElementById('projectDescription').value
+            };
+
+            console.log('프로젝트 생성:', projectData);
+
+            // 실제로는 API 호출
+            window.GrowFitUtils.showToast('프로젝트가 생성되었습니다', 'success');
+            closeCreateProjectModal();
+
+            // 페이지 새로고침 (실제로는 동적으로 카드 추가)
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        }
+
+        // ========== 프로젝트 액션 ==========
+        function viewProjectDetail(projectId) {
+            console.log('프로젝트 상세:', projectId);
+            window.GrowFitUtils.showToast('프로젝트 상세 페이지로 이동합니다', 'info');
+            // 실제로는: location.href = `project-detail.html?id=${projectId}`;
+        }
+
+        function manageStudents(projectId) {
+            console.log('학생 관리:', projectId);
+            window.GrowFitUtils.showToast('학생 관리 페이지로 이동합니다', 'info');
+            // 실제로는: location.href = `student-management.html?project=${projectId}`;
+        }
+
+        // ========== 모달 외부 클릭 시 닫기 ==========
+        document.addEventListener('click', function (e) {
+            const modal = document.getElementById('createProjectModal');
+            if (e.target === modal) {
+                closeCreateProjectModal();
+            }
+        });
+
+        console.log('✅ Project Management 로드 완료');
+    </script>
+</body>
+
+</html>

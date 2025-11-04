@@ -1,0 +1,2496 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>전체 사용자 관리 - GrowFit Platform Admin</title>
+
+    <!-- 공통 CSS -->
+    <link rel="stylesheet" href="../common/variables.css">
+    <link rel="stylesheet" href="../common/layout.css">
+    <link rel="stylesheet" href="../common/components.css">
+
+    <style>
+        /* ========== User Management 전용 스타일 ========== */
+        :root {
+            --platform-primary: #6366f1;
+            --platform-primary-light: #818cf8;
+            --platform-primary-dark: #4f46e5;
+            --platform-secondary: #ec4899;
+            --platform-accent: #f59e0b;
+            --platform-success: #10b981;
+            --platform-warning: #f59e0b;
+            --platform-danger: #ef4444;
+            --platform-purple: #8b5cf6;
+            --platform-blue: #3b82f6;
+        }
+
+        /* 페이지 헤더 */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-6);
+        }
+
+        .page-header__left h1 {
+            font-size: var(--text-3xl);
+            font-weight: var(--font-bold);
+            background: linear-gradient(135deg, var(--platform-primary), var(--platform-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: var(--space-1);
+        }
+
+        .page-header__left p {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+        }
+
+        .page-header__actions {
+            display: flex;
+            gap: var(--space-2);
+        }
+
+        /* 통계 카드 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: var(--space-4);
+            margin-bottom: var(--space-6);
+        }
+
+        .stat-card {
+            background: var(--background);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: var(--space-4);
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(99, 102, 241, 0.1);
+            border-color: var(--platform-primary);
+        }
+
+        .stat-card__label {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-2);
+        }
+
+        .stat-card__value {
+            font-size: var(--text-2xl);
+            font-weight: var(--font-bold);
+            color: var(--platform-primary);
+            margin-bottom: var(--space-1);
+        }
+
+        .stat-card__change {
+            font-size: var(--text-xs);
+            font-weight: var(--font-bold);
+        }
+
+        .stat-card__change--up {
+            color: var(--platform-success);
+        }
+
+        .stat-card__change--down {
+            color: var(--platform-danger);
+        }
+
+        /* 필터 & 검색 */
+        .filter-section {
+            background: var(--background);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: var(--space-4);
+            margin-bottom: var(--space-4);
+        }
+
+        .filter-row {
+            display: flex;
+            gap: var(--space-3);
+            align-items: end;
+        }
+
+        .filter-group {
+            flex: 1;
+        }
+
+        .filter-label {
+            font-size: var(--text-sm);
+            font-weight: var(--font-medium);
+            color: var(--text-primary);
+            margin-bottom: var(--space-2);
+        }
+
+        .filter-input {
+            width: 100%;
+            padding: var(--space-3);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+            transition: all 0.2s;
+        }
+
+        .filter-input:focus {
+            outline: none;
+            border-color: var(--platform-primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .filter-select {
+            width: 100%;
+            padding: var(--space-3);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+            background: white;
+            cursor: pointer;
+        }
+
+        /* 사용자 테이블 */
+        .user-table-container {
+            background: var(--background);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+        }
+
+        .user-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .user-table thead {
+            background: var(--surface);
+        }
+
+        .user-table th {
+            padding: var(--space-4);
+            text-align: left;
+            font-size: var(--text-sm);
+            font-weight: var(--font-semibold);
+            color: var(--text-secondary);
+            border-bottom: 2px solid var(--border);
+            white-space: nowrap;
+        }
+
+        .user-table th.sortable {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .user-table th.sortable:hover {
+            color: var(--platform-primary);
+        }
+
+        .user-table td {
+            padding: var(--space-4);
+            font-size: var(--text-sm);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .user-table tbody tr {
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .user-table tbody tr:hover {
+            background: var(--surface);
+        }
+
+        /* 사용자 정보 */
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-full);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: var(--font-bold);
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .user-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .user-name {
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+
+        .user-email {
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+        }
+
+        /* 역할 배지 */
+        .role-badge {
+            padding: 4px 12px;
+            border-radius: var(--radius-full);
+            font-size: var(--text-xs);
+            font-weight: var(--font-bold);
+            display: inline-block;
+        }
+
+        .role-badge--admin {
+            background: linear-gradient(135deg, #ef4444, #f87171);
+            color: white;
+        }
+
+        .role-badge--manager {
+            background: linear-gradient(135deg, #f59e0b, #fbbf24);
+            color: white;
+        }
+
+        .role-badge--employee {
+            background: linear-gradient(135deg, #3b82f6, #60a5fa);
+            color: white;
+        }
+
+        /* 상태 배지 */
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: var(--radius-full);
+            font-size: var(--text-xs);
+            font-weight: var(--font-bold);
+            display: inline-block;
+        }
+
+        .status-badge--active {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--platform-success);
+        }
+
+        .status-badge--inactive {
+            background: rgba(107, 114, 128, 0.1);
+            color: var(--text-secondary);
+        }
+
+        .status-badge--suspended {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--platform-danger);
+        }
+
+        /* 조직 링크 */
+        .org-link {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-1);
+            padding: 4px 8px;
+            background: var(--surface);
+            border-radius: var(--radius-md);
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .org-link:hover {
+            background: var(--platform-primary);
+            color: white;
+        }
+
+        /* 활동 지표 */
+        .activity-indicator {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .activity-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .activity-dot--online {
+            background: var(--platform-success);
+        }
+
+        .activity-dot--away {
+            background: var(--platform-warning);
+        }
+
+        .activity-dot--offline {
+            background: var(--text-tertiary);
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        /* 액션 버튼 */
+        .action-buttons {
+            display: flex;
+            gap: var(--space-2);
+        }
+
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-md);
+            border: 2px solid var(--border);
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 16px;
+        }
+
+        .action-btn:hover {
+            border-color: var(--platform-primary);
+            background: var(--surface);
+            transform: scale(1.1);
+        }
+
+        /* 페이지네이션 */
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-4);
+            background: var(--surface);
+            border-top: 2px solid var(--border);
+        }
+
+        .pagination-info {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: var(--space-2);
+        }
+
+        .pagination-btn {
+            padding: var(--space-2) var(--space-3);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-md);
+            background: white;
+            font-size: var(--text-sm);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            border-color: var(--platform-primary);
+            color: var(--platform-primary);
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination-btn--active {
+            background: var(--platform-primary);
+            color: white;
+            border-color: var(--platform-primary);
+        }
+
+        /* 모달 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay--active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: var(--radius-xl);
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: modalSlideUp 0.3s ease-out;
+        }
+
+        @keyframes modalSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            padding: var(--space-5);
+            border-bottom: 2px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: var(--text-xl);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-md);
+            border: none;
+            background: var(--surface);
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: var(--platform-danger);
+            color: white;
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: var(--space-5);
+            max-height: calc(90vh - 160px);
+            overflow-y: auto;
+        }
+
+        .modal-footer {
+            padding: var(--space-4);
+            border-top: 2px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: var(--space-2);
+        }
+
+        /* 정보 그룹 */
+        .info-group {
+            margin-bottom: var(--space-4);
+        }
+
+        .info-label {
+            font-size: var(--text-sm);
+            font-weight: var(--font-semibold);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-2);
+        }
+
+        .info-value {
+            font-size: var(--text-base);
+            color: var(--text-primary);
+        }
+
+        /* 반응형 */
+        @media (max-width: 1400px) {
+            .stats-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .filter-row {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .user-table {
+                display: block;
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header__left">
+                <button id="menuToggle" class="header__icon-button hidden-desktop">
+                    <span>☰</span>
+                </button>
+                <a href="platform-dashboard.html" class="header__logo">
+                    <span class="header__logo-icon">🚀</span>
+                    <span>GrowFit Platform</span>
+                </a>
+            </div>
+
+            <div class="header__right">
+                <button class="header__icon-button" title="새로고침" onclick="refreshUsers()">
+                    <span>🔄</span>
+                </button>
+
+                <button id="notificationBtn" class="header__icon-button">
+                    <span>🔔</span>
+                    <span class="header__badge">5</span>
+                </button>
+
+                <div id="profileBtn" class="header__profile">
+                    <div class="header__avatar" style="background: linear-gradient(135deg, #6366f1, #ec4899);">플</div>
+                    <span class="hidden-mobile">플랫폼 관리자</span>
+                    <span class="hidden-mobile">▼</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="container">
+            <!-- Sidebar -->
+            <aside class="sidebar sidebar--open">
+                <div class="sidebar__user">
+                    <div class="sidebar__user-info">
+                        <div class="sidebar__user-avatar"
+                            style="background: linear-gradient(135deg, #6366f1, #ec4899);">플</div>
+                        <div class="sidebar__user-details">
+                            <div class="sidebar__user-name">플랫폼 관리자</div>
+                            <div class="sidebar__user-role">Platform Admin</div>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="sidebar__nav">
+                    <ul class="sidebar__menu">
+                        <li class="sidebar__menu-item">
+                            <a href="platform-dashboard.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">🏠</span>
+                                <span>플랫폼 대시보드</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="organization-management.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">🏢</span>
+                                <span>조직 관리</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="user-management.html" class="sidebar__menu-link sidebar__menu-link--active">
+                                <span class="sidebar__menu-icon">👥</span>
+                                <span>전체 사용자</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="revenue-billing.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">💰</span>
+                                <span>매출/과금</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="analytics-reports.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">📊</span>
+                                <span>분석 & 리포트</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="system-monitoring.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">🔧</span>
+                                <span>시스템 모니터링</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="platform-settings.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">⚙️</span>
+                                <span>시스템 설정</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <div class="sidebar__footer">
+                    <div
+                        style="padding: var(--space-3); background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(236, 72, 153, 0.1)); border-radius: var(--radius-md); font-size: var(--text-xs);">
+                        <div style="color: var(--text-secondary); margin-bottom: var(--space-1);">총 사용자</div>
+                        <div
+                            style="font-weight: var(--font-bold); color: var(--platform-primary); font-size: var(--text-lg);">
+                            8,947명</div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main">
+                <!-- 페이지 헤더 -->
+                <div class="page-header">
+                    <div class="page-header__left">
+                        <h1>👥 전체 사용자</h1>
+                        <p>모든 조직의 사용자를 통합 관리하세요</p>
+                    </div>
+                    <div class="page-header__actions">
+                        <button class="btn btn--outline" onclick="exportUsers()">
+                            📥 내보내기
+                        </button>
+                        <button class="btn btn--outline" onclick="bulkActions()">
+                            ⚙️ 대량 작업
+                        </button>
+                        <button class="btn btn--primary" onclick="showUserAnalytics()">
+                            📊 사용자 분석
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 통계 카드 -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-card__label">총 사용자</div>
+                        <div class="stat-card__value">8,947</div>
+                        <div class="stat-card__change stat-card__change--up">↑ 18.3% (이번 달)</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-card__label">활성 사용자</div>
+                        <div class="stat-card__value">8,501</div>
+                        <div class="stat-card__change stat-card__change--up">↑ 15.2%</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-card__label">온라인 사용자</div>
+                        <div class="stat-card__value">1,247</div>
+                        <div class="stat-card__change stat-card__change--up">↑ 8.7%</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-card__label">신규 가입 (30일)</div>
+                        <div class="stat-card__value">1,384</div>
+                        <div class="stat-card__change stat-card__change--up">↑ 22.1%</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-card__label">평균 세션</div>
+                        <div class="stat-card__value">2.4h</div>
+                        <div class="stat-card__change stat-card__change--up">↑ 5.3%</div>
+                    </div>
+                </div>
+
+                <!-- 필터 & 검색 -->
+                <div class="filter-section">
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <div class="filter-label">🔍 검색</div>
+                            <input 
+                                type="text" 
+                                id="searchInput"
+                                class="filter-input" 
+                                placeholder="이름, 이메일, 조직명 검색..."
+                                oninput="searchUsers(this.value)"
+                            >
+                        </div>
+
+                        <div class="filter-group">
+                            <div class="filter-label">🏢 조직</div>
+                            <select class="filter-select" onchange="filterByOrganization(this.value)">
+                                <option value="">전체 조직</option>
+                                <option value="org-1">글로벌무역</option>
+                                <option value="org-2">테크스타트업 Inc.</option>
+                                <option value="org-3">AI연구소</option>
+                                <option value="org-4">디자인스튜디오</option>
+                                <option value="org-5">컨설팅그룹</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <div class="filter-label">👤 역할</div>
+                            <select class="filter-select" onchange="filterByRole(this.value)">
+                                <option value="">전체 역할</option>
+                                <option value="admin">Admin</option>
+                                <option value="manager">Manager</option>
+                                <option value="employee">Employee</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <div class="filter-label">🔄 상태</div>
+                            <select class="filter-select" onchange="filterByStatus(this.value)">
+                                <option value="">전체 상태</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                                <option value="suspended">Suspended</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <div class="filter-label">📅 가입일</div>
+                            <select class="filter-select" onchange="filterByDate(this.value)">
+                                <option value="">전체 기간</option>
+                                <option value="today">오늘</option>
+                                <option value="week">최근 7일</option>
+                                <option value="month">최근 30일</option>
+                                <option value="quarter">최근 90일</option>
+                            </select>
+                        </div>
+
+                        <button class="btn btn--outline" onclick="resetFilters()">
+                            🔄 초기화
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 사용자 테이블 -->
+                <div class="user-table-container">
+                    <table class="user-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;">
+                                    <input type="checkbox" onclick="toggleSelectAll(this)">
+                                </th>
+                                <th class="sortable" onclick="sortTable('name')">
+                                    사용자 <span>↕️</span>
+                                </th>
+                                <th class="sortable" onclick="sortTable('organization')">
+                                    조직 <span>↕️</span>
+                                </th>
+                                <th class="sortable" onclick="sortTable('role')">
+                                    역할 <span>↕️</span>
+                                </th>
+                                <th class="sortable" onclick="sortTable('status')">
+                                    상태 <span>↕️</span>
+                                </th>
+                                <th class="sortable" onclick="sortTable('lastActive')">
+                                    마지막 활동 <span>↕️</span>
+                                </th>
+                                <th class="sortable" onclick="sortTable('usage')">
+                                    사용량 <span>↕️</span>
+                                </th>
+                                <th class="sortable" onclick="sortTable('created')">
+                                    가입일 <span>↕️</span>
+                                </th>
+                                <th style="width: 120px;">액션</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <!-- 사용자 1 -->
+                            <tr data-user-id="user-1" onclick="viewUserDetail('user-1')">
+                                <td onclick="event.stopPropagation();">
+                                    <input type="checkbox" class="user-checkbox" value="user-1">
+                                </td>
+                                <td>
+                                    <div class="user-info">
+                                        <div class="user-avatar" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
+                                            김
+                                        </div>
+                                        <div class="user-details">
+                                            <div class="user-name">김철수</div>
+                                            <div class="user-email">kim.cs@globaltrade.com</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <a href="organization-management.html?id=org-1" class="org-link" onclick="event.stopPropagation();">
+                                        🏢 글로벌무역
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="role-badge role-badge--admin">Admin</span>
+                                </td>
+                                <td>
+                                    <div class="activity-indicator">
+                                        <div class="activity-dot activity-dot--online"></div>
+                                        <span class="status-badge status-badge--active">Active</span>
+                                    </div>
+                                </td>
+                                <td style="color: var(--text-secondary);">5분 전</td>
+                                <td>
+                                    <strong style="color: var(--platform-primary);">847</strong>
+                                    <span style="font-size: var(--text-xs); color: var(--text-secondary);">API 호출</span>
+                                </td>
+                                <td style="color: var(--text-secondary);">2024-03-15</td>
+                                <td onclick="event.stopPropagation();">
+                                    <div class="action-buttons">
+                                        <button class="action-btn" onclick="viewUserDetail('user-1')" title="상세 보기">
+                                            👁️
+                                        </button>
+                                        <button class="action-btn" onclick="editUser('user-1')" title="편집">
+                                            ✏️
+                                        </button>
+                                        <button class="action-btn" onclick="showMoreActions('user-1')" title="더보기">
+                                            ⋮
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- 사용자 2 -->
+                            <tr data-user-id="user-2" onclick="viewUserDetail('user-2')">
+                                <td onclick="event.stopPropagation();">
+                                    <input type="checkbox" class="user-checkbox" value="user-2">
+                                </td>
+                                <td>
+                                    <div class="user-info">
+                                        <div class="user-avatar" style="background: linear-gradient(135deg, #ec4899, #f472b6);">
+                                            이
+                                        </div>
+                                        <div class="user-details">
+                                            <div class="user-name">이영희</div>
+                                            <div class="user-email">lee.yh@techstartup.com</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <a href="organization-management.html?id=org-2" class="org-link" onclick="event.stopPropagation();">
+                                        🚀 테크스타트업 Inc.
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="role-badge role-badge--manager">Manager</span>
+                                </td>
+                                <td>
+                                    <div class="activity-indicator">
+                                        <div class="activity-dot activity-dot--online"></div>
+                                        <span class="status-badge status-badge--active">Active</span>
+                                    </div>
+                                </td>
+                                <td style="color: var(--text-secondary);">12분 전</td>
+                                <td>
+                                    <strong style="color: var(--platform-primary);">523</strong>
+                                    <span style="font-size: var(--text-xs); color: var(--text-secondary);">API 호출</span>
+                                </td>
+                                <td style="color: var(--text-secondary);">2024-10-08</td>
+                                <td onclick="event.stopPropagation();">
+                                    <div class="action-buttons">
+                                        <button class="action-btn" onclick="viewUserDetail('user-2')" title="상세 보기">
+                                            👁️
+                                        </button>
+                                        <button class="action-btn" onclick="editUser('user-2')" title="편집">
+                                            ✏️
+                                        </button>
+                                        <button class="action-btn" onclick="showMoreActions('user-2')" title="더보기">
+                                            ⋮
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- 사용자 3 -->
+                            <tr data-user-id="user-3" onclick="viewUserDetail('user-3')">
+                                <td onclick="event.stopPropagation();">
+                                    <input type="checkbox" class="user-checkbox" value="user-3">
+                                </td>
+                                <td>
+                                    <div class="user-info">
+                                        <div class="user-avatar" style="background: linear-gradient(135deg, #10b981, #34d399);">
+                                            박
+                                        </div>
+                                        <div class="user-details">
+                                            <div class="user-name">박민수</div>
+                                            <div class="user-email">park.ms@ailab.com</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <a href="organization-management.html?id=org-3" class="org-link" onclick="event.stopPropagation();">
+                                        🤖 AI연구소
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="role-badge role-badge--employee">Employee</span>
+                                </td>
+                                <td>
+                                    <div class="activity-indicator">
+                                        <div class="activity-dot activity-dot--away"></div>
+                                        <span class="status-badge status-badge--active">Active</span>
+                                    </div>
+                                </td>
+                                <td style="color: var(--text-secondary);">1시간 전</td>
+                                <td>
+                                    <strong style="color: var(--platform-primary);">1,234</strong>
+                                    <span style="font-size: var(--text-xs); color: var(--text-secondary);">API 호출</span>
+                                </td>
+                                <td style="color: var(--text-secondary);">2024-05-22</td>
+                                <td onclick="event.stopPropagation();">
+                                    <div class="action-buttons">
+                                        <button class="action-btn" onclick="viewUserDetail('user-3')" title="상세 보기">
+                                            👁️
+                                        </button>
+                                        <button class="action-btn" onclick="editUser('user-3')" title="편집">
+                                            ✏️
+                                        </button>
+                                        <button class="action-btn" onclick="showMoreActions('user-3')" title="더보기">
+                                            ⋮
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- 사용자 4 -->
+                            <tr data-user-id="user-4" onclick="viewUserDetail('user-4')">
+                                <td onclick="event.stopPropagation();">
+                                    <input type="checkbox" class="user-checkbox" value="user-4">
+                                </td>
+                                <td>
+                                    <div class="user-info">
+                                        <div class="user-avatar" style="background: linear-gradient(135deg, #f59e0b, #fbbf24);">
+                                            최
+                                        </div>
+                                        <div class="user-details">
+                                            <div class="user-name">최지은</div>
+                                            <div class="user-email">choi.je@designstudio.com</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <a href="organization-management.html?id=org-4" class="org-link" onclick="event.stopPropagation();">
+                                        🎨 디자인스튜디오
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="role-badge role-badge--employee">Employee</span>
+                                </td>
+                                <td>
+                                    <div class="activity-indicator">
+                                        <div class="activity-dot activity-dot--offline"></div>
+                                        <span class="status-badge status-badge--active">Active</span>
+                                    </div>
+                                </td>
+                                <td style="color: var(--text-secondary);">3시간 전</td>
+                                <td>
+                                    <strong style="color: var(--platform-primary);">234</strong>
+                                    <span style="font-size: var(--text-xs); color: var(--text-secondary);">API 호출</span>
+                                </td>
+                                <td style="color: var(--text-secondary);">2024-07-10</td>
+                                <td onclick="event.stopPropagation();">
+                                    <div class="action-buttons">
+                                        <button class="action-btn" onclick="viewUserDetail('user-4')" title="상세 보기">
+                                            👁️
+                                        </button>
+                                        <button class="action-btn" onclick="editUser('user-4')" title="편집">
+                                            ✏️
+                                        </button>
+                                        <button class="action-btn" onclick="showMoreActions('user-4')" title="더보기">
+                                            ⋮
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- 사용자 5 -->
+                            <tr data-user-id="user-5" onclick="viewUserDetail('user-5')">
+                                <td onclick="event.stopPropagation();">
+                                    <input type="checkbox" class="user-checkbox" value="user-5">
+                                </td>
+                                <td>
+                                    <div class="user-info">
+                                        <div class="user-avatar" style="background: linear-gradient(135deg, #3b82f6, #60a5fa);">
+                                            정
+                                        </div>
+                                        <div class="user-details">
+                                            <div class="user-name">정태민</div>
+                                            <div class="user-email">jung.tm@consulting.com</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <a href="organization-management.html?id=org-5" class="org-link" onclick="event.stopPropagation();">
+                                        💼 컨설팅그룹
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="role-badge role-badge--admin">Admin</span>
+                                </td>
+                                <td>
+                                    <div class="activity-indicator">
+                                        <div class="activity-dot activity-dot--online"></div>
+                                        <span class="status-badge status-badge--active">Active</span>
+                                    </div>
+                                </td>
+                                <td style="color: var(--text-secondary);">방금 전</td>
+                                <td>
+                                    <strong style="color: var(--platform-primary);">678</strong>
+                                    <span style="font-size: var(--text-xs); color: var(--text-secondary);">API 호출</span>
+                                </td>
+                                <td style="color: var(--text-secondary);">2024-02-08</td>
+                                <td onclick="event.stopPropagation();">
+                                    <div class="action-buttons">
+                                        <button class="action-btn" onclick="viewUserDetail('user-5')" title="상세 보기">
+                                            👁️
+                                        </button>
+                                        <button class="action-btn" onclick="editUser('user-5')" title="편집">
+                                            ✏️
+                                        </button>
+                                        <button class="action-btn" onclick="showMoreActions('user-5')" title="더보기">
+                                            ⋮
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- 사용자 6 -->
+                            <tr data-user-id="user-6" onclick="viewUserDetail('user-6')">
+                                <td onclick="event.stopPropagation();">
+                                    <input type="checkbox" class="user-checkbox" value="user-6">
+                                </td>
+                                <td>
+                                    <div class="user-info">
+                                        <div class="user-avatar" style="background: linear-gradient(135deg, #8b5cf6, #a78bfa);">
+                                            한
+                                        </div>
+                                        <div class="user-details">
+                                            <div class="user-name">한수진</div>
+                                            <div class="user-email">han.sj@ailab.com</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <a href="organization-management.html?id=org-3" class="org-link" onclick="event.stopPropagation();">
+                                        🤖 AI연구소
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="role-badge role-badge--manager">Manager</span>
+                                </td>
+                                <td>
+                                    <div class="activity-indicator">
+                                        <div class="activity-dot activity-dot--online"></div>
+                                        <span class="status-badge status-badge--active">Active</span>
+                                    </div>
+                                </td>
+                                <td style="color: var(--text-secondary);">8분 전</td>
+                                <td>
+                                    <strong style="color: var(--platform-primary);">945</strong>
+                                    <span style="font-size: var(--text-xs); color: var(--text-secondary);">API 호출</span>
+                                </td>
+                                <td style="color: var(--text-secondary);">2024-05-22</td>
+                                <td onclick="event.stopPropagation();">
+                                    <div class="action-buttons">
+                                        <button class="action-btn" onclick="viewUserDetail('user-6')" title="상세 보기">
+                                            👁️
+                                        </button>
+                                        <button class="action-btn" onclick="editUser('user-6')" title="편집">
+                                            ✏️
+                                        </button>
+                                        <button class="action-btn" onclick="showMoreActions('user-6')" title="더보기">
+                                            ⋮
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- 사용자 7 -->
+                            <tr data-user-id="user-7" onclick="viewUserDetail('user-7')">
+                                <td onclick="event.stopPropagation();">
+                                    <input type="checkbox" class="user-checkbox" value="user-7">
+                                </td>
+                                <td>
+                                    <div class="user-info">
+                                        <div class="user-avatar" style="background: linear-gradient(135deg, #ef4444, #f87171);">
+                                            강
+                                        </div>
+                                        <div class="user-details">
+                                            <div class="user-name">강동원</div>
+                                            <div class="user-email">kang.dw@techstartup.com</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <a href="organization-management.html?id=org-2" class="org-link" onclick="event.stopPropagation();">
+                                        🚀 테크스타트업 Inc.
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="role-badge role-badge--employee">Employee</span>
+                                </td>
+                                <td>
+                                    <div class="activity-indicator">
+                                        <div class="activity-dot activity-dot--offline"></div>
+                                        <span class="status-badge status-badge--inactive">Inactive</span>
+                                    </div>
+                                </td>
+                                <td style="color: var(--text-secondary);">2일 전</td>
+                                <td>
+                                    <strong style="color: var(--platform-primary);">156</strong>
+                                    <span style="font-size: var(--text-xs); color: var(--text-secondary);">API 호출</span>
+                                </td>
+                                <td style="color: var(--text-secondary);">2024-10-08</td>
+                                <td onclick="event.stopPropagation();">
+                                    <div class="action-buttons">
+                                        <button class="action-btn" onclick="viewUserDetail('user-7')" title="상세 보기">
+                                            👁️
+                                        </button>
+                                        <button class="action-btn" onclick="editUser('user-7')" title="편집">
+                                            ✏️
+                                        </button>
+                                        <button class="action-btn" onclick="showMoreActions('user-7')" title="더보기">
+                                            ⋮
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- 사용자 8 -->
+                            <tr data-user-id="user-8" onclick="viewUserDetail('user-8')">
+                                <td onclick="event.stopPropagation();">
+                                    <input type="checkbox" class="user-checkbox" value="user-8">
+                                </td>
+                                <td>
+                                    <div class="user-info">
+                                        <div class="user-avatar" style="background: linear-gradient(135deg, #14b8a6, #5eead4);">
+                                            윤
+                                        </div>
+                                        <div class="user-details">
+                                            <div class="user-name">윤서연</div>
+                                            <div class="user-email">yoon.sy@globaltrade.com</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <a href="organization-management.html?id=org-1" class="org-link" onclick="event.stopPropagation();">
+                                        🏢 글로벌무역
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="role-badge role-badge--manager">Manager</span>
+                                </td>
+                                <td>
+                                    <div class="activity-indicator">
+                                        <div class="activity-dot activity-dot--away"></div>
+                                        <span class="status-badge status-badge--active">Active</span>
+                                    </div>
+                                </td>
+                                <td style="color: var(--text-secondary);">45분 전</td>
+                                <td>
+                                    <strong style="color: var(--platform-primary);">567</strong>
+                                    <span style="font-size: var(--text-xs); color: var(--text-secondary);">API 호출</span>
+                                </td>
+                                <td style="color: var(--text-secondary);">2024-03-15</td>
+                                <td onclick="event.stopPropagation();">
+                                    <div class="action-buttons">
+                                        <button class="action-btn" onclick="viewUserDetail('user-8')" title="상세 보기">
+                                            👁️
+                                        </button>
+                                        <button class="action-btn" onclick="editUser('user-8')" title="편집">
+                                            ✏️
+                                        </button>
+                                        <button class="action-btn" onclick="showMoreActions('user-8')" title="더보기">
+                                            ⋮
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- 페이지네이션 -->
+                    <div class="pagination">
+                        <div class="pagination-info">
+                            1-8 / 8,947명
+                        </div>
+                        <div class="pagination-controls">
+                            <button class="pagination-btn" disabled>◀ 이전</button>
+                            <button class="pagination-btn pagination-btn--active">1</button>
+                            <button class="pagination-btn">2</button>
+                            <button class="pagination-btn">3</button>
+                            <button class="pagination-btn">...</button>
+                            <button class="pagination-btn">1119</button>
+                            <button class="pagination-btn">다음 ▶</button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- 사용자 상세 모달 -->
+        <div id="userDetailModal" class="modal-overlay">
+            <div class="modal">
+                <div class="modal-header">
+                    <h2 class="modal-title">👤 사용자 상세 정보</h2>
+                    <button class="modal-close" onclick="closeUserDetailModal()">✕</button>
+                </div>
+                <div class="modal-body" id="userDetailContent">
+                    <!-- 동적으로 채워짐 -->
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn--outline" onclick="closeUserDetailModal()">닫기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 공통 스크립트 -->
+    <script src="../common/layout.js"></script>
+    <script src="../common/utils.js"></script>
+
+    <!-- 페이지 전용 스크립트 -->
+    <script>
+        // ========== User Management 전용 로직 ==========
+
+        // 전역 변수
+        let usersData = [];
+        let filteredUsers = [];
+        let sortColumn = 'created';
+        let sortDirection = 'desc';
+        let currentPage = 1;
+        let itemsPerPage = 8;
+
+        // ========== 초기화 ==========
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('User Management 페이지 초기화');
+            
+            initializeUsers();
+            loadUsersData();
+        });
+
+        function initializeUsers() {
+            // 초기 데이터 로드
+            usersData = getAllUsers();
+            filteredUsers = [...usersData];
+            
+            // URL 파라미터 확인
+            const urlParams = new URLSearchParams(window.location.search);
+            const action = urlParams.get('action');
+            const userId = urlParams.get('id');
+            const orgId = urlParams.get('org');
+
+            if (action === 'view' && userId) {
+                viewUserDetail(userId);
+            } else if (orgId) {
+                filterByOrganization(orgId);
+            }
+        }
+
+        function loadUsersData() {
+            // 실제로는 서버에서 데이터 가져옴
+            console.log('사용자 데이터 로드 완료:', usersData.length);
+        }
+
+        // ========== 데이터 가져오기 ==========
+        function getAllUsers() {
+            // 실제로는 API 호출
+            return [
+                {
+                    id: 'user-1',
+                    name: '김철수',
+                    email: 'kim.cs@globaltrade.com',
+                    organization: 'org-1',
+                    organizationName: '글로벌무역',
+                    role: 'admin',
+                    status: 'active',
+                    lastActive: '5분 전',
+                    usage: 847,
+                    created: '2024-03-15',
+                    online: true
+                },
+                {
+                    id: 'user-2',
+                    name: '이영희',
+                    email: 'lee.yh@techstartup.com',
+                    organization: 'org-2',
+                    organizationName: '테크스타트업 Inc.',
+                    role: 'manager',
+                    status: 'active',
+                    lastActive: '12분 전',
+                    usage: 523,
+                    created: '2024-10-08',
+                    online: true
+                },
+                {
+                    id: 'user-3',
+                    name: '박민수',
+                    email: 'park.ms@ailab.com',
+                    organization: 'org-3',
+                    organizationName: 'AI연구소',
+                    role: 'employee',
+                    status: 'active',
+                    lastActive: '1시간 전',
+                    usage: 1234,
+                    created: '2024-05-22',
+                    online: false
+                },
+                {
+                    id: 'user-4',
+                    name: '최지은',
+                    email: 'choi.je@designstudio.com',
+                    organization: 'org-4',
+                    organizationName: '디자인스튜디오',
+                    role: 'employee',
+                    status: 'active',
+                    lastActive: '3시간 전',
+                    usage: 234,
+                    created: '2024-07-10',
+                    online: false
+                },
+                {
+                    id: 'user-5',
+                    name: '정태민',
+                    email: 'jung.tm@consulting.com',
+                    organization: 'org-5',
+                    organizationName: '컨설팅그룹',
+                    role: 'admin',
+                    status: 'active',
+                    lastActive: '방금 전',
+                    usage: 678,
+                    created: '2024-02-08',
+                    online: true
+                },
+                {
+                    id: 'user-6',
+                    name: '한수진',
+                    email: 'han.sj@ailab.com',
+                    organization: 'org-3',
+                    organizationName: 'AI연구소',
+                    role: 'manager',
+                    status: 'active',
+                    lastActive: '8분 전',
+                    usage: 945,
+                    created: '2024-05-22',
+                    online: true
+                },
+                {
+                    id: 'user-7',
+                    name: '강동원',
+                    email: 'kang.dw@techstartup.com',
+                    organization: 'org-2',
+                    organizationName: '테크스타트업 Inc.',
+                    role: 'employee',
+                    status: 'inactive',
+                    lastActive: '2일 전',
+                    usage: 156,
+                    created: '2024-10-08',
+                    online: false
+                },
+                {
+                    id: 'user-8',
+                    name: '윤서연',
+                    email: 'yoon.sy@globaltrade.com',
+                    organization: 'org-1',
+                    organizationName: '글로벌무역',
+                    role: 'manager',
+                    status: 'active',
+                    lastActive: '45분 전',
+                    usage: 567,
+                    created: '2024-03-15',
+                    online: false
+                }
+            ];
+        }
+
+        // ========== 검색 ==========
+        function searchUsers(query) {
+            const lowerQuery = query.toLowerCase();
+            
+            filteredUsers = usersData.filter(user => {
+                return user.name.toLowerCase().includes(lowerQuery) ||
+                       user.email.toLowerCase().includes(lowerQuery) ||
+                       user.organizationName.toLowerCase().includes(lowerQuery);
+            });
+
+            currentPage = 1;
+            renderUsersTable();
+        }
+
+        // ========== 필터링 ==========
+        function filterByOrganization(orgId) {
+            if (!orgId) {
+                filteredUsers = [...usersData];
+            } else {
+                filteredUsers = usersData.filter(user => user.organization === orgId);
+            }
+            currentPage = 1;
+            renderUsersTable();
+        }
+
+        function filterByRole(role) {
+            if (!role) {
+                filteredUsers = [...usersData];
+            } else {
+                filteredUsers = usersData.filter(user => user.role === role);
+            }
+            currentPage = 1;
+            renderUsersTable();
+        }
+
+        function filterByStatus(status) {
+            if (!status) {
+                filteredUsers = [...usersData];
+            } else {
+                filteredUsers = usersData.filter(user => user.status === status);
+            }
+            currentPage = 1;
+            renderUsersTable();
+        }
+
+        function filterByDate(period) {
+            const now = new Date();
+            
+            if (!period) {
+                filteredUsers = [...usersData];
+            } else {
+                filteredUsers = usersData.filter(user => {
+                    const userDate = new Date(user.created);
+                    
+                    switch(period) {
+                        case 'today':
+                            return userDate.toDateString() === now.toDateString();
+                        case 'week':
+                            const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
+                            return userDate >= weekAgo;
+                        case 'month':
+                            const monthAgo = new Date(now - 30 * 24 * 60 * 60 * 1000);
+                            return userDate >= monthAgo;
+                        case 'quarter':
+                            const quarterAgo = new Date(now - 90 * 24 * 60 * 60 * 1000);
+                            return userDate >= quarterAgo;
+                        default:
+                            return true;
+                    }
+                });
+            }
+            currentPage = 1;
+            renderUsersTable();
+        }
+
+        function resetFilters() {
+            // 모든 필터 초기화
+            document.getElementById('searchInput').value = '';
+            document.querySelectorAll('.filter-select').forEach(select => {
+                select.selectedIndex = 0;
+            });
+            
+            filteredUsers = [...usersData];
+            currentPage = 1;
+            renderUsersTable();
+            
+            window.GrowFitUtils.showToast('필터가 초기화되었습니다', 'info');
+        }
+
+        // ========== 정렬 ==========
+        function sortTable(column) {
+            if (sortColumn === column) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortColumn = column;
+                sortDirection = 'asc';
+            }
+
+            filteredUsers.sort((a, b) => {
+                let aVal = a[column];
+                let bVal = b[column];
+
+                // 숫자 비교
+                if (typeof aVal === 'number') {
+                    return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
+                }
+
+                // 문자열 비교
+                if (sortDirection === 'asc') {
+                    return aVal > bVal ? 1 : -1;
+                } else {
+                    return aVal < bVal ? 1 : -1;
+                }
+            });
+
+            renderUsersTable();
+            
+            window.GrowFitUtils.showToast(`${column}로 정렬되었습니다`, 'info');
+        }
+
+        // ========== 테이블 렌더링 ==========
+        function renderUsersTable() {
+            // 실제 구현에서는 동적으로 테이블 생성
+            console.log('테이블 렌더링:', filteredUsers.length, '명 사용자');
+        }
+
+        // ========== 선택 관리 ==========
+        function toggleSelectAll(checkbox) {
+            const checkboxes = document.querySelectorAll('.user-checkbox');
+            checkboxes.forEach(cb => {
+                cb.checked = checkbox.checked;
+            });
+
+            updateBulkActionButton();
+        }
+
+        function updateBulkActionButton() {
+            const selectedCount = document.querySelectorAll('.user-checkbox:checked').length;
+            
+            if (selectedCount > 0) {
+                console.log(`${selectedCount}명 사용자 선택됨`);
+            }
+        }
+
+        // ========== 사용자 상세 보기 ==========
+        function viewUserDetail(userId) {
+            const user = usersData.find(u => u.id === userId);
+            
+            if (!user) {
+                window.GrowFitUtils.showToast('사용자를 찾을 수 없습니다', 'error');
+                return;
+            }
+
+            const detailHtml = `
+                <div style="display: grid; gap: var(--space-4);">
+                    <div class="info-group">
+                        <div class="info-label">기본 정보</div>
+                        <div style="padding: var(--space-4); background: var(--surface); border-radius: var(--radius-lg);">
+                            <div style="display: grid; gap: var(--space-3);">
+                                <div>
+                                    <div style="font-size: var(--text-sm); color: var(--text-secondary);">이름</div>
+                                    <div style="font-weight: var(--font-semibold);">${user.name}</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: var(--text-sm); color: var(--text-secondary);">이메일</div>
+                                    <div style="font-weight: var(--font-semibold);">${user.email}</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: var(--text-sm); color: var(--text-secondary);">사용자 ID</div>
+                                    <div style="font-family: 'Courier New', monospace; font-size: var(--text-sm);">${user.id}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-group">
+                        <div class="info-label">조직 & 역할</div>
+                        <div style="padding: var(--space-4); background: var(--surface); border-radius: var(--radius-lg);">
+                            <div style="display: grid; gap: var(--space-3);">
+                                <div>
+                                    <div style="font-size: var(--text-sm); color: var(--text-secondary);">조직</div>
+                                    <div style="font-weight: var(--font-semibold);">${user.organizationName}</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: var(--text-sm); color: var(--text-secondary);">역할</div>
+                                    <div><span class="role-badge role-badge--${user.role}">${getRoleName(user.role)}</span></div>
+                                </div>
+                                <div>
+                                    <div style="font-size: var(--text-sm); color: var(--text-secondary);">상태</div>
+                                    <div><span class="status-badge status-badge--${user.status}">${getStatusName(user.status)}</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-group">
+                        <div class="info-label">활동 & 사용량</div>
+                        <div style="padding: var(--space-4); background: var(--surface); border-radius: var(--radius-lg);">
+                            <div style="display: grid; gap: var(--space-3);">
+                                <div>
+                                    <div style="font-size: var(--text-sm); color: var(--text-secondary);">마지막 활동</div>
+                                    <div style="font-weight: var(--font-semibold);">${user.lastActive}</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: var(--text-sm); color: var(--text-secondary);">이번 달 API 호출</div>
+                                    <div style="font-weight: var(--font-semibold); color: var(--platform-primary);">${user.usage.toLocaleString()}회</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: var(--text-sm); color: var(--text-secondary);">가입일</div>
+                                    <div style="font-weight: var(--font-semibold);">${user.created}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-group">
+                        <div class="info-label">빠른 액션</div>
+                        <div style="display: flex; gap: var(--space-2); flex-wrap: wrap;">
+                            <button class="btn btn--sm btn--outline" onclick="sendEmailToUser('${user.id}')">📧 이메일 발송</button>
+                            <button class="btn btn--sm btn--outline" onclick="viewUserActivity('${user.id}')">📊 활동 내역</button>
+                            <button class="btn btn--sm btn--outline" onclick="resetUserPassword('${user.id}')">🔑 비밀번호 초기화</button>
+                            <button class="btn btn--sm btn--outline" onclick="changeUserRole('${user.id}')">👤 역할 변경</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('userDetailContent').innerHTML = detailHtml;
+            document.getElementById('userDetailModal').classList.add('modal-overlay--active');
+        }
+
+        function closeUserDetailModal() {
+            document.getElementById('userDetailModal').classList.remove('modal-overlay--active');
+        }
+
+        // ========== 사용자 편집 ==========
+        function editUser(userId) {
+            const user = usersData.find(u => u.id === userId);
+            
+            if (!user) {
+                window.GrowFitUtils.showToast('사용자를 찾을 수 없습니다', 'error');
+                return;
+            }
+
+            const options = `
+✏️ 사용자 편집: ${user.name}
+
+수정할 항목:
+
+1. 기본 정보 (이름, 이메일)
+2. 역할 변경
+3. 상태 변경
+4. 조직 변경
+5. 권한 설정
+
+번호를 입력하세요:
+            `.trim();
+
+            const choice = prompt(options);
+
+            if (choice && ['1', '2', '3', '4', '5'].includes(choice)) {
+                handleEditAction(userId, choice);
+            }
+        }
+
+        function handleEditAction(userId, action) {
+            switch(action) {
+                case '1':
+                    editBasicInfo(userId);
+                    break;
+                case '2':
+                    changeUserRole(userId);
+                    break;
+                case '3':
+                    changeUserStatus(userId);
+                    break;
+                case '4':
+                    changeUserOrganization(userId);
+                    break;
+                case '5':
+                    setUserPermissions(userId);
+                    break;
+            }
+        }
+
+        function editBasicInfo(userId) {
+            const user = usersData.find(u => u.id === userId);
+            const newName = prompt('새 이름:', user.name);
+            
+            if (newName && newName.trim()) {
+                user.name = newName;
+                window.GrowFitUtils.showToast('사용자 정보가 변경되었습니다', 'success');
+                renderUsersTable();
+            }
+        }
+
+        function changeUserRole(userId) {
+            const roles = `
+역할 변경
+
+1. Admin (관리자)
+2. Manager (매니저)
+3. Employee (일반 사용자)
+
+번호를 입력하세요:
+            `.trim();
+
+            const choice = prompt(roles);
+
+            if (choice && ['1', '2', '3'].includes(choice)) {
+                const roleMap = {
+                    '1': 'admin',
+                    '2': 'manager',
+                    '3': 'employee'
+                };
+
+                const user = usersData.find(u => u.id === userId);
+                user.role = roleMap[choice];
+                
+                window.GrowFitUtils.showToast('역할이 변경되었습니다', 'success');
+                renderUsersTable();
+            }
+        }
+
+        function changeUserStatus(userId) {
+            const statuses = `
+상태 변경
+
+1. Active (활성)
+2. Inactive (비활성)
+3. Suspended (정지)
+
+번호를 입력하세요:
+            `.trim();
+
+            const choice = prompt(statuses);
+
+            if (choice && ['1', '2', '3'].includes(choice)) {
+                const statusMap = {
+                    '1': 'active',
+                    '2': 'inactive',
+                    '3': 'suspended'
+                };
+
+                const user = usersData.find(u => u.id === userId);
+                user.status = statusMap[choice];
+                
+                window.GrowFitUtils.showToast('상태가 변경되었습니다', 'success');
+                renderUsersTable();
+            }
+        }
+
+        function changeUserOrganization(userId) {
+            const orgs = `
+조직 변경
+
+1. 글로벌무역
+2. 테크스타트업 Inc.
+3. AI연구소
+4. 디자인스튜디오
+5. 컨설팅그룹
+
+번호를 입력하세요:
+            `.trim();
+
+            const choice = prompt(orgs);
+
+            if (choice && ['1', '2', '3', '4', '5'].includes(choice)) {
+                window.GrowFitUtils.showToast('조직이 변경되었습니다', 'success');
+            }
+        }
+
+        function setUserPermissions(userId) {
+            alert('권한 설정 기능은 개발 중입니다');
+        }
+
+        // ========== 더보기 액션 ==========
+        function showMoreActions(userId) {
+            const user = usersData.find(u => u.id === userId);
+
+            const actions = `
+⋮ ${user.name} 추가 작업
+
+1. 📊 활동 내역 보기
+2. 📧 이메일 발송
+3. 🔑 비밀번호 초기화
+4. 👤 역할 변경
+5. 🏢 조직 변경
+6. ⏸️ 계정 정지
+7. 🗑️ 사용자 삭제
+
+번호를 입력하세요:
+            `.trim();
+
+            const choice = prompt(actions);
+
+            if (choice && ['1', '2', '3', '4', '5', '6', '7'].includes(choice)) {
+                handleMoreAction(userId, choice);
+            }
+        }
+
+        function handleMoreAction(userId, action) {
+            const user = usersData.find(u => u.id === userId);
+
+            switch(action) {
+                case '1':
+                    viewUserActivity(userId);
+                    break;
+                case '2':
+                    sendEmailToUser(userId);
+                    break;
+                case '3':
+                    resetUserPassword(userId);
+                    break;
+                case '4':
+                    changeUserRole(userId);
+                    break;
+                case '5':
+                    changeUserOrganization(userId);
+                    break;
+                case '6':
+                    suspendUser(userId);
+                    break;
+                case '7':
+                    deleteUser(userId);
+                    break;
+            }
+        }
+
+        function viewUserActivity(userId) {
+            const user = usersData.find(u => u.id === userId);
+
+            const activity = `
+📊 ${user.name} 활동 내역
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+이번 달:
+- API 호출: ${user.usage.toLocaleString()}회
+- 평균 일일 호출: ${Math.floor(user.usage / 30)}회
+- 세션 시간: 47.2시간
+
+오늘:
+- API 호출: 234회
+- 로그인: 14:23
+- 마지막 활동: ${user.lastActive}
+
+최근 활동:
+- 15:47 - 문서 분석 실행
+- 15:32 - 프로젝트 생성
+- 14:56 - 팀원 초대
+- 14:23 - 로그인
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+LLM 사용 분포:
+- OpenAI: 45%
+- Claude: 35%
+- Gemini: 20%
+
+[상세 리포트] [내보내기]
+            `.trim();
+
+            alert(activity);
+        }
+
+        function sendEmailToUser(userId) {
+            const user = usersData.find(u => u.id === userId);
+
+            const templates = `
+📧 이메일 발송
+
+받는 사람: ${user.email}
+
+템플릿 선택:
+
+1. 환영 메시지
+2. 비밀번호 초기화
+3. 계정 정보 업데이트
+4. 사용량 알림
+5. 커스텀 이메일
+
+번호를 입력하세요:
+            `.trim();
+
+            const choice = prompt(templates);
+
+            if (choice) {
+                window.GrowFitUtils.showToast('이메일이 발송되었습니다', 'success');
+            }
+        }
+
+        function resetUserPassword(userId) {
+            const user = usersData.find(u => u.id === userId);
+
+            if (confirm(`${user.name}의 비밀번호를 초기화하시겠습니까?\n\n초기화 링크가 ${user.email}로 발송됩니다.`)) {
+                window.GrowFitUtils.showToast('비밀번호 초기화 이메일이 발송되었습니다', 'success');
+            }
+        }
+
+        function suspendUser(userId) {
+            const user = usersData.find(u => u.id === userId);
+
+            if (confirm(`${user.name}의 계정을 정지하시겠습니까?\n\n사용자의 접근이 차단됩니다.`)) {
+                user.status = 'suspended';
+                window.GrowFitUtils.showToast('계정이 정지되었습니다', 'success');
+                renderUsersTable();
+            }
+        }
+
+        function deleteUser(userId) {
+            const user = usersData.find(u => u.id === userId);
+
+            const confirmText = prompt(`
+⚠️ 사용자 삭제
+
+정말로 "${user.name}"을(를) 삭제하시겠습니까?
+
+이 작업은 되돌릴 수 없으며:
+- 모든 데이터 영구 삭제
+- 작업 내역 삭제
+- 접근 권한 제거
+
+삭제하려면 사용자명을 입력하세요:
+            `.trim());
+
+            if (confirmText === user.name) {
+                window.GrowFitUtils.showToast('사용자를 삭제하는 중...', 'info');
+
+                setTimeout(() => {
+                    const index = usersData.findIndex(u => u.id === userId);
+                    if (index > -1) {
+                        usersData.splice(index, 1);
+                        filteredUsers = [...usersData];
+                    }
+
+                    window.GrowFitUtils.showToast('사용자가 삭제되었습니다', 'success');
+                    renderUsersTable();
+                }, 2000);
+            } else if (confirmText) {
+                window.GrowFitUtils.showToast('사용자명이 일치하지 않습니다', 'error');
+            }
+        }
+
+        // ========== 대량 작업 ==========
+        function bulkActions() {
+            const selectedUsers = Array.from(document.querySelectorAll('.user-checkbox:checked'));
+            
+            if (selectedUsers.length === 0) {
+                window.GrowFitUtils.showToast('사용자를 선택해주세요', 'warning');
+                return;
+            }
+
+            const actions = `
+⚙️ 대량 작업
+
+선택된 사용자: ${selectedUsers.length}명
+
+작업 선택:
+
+1. 역할 일괄 변경
+2. 상태 일괄 변경
+3. 이메일 일괄 발송
+4. 조직 일괄 변경
+5. 태그 추가
+6. 내보내기
+7. 삭제
+
+번호를 입력하세요:
+            `.trim();
+
+            const choice = prompt(actions);
+
+            if (choice && ['1', '2', '3', '4', '5', '6', '7'].includes(choice)) {
+                handleBulkAction(selectedUsers, choice);
+            }
+        }
+
+        function handleBulkAction(selectedUsers, action) {
+            const count = selectedUsers.length;
+
+            switch(action) {
+                case '1':
+                    bulkChangeRole(selectedUsers);
+                    break;
+                case '2':
+                    bulkChangeStatus(selectedUsers);
+                    break;
+                case '3':
+                    bulkSendEmail(selectedUsers);
+                    break;
+                case '4':
+                    bulkChangeOrganization(selectedUsers);
+                    break;
+                case '5':
+                    bulkAddTags(selectedUsers);
+                    break;
+                case '6':
+                    bulkExport(selectedUsers);
+                    break;
+                case '7':
+                    bulkDelete(selectedUsers);
+                    break;
+            }
+        }
+
+        function bulkChangeRole(selectedUsers) {
+            const roles = `
+역할 일괄 변경
+
+대상: ${selectedUsers.length}명
+
+1. Admin (관리자)
+2. Manager (매니저)
+3. Employee (일반 사용자)
+
+번호를 입력하세요:
+            `.trim();
+
+            const choice = prompt(roles);
+
+            if (choice && ['1', '2', '3'].includes(choice)) {
+                window.GrowFitUtils.showToast(`${selectedUsers.length}명의 역할을 변경하는 중...`, 'info');
+                
+                setTimeout(() => {
+                    window.GrowFitUtils.showToast('역할이 변경되었습니다', 'success');
+                }, 1500);
+            }
+        }
+
+        function bulkChangeStatus(selectedUsers) {
+            const statuses = `
+상태 일괄 변경
+
+대상: ${selectedUsers.length}명
+
+1. Active (활성)
+2. Inactive (비활성)
+3. Suspended (정지)
+
+번호를 입력하세요:
+            `.trim();
+
+            const choice = prompt(statuses);
+
+            if (choice && ['1', '2', '3'].includes(choice)) {
+                window.GrowFitUtils.showToast(`${selectedUsers.length}명의 상태를 변경하는 중...`, 'info');
+                
+                setTimeout(() => {
+                    window.GrowFitUtils.showToast('상태가 변경되었습니다', 'success');
+                }, 1500);
+            }
+        }
+
+        function bulkSendEmail(selectedUsers) {
+            window.GrowFitUtils.showToast(`${selectedUsers.length}명에게 이메일 발송 중...`, 'info');
+            
+            setTimeout(() => {
+                window.GrowFitUtils.showToast('이메일 발송이 완료되었습니다', 'success');
+            }, 2000);
+        }
+
+        function bulkChangeOrganization(selectedUsers) {
+            const orgs = `
+조직 일괄 변경
+
+대상: ${selectedUsers.length}명
+
+1. 글로벌무역
+2. 테크스타트업 Inc.
+3. AI연구소
+4. 디자인스튜디오
+5. 컨설팅그룹
+
+번호를 입력하세요:
+            `.trim();
+
+            const choice = prompt(orgs);
+
+            if (choice && ['1', '2', '3', '4', '5'].includes(choice)) {
+                window.GrowFitUtils.showToast(`${selectedUsers.length}명의 조직을 변경하는 중...`, 'info');
+                
+                setTimeout(() => {
+                    window.GrowFitUtils.showToast('조직이 변경되었습니다', 'success');
+                }, 1500);
+            }
+        }
+
+        function bulkAddTags(selectedUsers) {
+            const tags = prompt('추가할 태그 (쉼표로 구분):');
+            
+            if (tags && tags.trim()) {
+                window.GrowFitUtils.showToast(`${selectedUsers.length}명에게 태그를 추가하는 중...`, 'info');
+                
+                setTimeout(() => {
+                    window.GrowFitUtils.showToast('태그가 추가되었습니다', 'success');
+                }, 1500);
+            }
+        }
+
+        function bulkExport(selectedUsers) {
+            window.GrowFitUtils.showToast(`${selectedUsers.length}명을 내보내는 중...`, 'info');
+            
+            setTimeout(() => {
+                window.GrowFitUtils.showToast('users_export.csv가 다운로드되었습니다', 'success');
+            }, 2000);
+        }
+
+        function bulkDelete(selectedUsers) {
+            if (confirm(`정말로 ${selectedUsers.length}명을 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`)) {
+                window.GrowFitUtils.showToast(`${selectedUsers.length}명을 삭제하는 중...`, 'info');
+                
+                setTimeout(() => {
+                    window.GrowFitUtils.showToast('사용자가 삭제되었습니다', 'success');
+                }, 2000);
+            }
+        }
+
+        // ========== 내보내기 ==========
+        function exportUsers() {
+            const formats = `
+📥 사용자 데이터 내보내기
+
+내보낼 형식:
+
+1. CSV (전체 데이터)
+2. Excel (전체 데이터)
+3. JSON (API 형식)
+4. PDF (리포트)
+
+번호를 입력하세요:
+            `.trim();
+
+            const choice = prompt(formats);
+
+            if (choice && ['1', '2', '3', '4'].includes(choice)) {
+                handleExport(choice);
+            }
+        }
+
+        function handleExport(format) {
+            const formatMap = {
+                '1': 'users.csv',
+                '2': 'users.xlsx',
+                '3': 'users.json',
+                '4': 'users_report.pdf'
+            };
+
+            window.GrowFitUtils.showToast('데이터를 내보내는 중...', 'info');
+
+            setTimeout(() => {
+                const filename = formatMap[format];
+                window.GrowFitUtils.showToast(`${filename}이(가) 다운로드되었습니다`, 'success');
+            }, 2000);
+        }
+
+        // ========== 사용자 분석 ==========
+        function showUserAnalytics() {
+            const analytics = `
+📊 사용자 분석
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+전체 사용자: ${usersData.length.toLocaleString()}명
+
+역할별 분포:
+- Admin: ${usersData.filter(u => u.role === 'admin').length}명 (${Math.round(usersData.filter(u => u.role === 'admin').length / usersData.length * 100)}%)
+- Manager: ${usersData.filter(u => u.role === 'manager').length}명 (${Math.round(usersData.filter(u => u.role === 'manager').length / usersData.length * 100)}%)
+- Employee: ${usersData.filter(u => u.role === 'employee').length}명 (${Math.round(usersData.filter(u => u.role === 'employee').length / usersData.length * 100)}%)
+
+상태별 분포:
+- Active: ${usersData.filter(u => u.status === 'active').length}명
+- Inactive: ${usersData.filter(u => u.status === 'inactive').length}명
+- Suspended: ${usersData.filter(u => u.status === 'suspended').length}명
+
+활동 현황:
+- 온라인: ${usersData.filter(u => u.online).length}명
+- 오프라인: ${usersData.filter(u => !u.online).length}명
+- 평균 세션: 2.4시간
+- 평균 API 호출: ${Math.round(usersData.reduce((s, u) => s + u.usage, 0) / usersData.length)}회/월
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+성장 추이:
+- 이번 달 가입: 1,384명 (+22.1%)
+- 활성 사용자 증가: +15.2%
+- 평균 세션 시간 증가: +5.3%
+
+조직별 분포:
+- 글로벌무역: ${usersData.filter(u => u.organization === 'org-1').length}명
+- 테크스타트업 Inc.: ${usersData.filter(u => u.organization === 'org-2').length}명
+- AI연구소: ${usersData.filter(u => u.organization === 'org-3').length}명
+- 기타: ${usersData.filter(u => !['org-1', 'org-2', 'org-3'].includes(u.organization)).length}명
+
+[상세 리포트] [PDF 다운로드]
+            `.trim();
+
+            alert(analytics);
+        }
+
+        // ========== 새로고침 ==========
+        function refreshUsers() {
+            window.GrowFitUtils.showToast('사용자 목록을 새로고침하는 중...', 'info');
+            
+            setTimeout(() => {
+                loadUsersData();
+                renderUsersTable();
+                window.GrowFitUtils.showToast('목록이 업데이트되었습니다', 'success');
+            }, 1000);
+        }
+
+        // ========== 유틸리티 함수 ==========
+        function getRoleName(role) {
+            const names = {
+                'admin': 'Admin',
+                'manager': 'Manager',
+                'employee': 'Employee'
+            };
+            return names[role] || role;
+        }
+
+        function getStatusName(status) {
+            const names = {
+                'active': 'Active',
+                'inactive': 'Inactive',
+                'suspended': 'Suspended'
+            };
+            return names[status] || status;
+        }
+
+        // ========== 고급 검색 ==========
+        function advancedSearch() {
+            const criteria = `
+🔍 고급 검색
+
+검색 조건:
+
+1. 역할별 검색
+2. 활동 기준 검색
+3. 사용량 기준 검색
+4. 가입일 범위
+5. 조직별 검색
+6. 온라인 상태
+
+번호를 입력하세요:
+            `.trim();
+
+            const choice = prompt(criteria);
+
+            if (choice && ['1', '2', '3', '4', '5', '6'].includes(choice)) {
+                handleAdvancedSearch(choice);
+            }
+        }
+
+        function handleAdvancedSearch(type) {
+            switch(type) {
+                case '1':
+                    // 역할별 검색은 이미 필터에 있음
+                    break;
+                case '2':
+                    searchByActivity();
+                    break;
+                case '3':
+                    searchByUsage();
+                    break;
+                case '4':
+                    searchByDateRange();
+                    break;
+                case '5':
+                    // 조직별 검색은 이미 필터에 있음
+                    break;
+                case '6':
+                    searchByOnlineStatus();
+                    break;
+            }
+        }
+
+        function searchByActivity() {
+            const threshold = prompt('활동 임계값 (시간):', '24');
+            
+            if (threshold) {
+                window.GrowFitUtils.showToast('활동 기준 검색 기능은 개발 중입니다', 'info');
+            }
+        }
+
+        function searchByUsage() {
+            const threshold = prompt('최소 API 호출 수:', '500');
+            
+            if (threshold && !isNaN(threshold)) {
+                filteredUsers = usersData.filter(user => user.usage >= parseInt(threshold));
+                currentPage = 1;
+                renderUsersTable();
+                
+                window.GrowFitUtils.showToast(`사용량 ${threshold}회 이상: ${filteredUsers.length}명`, 'info');
+            }
+        }
+
+        function searchByDateRange() {
+            const start = prompt('시작일 (YYYY-MM-DD):');
+            const end = prompt('종료일 (YYYY-MM-DD):');
+            
+            if (start && end) {
+                filteredUsers = usersData.filter(user => {
+                    return user.created >= start && user.created <= end;
+                });
+                currentPage = 1;
+                renderUsersTable();
+                
+                window.GrowFitUtils.showToast(`기간 내 사용자: ${filteredUsers.length}명`, 'info');
+            }
+        }
+
+        function searchByOnlineStatus() {
+            const status = prompt('온라인 상태 (online/offline):');
+            
+            if (status === 'online') {
+                filteredUsers = usersData.filter(user => user.online);
+            } else if (status === 'offline') {
+                filteredUsers = usersData.filter(user => !user.online);
+            }
+            
+            currentPage = 1;
+            renderUsersTable();
+            
+            window.GrowFitUtils.showToast(`${status} 사용자: ${filteredUsers.length}명`, 'info');
+        }
+
+        // ========== 통계 업데이트 ==========
+        function updateStatistics() {
+            const stats = {
+                total: usersData.length,
+                active: usersData.filter(u => u.status === 'active').length,
+                online: usersData.filter(u => u.online).length,
+                newThisMonth: usersData.filter(u => {
+                    const userDate = new Date(u.created);
+                    const now = new Date();
+                    return userDate.getMonth() === now.getMonth() && userDate.getFullYear() === now.getFullYear();
+                }).length,
+                avgSession: 2.4
+            };
+
+            console.log('통계 업데이트:', stats);
+        }
+
+        // ========== 사용자 초대 ==========
+        function inviteUser() {
+            const email = prompt('초대할 사용자의 이메일:');
+            
+            if (email && email.includes('@')) {
+                window.GrowFitUtils.showToast('초대 이메일을 발송하는 중...', 'info');
+                
+                setTimeout(() => {
+                    window.GrowFitUtils.showToast(`${email}로 초대 이메일이 발송되었습니다`, 'success');
+                }, 1500);
+            } else if (email) {
+                window.GrowFitUtils.showToast('올바른 이메일 주소를 입력해주세요', 'error');
+            }
+        }
+
+        // ========== 사용자 활동 모니터링 ==========
+        function monitorUserActivity() {
+            const monitor = `
+📡 실시간 사용자 활동
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+현재 온라인: ${usersData.filter(u => u.online).length}명
+
+최근 활동:
+- 15:47 - 김철수: 문서 분석 실행
+- 15:45 - 이영희: 프로젝트 생성
+- 15:43 - 정태민: API 호출 (847회)
+- 15:41 - 한수진: 팀원 초대
+- 15:39 - 윤서연: 파일 업로드
+
+활동 집중 시간:
+- 피크 시간: 14:00-16:00
+- 평균 동시 접속: 1,247명
+- 최대 동시 접속: 1,892명 (14:32)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+API 호출 현황:
+- 총 호출: 34.2K (오늘)
+- 평균 응답: 0.12초
+- 에러율: 0.3%
+
+[실시간 모니터링] [알림 설정]
+            `.trim();
+
+            alert(monitor);
+        }
+
+        // ========== 키보드 단축키 ==========
+        document.addEventListener('keydown', function(e) {
+            // Ctrl/Cmd + F: 검색 포커스
+            if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                e.preventDefault();
+                document.getElementById('searchInput').focus();
+            }
+
+            // Ctrl/Cmd + R: 새로고침
+            if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+                e.preventDefault();
+                refreshUsers();
+            }
+
+            // Ctrl/Cmd + E: 내보내기
+            if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+                e.preventDefault();
+                exportUsers();
+            }
+
+            // Ctrl/Cmd + A: 전체 선택
+            if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+                const checkboxes = document.querySelectorAll('.user-checkbox');
+                if (checkboxes.length > 0) {
+                    e.preventDefault();
+                    checkboxes.forEach(cb => cb.checked = true);
+                    updateBulkActionButton();
+                }
+            }
+
+            // Esc: 모달 닫기
+            if (e.key === 'Escape') {
+                closeUserDetailModal();
+            }
+        });
+
+        // ========== 모달 외부 클릭 시 닫기 ==========
+        document.getElementById('userDetailModal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeUserDetailModal();
+            }
+        });
+
+        // ========== 실시간 온라인 상태 업데이트 ==========
+        function updateOnlineStatus() {
+            // 실제로는 WebSocket으로 실시간 업데이트
+            // 여기서는 시뮬레이션
+            setInterval(() => {
+                // 랜덤하게 온라인 상태 변경
+                usersData.forEach(user => {
+                    if (Math.random() < 0.1) { // 10% 확률로 상태 변경
+                        user.online = !user.online;
+                    }
+                });
+            }, 30000); // 30초마다
+        }
+
+        // ========== 성능 모니터링 ==========
+        function logPerformance() {
+            if (window.performance) {
+                const perfData = window.performance.timing;
+                const pageLoadTime = perfData.loadEventEnd - perfData.navigationStart;
+                
+                console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+                console.log('📊 페이지 성능 메트릭');
+                console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+                console.log('페이지 로드 시간:', pageLoadTime + 'ms');
+                console.log('DOM 준비 시간:', (perfData.domContentLoadedEventEnd - perfData.navigationStart) + 'ms');
+                console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            }
+        }
+
+        // 페이지 로드 완료 후 성능 측정
+        window.addEventListener('load', function() {
+            setTimeout(logPerformance, 0);
+        });
+
+        // ========== 초기화 완료 ==========
+        console.log('✅ User Management 완전히 로드됨');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('👥 총 사용자:', usersData.length.toLocaleString());
+        console.log('✅ 활성 사용자:', usersData.filter(u => u.status === 'active').length.toLocaleString());
+        console.log('🟢 온라인:', usersData.filter(u => u.online).length);
+        console.log('📊 평균 사용량:', Math.round(usersData.reduce((s, u) => s + u.usage, 0) / usersData.length) + '회');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('단축키: Ctrl+F(검색), Ctrl+R(새로고침), Ctrl+E(내보내기), Ctrl+A(전체선택)');
+
+        // 실시간 상태 업데이트 시작
+        // updateOnlineStatus();
+    </script>
+</body>
+</html>

@@ -1,0 +1,1757 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>내 프로젝트 - GrowFit Employee</title>
+
+    <!-- 공통 CSS -->
+    <link rel="stylesheet" href="../common/variables.css">
+    <link rel="stylesheet" href="../common/layout.css">
+    <link rel="stylesheet" href="../common/components.css">
+
+    <style>
+        /* ========== Projects 전용 스타일 ========== */
+        :root {
+            --employee-primary: #10b981;
+            --employee-primary-light: #34d399;
+            --employee-primary-dark: #059669;
+            --employee-secondary: #06b6d4;
+            --employee-accent: #f59e0b;
+        }
+
+        /* 헤더 액션 */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-6);
+        }
+
+        .page-title {
+            font-size: var(--text-3xl);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+        }
+
+        .page-subtitle {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            margin-top: var(--space-1);
+        }
+
+        /* 탭 네비게이션 */
+        .project-tabs {
+            display: flex;
+            gap: var(--space-2);
+            margin-bottom: var(--space-6);
+            border-bottom: 2px solid var(--border);
+        }
+
+        .project-tab {
+            padding: var(--space-3) var(--space-5);
+            border: none;
+            background: none;
+            font-size: var(--text-base);
+            font-weight: var(--font-semibold);
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .project-tab:hover {
+            color: var(--employee-primary);
+        }
+
+        .project-tab--active {
+            color: var(--employee-primary);
+            border-bottom-color: var(--employee-primary);
+        }
+
+        .project-tab__badge {
+            padding: 2px 8px;
+            background: var(--gray-200);
+            border-radius: var(--radius-full);
+            font-size: var(--text-xs);
+            font-weight: var(--font-bold);
+        }
+
+        .project-tab--active .project-tab__badge {
+            background: var(--employee-primary);
+            color: white;
+        }
+
+        /* 필터 바 */
+        .filter-bar {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-3);
+            margin-bottom: var(--space-4);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: var(--space-3);
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: var(--space-2);
+            align-items: center;
+        }
+
+        .filter-select {
+            padding: var(--space-2) var(--space-3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-select:hover {
+            border-color: var(--employee-primary);
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 200px;
+            padding: var(--space-2) var(--space-3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--employee-primary);
+        }
+
+        /* 프로젝트 그리드 */
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: var(--space-4);
+            margin-bottom: var(--space-6);
+        }
+
+        /* 프로젝트 카드 */
+        .project-card {
+            background: var(--background);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            transition: all 0.2s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .project-card:hover {
+            border-color: var(--employee-primary);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .project-card--personal {
+            border-left: 4px solid var(--employee-primary);
+        }
+
+        .project-card--team {
+            border-left: 4px solid var(--employee-secondary);
+        }
+
+        .project-card__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: var(--space-3);
+        }
+
+        .project-card__icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: var(--space-3);
+        }
+
+        .project-card__icon--personal {
+            background: linear-gradient(135deg, var(--employee-primary-light), var(--employee-primary));
+        }
+
+        .project-card__icon--team {
+            background: linear-gradient(135deg, var(--employee-secondary), #0891b2);
+        }
+
+        .project-card__menu {
+            width: 32px;
+            height: 32px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            background: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .project-card__menu:hover {
+            border-color: var(--employee-primary);
+            background: var(--surface);
+        }
+
+        .project-card__title {
+            font-size: var(--text-lg);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-2);
+        }
+
+        .project-card__description {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: var(--space-3);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .project-card__meta {
+            display: flex;
+            gap: var(--space-3);
+            margin-bottom: var(--space-3);
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+        }
+
+        .project-meta-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-1);
+        }
+
+        .project-card__stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-2);
+            padding-top: var(--space-3);
+            border-top: 1px solid var(--border);
+        }
+
+        .project-stat {
+            text-align: center;
+        }
+
+        .project-stat__value {
+            font-size: var(--text-lg);
+            font-weight: var(--font-bold);
+            color: var(--employee-primary);
+        }
+
+        .project-stat__label {
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+        }
+
+        .project-card__footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: var(--space-3);
+            padding-top: var(--space-3);
+            border-top: 1px solid var(--border);
+        }
+
+        .project-members {
+            display: flex;
+            align-items: center;
+        }
+
+        .project-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 2px solid white;
+            margin-left: -8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: var(--text-xs);
+            font-weight: var(--font-bold);
+            color: white;
+        }
+
+        .project-avatar:first-child {
+            margin-left: 0;
+        }
+
+        .project-avatar--more {
+            background: var(--gray-400);
+        }
+
+        .project-card__date {
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+        }
+
+        /* 빈 프로젝트 카드 (새 프로젝트 만들기) */
+        .project-card--empty {
+            border: 2px dashed var(--border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 280px;
+            cursor: pointer;
+        }
+
+        .project-card--empty:hover {
+            border-color: var(--employee-primary);
+            background: rgba(16, 185, 129, 0.02);
+        }
+
+        .project-card--empty__icon {
+            font-size: 48px;
+            margin-bottom: var(--space-3);
+            opacity: 0.5;
+        }
+
+        .project-card--empty__text {
+            font-size: var(--text-lg);
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-1);
+        }
+
+        .project-card--empty__desc {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+        }
+
+        /* 리스트 뷰 */
+        .projects-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+        }
+
+        .project-list-item {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: var(--space-4);
+            align-items: center;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .project-list-item:hover {
+            border-color: var(--employee-primary);
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);
+        }
+
+        /* 뷰 전환 버튼 */
+        .view-switcher {
+            display: flex;
+            gap: var(--space-1);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 2px;
+            background: var(--surface);
+        }
+
+        .view-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: transparent;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .view-btn:hover {
+            background: white;
+        }
+
+        .view-btn--active {
+            background: var(--employee-primary);
+            color: white;
+        }
+
+        /* 태그 */
+        .project-tags {
+            display: flex;
+            gap: var(--space-1);
+            flex-wrap: wrap;
+            margin-top: var(--space-2);
+        }
+
+        .project-tag {
+            padding: 2px 8px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+        }
+
+        /* 반응형 */
+        @media (max-width: 1024px) {
+            .projects-grid {
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+                align-items: start;
+                gap: var(--space-3);
+            }
+
+            .project-tabs {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .filter-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .projects-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header__left">
+                <button id="menuToggle" class="header__icon-button hidden-desktop">
+                    <span>☰</span>
+                </button>
+                <a href="dashboard.html" class="header__logo">
+                    <span class="header__logo-icon">🌱</span>
+                    <span>GrowFit</span>
+                </a>
+            </div>
+
+            <div class="header__right">
+                <button id="notificationBtn" class="header__icon-button">
+                    <span>🔔</span>
+                    <span class="header__badge">3</span>
+                </button>
+
+                <div id="profileBtn" class="header__profile">
+                    <div class="header__avatar" style="background: linear-gradient(135deg, #10b981, #06b6d4);">김</div>
+                    <span class="hidden-mobile">김직원</span>
+                    <span class="hidden-mobile">▼</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="container">
+            <!-- Sidebar -->
+            <aside class="sidebar sidebar--open">
+                <div class="sidebar__user">
+                    <div class="sidebar__user-info">
+                        <div class="sidebar__user-avatar"
+                            style="background: linear-gradient(135deg, #10b981, #06b6d4);">김</div>
+                        <div class="sidebar__user-details">
+                            <div class="sidebar__user-name">김직원</div>
+                            <div class="sidebar__user-role">AI 실습생</div>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="sidebar__nav">
+                    <ul class="sidebar__menu">
+                        <li class="sidebar__menu-item">
+                            <a href="dashboard.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">🏠</span>
+                                <span>대시보드</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="practice.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">💬</span>
+                                <span>AI 실습</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="my-projects.html" class="sidebar__menu-link sidebar__menu-link--active">
+                                <span class="sidebar__menu-icon">📁</span>
+                                <span>내 프로젝트</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="my-agents.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">🤖</span>
+                                <span>내 에이전트</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="my-documents.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">📚</span>
+                                <span>내 문서</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="history.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">📊</span>
+                                <span>내 기록</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="profile.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">⚙️</span>
+                                <span>설정</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <div class="sidebar__footer">
+                    <div
+                        style="padding: var(--space-3); background: var(--surface); border-radius: var(--radius-md); font-size: var(--text-xs);">
+                        <div style="color: var(--text-secondary); margin-bottom: var(--space-1);">이번 주 실습</div>
+                        <div style="font-weight: var(--font-bold); color: var(--employee-primary);">3시간 24분</div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main">
+                <!-- 페이지 헤더 -->
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">📁 내 프로젝트</h1>
+                        <p class="page-subtitle">AI 실습을 프로젝트별로 조직화하고 관리하세요</p>
+                    </div>
+                    <div style="display: flex; gap: var(--space-2);">
+                        <button class="btn btn--outline" onclick="importProject()">
+                            📥 가져오기
+                        </button>
+                        <button class="btn btn--primary" style="background: var(--employee-primary);" onclick="createNewProject()">
+                            ➕ 새 프로젝트
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 탭 네비게이션 -->
+                <div class="project-tabs">
+                    <button class="project-tab project-tab--active" data-tab="all" onclick="switchTab('all')">
+                        <span>전체 프로젝트</span>
+                        <span class="project-tab__badge">8</span>
+                    </button>
+                    <button class="project-tab" data-tab="personal" onclick="switchTab('personal')">
+                        <span>🙋 개인 프로젝트</span>
+                        <span class="project-tab__badge">5</span>
+                    </button>
+                    <button class="project-tab" data-tab="team" onclick="switchTab('team')">
+                        <span>👥 팀 프로젝트</span>
+                        <span class="project-tab__badge">3</span>
+                    </button>
+                    <button class="project-tab" data-tab="archived" onclick="switchTab('archived')">
+                        <span>📦 보관됨</span>
+                        <span class="project-tab__badge">2</span>
+                    </button>
+                </div>
+
+                <!-- 필터 및 검색 -->
+                <div class="filter-bar">
+                    <div class="filter-group">
+                        <select class="filter-select" id="sortBy" onchange="sortProjects(this.value)">
+                            <option value="recent">최근 수정순</option>
+                            <option value="name">이름순</option>
+                            <option value="created">생성일순</option>
+                            <option value="conversations">대화 많은 순</option>
+                        </select>
+                        <select class="filter-select" id="filterModel" onchange="filterByModel(this.value)">
+                            <option value="all">모든 모델</option>
+                            <option value="gpt">GPT-4만</option>
+                            <option value="claude">Claude만</option>
+                            <option value="gemini">Gemini만</option>
+                        </select>
+                    </div>
+                    <input 
+                        type="text" 
+                        class="search-input" 
+                        placeholder="🔍 프로젝트 검색..." 
+                        id="searchInput"
+                        onkeyup="searchProjects(this.value)"
+                    >
+                    <div class="view-switcher">
+                        <button class="view-btn view-btn--active" onclick="switchView('grid')" title="그리드 뷰">
+                            ⊞
+                        </button>
+                        <button class="view-btn" onclick="switchView('list')" title="리스트 뷰">
+                            ☰
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 프로젝트 그리드 뷰 -->
+                <div id="projectsGrid" class="projects-grid">
+                    <!-- 개인 프로젝트 1 -->
+                    <div class="project-card project-card--personal" onclick="openProject('python-learning')">
+                        <div class="project-card__icon project-card__icon--personal">🐍</div>
+                        <div class="project-card__header">
+                            <button class="project-card__menu" onclick="event.stopPropagation(); openProjectMenu('python-learning')">
+                                ⋮
+                            </button>
+                        </div>
+                        <h3 class="project-card__title">Python 기초 학습</h3>
+                        <p class="project-card__description">
+                            Python 프로그래밍의 기초부터 고급 개념까지 체계적으로 학습하는 프로젝트
+                        </p>
+                        <div class="project-card__meta">
+                            <span class="project-meta-item">
+                                <span>🙋</span>
+                                <span>개인</span>
+                            </span>
+                            <span class="project-meta-item">
+                                <span>💬</span>
+                                <span>45개 대화</span>
+                            </span>
+                        </div>
+                        <div class="project-tags">
+                            <span class="project-tag">프로그래밍</span>
+                            <span class="project-tag">Python</span>
+                            <span class="project-tag">기초</span>
+                        </div>
+                        <div class="project-card__stats">
+                            <div class="project-stat">
+                                <div class="project-stat__value">12.5h</div>
+                                <div class="project-stat__label">실습 시간</div>
+                            </div>
+                            <div class="project-stat">
+                                <div class="project-stat__value">85%</div>
+                                <div class="project-stat__label">진행률</div>
+                            </div>
+                            <div class="project-stat">
+                                <div class="project-stat__value">3개</div>
+                                <div class="project-stat__label">모델 사용</div>
+                            </div>
+                        </div>
+                        <div class="project-card__footer">
+                            <div class="project-members">
+                                <div class="project-avatar" style="background: linear-gradient(135deg, #10b981, #06b6d4);">김</div>
+                            </div>
+                            <div class="project-card__date">2시간 전</div>
+                        </div>
+                    </div>
+
+                    <!-- 개인 프로젝트 2 -->
+                    <div class="project-card project-card--personal" onclick="openProject('data-analysis')">
+                        <div class="project-card__icon project-card__icon--personal">📊</div>
+                        <div class="project-card__header">
+                            <button class="project-card__menu" onclick="event.stopPropagation(); openProjectMenu('data-analysis')">
+                                ⋮
+                            </button>
+                        </div>
+                        <h3 class="project-card__title">데이터 분석 실습</h3>
+                        <p class="project-card__description">
+                            Pandas와 NumPy를 활용한 데이터 분석 및 시각화 프로젝트
+                        </p>
+                        <div class="project-card__meta">
+                            <span class="project-meta-item">
+                                <span>🙋</span>
+                                <span>개인</span>
+                            </span>
+                            <span class="project-meta-item">
+                                <span>💬</span>
+                                <span>23개 대화</span>
+                            </span>
+                        </div>
+                        <div class="project-tags">
+                            <span class="project-tag">데이터</span>
+                            <span class="project-tag">분석</span>
+                            <span class="project-tag">Pandas</span>
+                        </div>
+                        <div class="project-card__stats">
+                            <div class="project-stat">
+                                <div class="project-stat__value">8.2h</div>
+                                <div class="project-stat__label">실습 시간</div>
+                            </div>
+                            <div class="project-stat">
+                                <div class="project-stat__value">60%</div>
+                                <div class="project-stat__label">진행률</div>
+                            </div>
+                            <div class="project-stat">
+                                <div class="project-stat__value">2개</div>
+                                <div class="project-stat__label">모델 사용</div>
+                            </div>
+                        </div>
+                        <div class="project-card__footer">
+                            <div class="project-members">
+                                <div class="project-avatar" style="background: linear-gradient(135deg, #10b981, #06b6d4);">김</div>
+                            </div>
+                            <div class="project-card__date">어제</div>
+                        </div>
+                    </div>
+
+                    <!-- 팀 프로젝트 1 -->
+                    <div class="project-card project-card--team" onclick="openProject('marketing-content')">
+                        <div class="project-card__icon project-card__icon--team">📝</div>
+                        <div class="project-card__header">
+                            <button class="project-card__menu" onclick="event.stopPropagation(); openProjectMenu('marketing-content')">
+                                ⋮
+                            </button>
+                        </div>
+                        <h3 class="project-card__title">마케팅 콘텐츠 생성</h3>
+                        <p class="project-card__description">
+                            AI를 활용한 소셜미디어 콘텐츠 및 마케팅 카피 작성 프로젝트
+                        </p>
+                        <div class="project-card__meta">
+                            <span class="project-meta-item">
+                                <span>👥</span>
+                                <span>팀 (5명)</span>
+                            </span>
+                            <span class="project-meta-item">
+                                <span>💬</span>
+                                <span>156개 대화</span>
+                            </span>
+                        </div>
+                        <div class="project-tags">
+                            <span class="project-tag">마케팅</span>
+                            <span class="project-tag">콘텐츠</span>
+                            <span class="project-tag">카피라이팅</span>
+                        </div>
+                        <div class="project-card__stats">
+                            <div class="project-stat">
+                                <div class="project-stat__value">34.5h</div>
+                                <div class="project-stat__label">실습 시간</div>
+                            </div>
+                            <div class="project-stat">
+                                <div class="project-stat__value">92%</div>
+                                <div class="project-stat__label">진행률</div>
+                            </div>
+                            <div class="project-stat">
+                                <div class="project-stat__value">3개</div>
+                                <div class="project-stat__label">모델 사용</div>
+                            </div>
+                        </div>
+                        <div class="project-card__footer">
+                            <div class="project-members">
+                                <div class="project-avatar" style="background: #10b981;">김</div>
+                                <div class="project-avatar" style="background: #06b6d4;">이</div>
+                                <div class="project-avatar" style="background: #f59e0b;">박</div>
+                                <div class="project-avatar" style="background: #8b5cf6;">최</div>
+                                <div class="project-avatar project-avatar--more">+1</div>
+                            </div>
+                            <div class="project-card__date">1시간 전</div>
+                        </div>
+                    </div>
+
+                    <!-- 개인 프로젝트 3 -->
+                    <div class="project-card project-card--personal" onclick="openProject('ml-basics')">
+                        <div class="project-card__icon project-card__icon--personal">🤖</div>
+                        <div class="project-card__header">
+                            <button class="project-card__menu" onclick="event.stopPropagation(); openProjectMenu('ml-basics')">
+                                ⋮
+                            </button>
+                        </div>
+                        <h3 class="project-card__title">머신러닝 기초</h3>
+                        <p class="project-card__description">
+                            머신러닝의 기본 개념과 알고리즘을 학습하는 프로젝트
+                        </p>
+                        <div class="project-card__meta">
+                            <span class="project-meta-item">
+                                <span>🙋</span>
+                                <span>개인</span>
+                            </span>
+                            <span class="project-meta-item">
+                                <span>💬</span>
+                                <span>31개 대화</span>
+                            </span>
+                        </div>
+                        <div class="project-tags">
+                            <span class="project-tag">AI</span>
+                            <span class="project-tag">머신러닝</span>
+                        </div>
+                        <div class="project-card__stats">
+                            <div class="project-stat">
+                                <div class="project-stat__value">15.8h</div>
+                                <div class="project-stat__label">실습 시간</div>
+                            </div>
+                            <div class="project-stat">
+                                <div class="project-stat__value">45%</div>
+                                <div class="project-stat__label">진행률</div>
+                            </div>
+                            <div class="project-stat">
+                                <div class="project-stat__value">2개</div>
+                                <div class="project-stat__label">모델 사용</div>
+                            </div>
+                        </div>
+                        <div class="project-card__footer">
+                            <div class="project-members">
+                                <div class="project-avatar" style="background: linear-gradient(135deg, #10b981, #06b6d4);">김</div>
+                            </div>
+                            <div class="project-card__date">3일 전</div>
+                        </div>
+                    </div>
+
+                    <!-- 팀 프로젝트 2 -->
+                    <div class="project-card project-card--team" onclick="openProject('code-review')">
+                        <div class="project-card__icon project-card__icon--team">💻</div>
+                        <div class="project-card__header">
+                            <button class="project-card__menu" onclick="event.stopPropagation(); openProjectMenu('code-review')">
+                                ⋮
+                            </button>
+                        </div>
+                        <h3 class="project-card__title">코드 리뷰 자동화</h3>
+                        <p class="project-card__description">
+                            AI를 활용한 코드 리뷰 및 개선 제안 시스템 구축
+                        </p>
+                        <div class="project-card__meta">
+                            <span class="project-meta-item">
+                                <span>👥</span>
+                                <span>팀 (3명)</span>
+                            </span>
+                            <span class="project-meta-item">
+                                <span>💬</span>
+                                <span>89개 대화</span>
+                            </span>
+                        </div>
+                        <div class="project-tags">
+                            <span class="project-tag">개발</span>
+                            <span class="project-tag">코드리뷰</span>
+                        </div>
+                        <div class="project-card__stats">
+                            <div class="project-stat">
+                                <div class="project-stat__value">22.3h</div>
+                                <div class="project-stat__label">실습 시간</div>
+                            </div>
+                            <div class="project-stat">
+                                <div class="project-stat__value">75%</div>
+                                <div class="project-stat__label">진행률</div>
+                            </div>
+                            <div class="project-stat">
+                                <div class="project-stat__value">2개</div>
+                                <div class="project-stat__label">모델 사용</div>
+                            </div>
+                        </div>
+                        <div class="project-card__footer">
+                            <div class="project-members">
+                                <div class="project-avatar" style="background: #10b981;">김</div>
+                                <div class="project-avatar" style="background: #06b6d4;">이</div>
+                                <div class="project-avatar" style="background: #f59e0b;">박</div>
+                            </div>
+                            <div class="project-card__date">5시간 전</div>
+                        </div>
+                    </div>
+
+                    <!-- 개인 프로젝트 4 -->
+                    <div class="project-card project-card--personal" onclick="openProject('web-scraping')">
+                        <div class="project-card__icon project-card__icon--personal">🕷️</div>
+                        <div class="project-card__header">
+                            <button class="project-card__menu" onclick="event.stopPropagation(); openProjectMenu('web-scraping')">
+                                ⋮
+                            </button>
+                        </div>
+                        <h3 class="project-card__title">웹 스크래핑 실습</h3>
+                        <p class="project-card__description">
+                            BeautifulSoup과 Selenium을 활용한 웹 데이터 수집
+                        </p>
+                        <div class="project-card__meta">
+                            <span class="project-meta-item">
+                                <span>🙋</span>
+                                <span>개인</span>
+                            </span>
+                            <span class="project-meta-item">
+                                <span>💬</span>
+                                <span>18개 대화</span>
+                            </span>
+                        </div>
+                        <div class="project-tags">
+                            <span class="project-tag">크롤링</span>
+                            <span class="project-tag">데이터수집</span>
+                        </div>
+                        <div class="project-card__stats">
+                            <div class="project-stat">
+                                <div class="project-stat__value">6.5h</div>
+                                <div class="project-stat__label">실습 시간</div>
+                            </div>
+                            <div class="project-stat">
+                                <div class="project-stat__value">30%</div>
+                                <div class="project-stat__label">진행률</div>
+                            </div>
+                            <div class="project-stat">
+                                <div class="project-stat__value">1개</div>
+                                <div class="project-stat__label">모델 사용</div>
+                            </div>
+                        </div>
+                        <div class="project-card__footer">
+                            <div class="project-members">
+                                <div class="project-avatar" style="background: linear-gradient(135deg, #10b981, #06b6d4);">김</div>
+                            </div>
+                            <div class="project-card__date">1주일 전</div>
+                        </div>
+                    </div>
+
+                    <!-- 팀 프로젝트 3 -->
+                    <div class="project-card project-card--team" onclick="openProject('customer-analysis')">
+                        <div class="project-card__icon project-card__icon--team">📈</div>
+                        <div class="project-card__header">
+                            <button class="project-card__menu" onclick="event.stopPropagation(); openProjectMenu('customer-analysis')">
+                                ⋮
+                            </button>
+                        </div>
+                        <h3 class="project-card__title">고객 분석 프로젝트</h3>
+                        <p class="project-card__description">
+                            고객 리뷰 감성 분석 및 인사이트 도출 프로젝트
+                        </p>
+                        <div class="project-card__meta">
+                            <span class="project-meta-item">
+                                <span>👥</span>
+                                <span>팀 (4명)</span>
+                            </span>
+                            <span class="project-meta-item">
+                                <span>💬</span>
+                                <span>67개 대화</span>
+                            </span>
+                        </div>
+                        <div class="project-tags">
+                            <span class="project-tag">분석</span>
+                            <span class="project-tag">고객</span>
+                        </div>
+                        <div class="project-card__stats">
+                            <div class="project-stat">
+                                <div class="project-stat__value">18.7h</div>
+                                <div class="project-stat__label">실습 시간</div>
+                            </div>
+                            <div class="project-stat">
+                                <div class="project-stat__value">55%</div>
+                                <div class="project-stat__label">진행률</div>
+                            </div>
+                            <div class="project-stat">
+                                <div class="project-stat__value">3개</div>
+                                <div class="project-stat__label">모델 사용</div>
+                            </div>
+                        </div>
+                        <div class="project-card__footer">
+                            <div class="project-members">
+                                <div class="project-avatar" style="background: #10b981;">김</div>
+                                <div class="project-avatar" style="background: #06b6d4;">이</div>
+                                <div class="project-avatar" style="background: #f59e0b;">박</div>
+                                <div class="project-avatar" style="background: #8b5cf6;">최</div>
+                            </div>
+                            <div class="project-card__date">2일 전</div>
+                        </div>
+                    </div>
+
+                    <!-- 개인 프로젝트 5 -->
+                    <div class="project-card project-card--personal" onclick="openProject('automation')">
+                        <div class="project-card__icon project-card__icon--personal">⚙️</div>
+                        <div class="project-card__header">
+                            <button class="project-card__menu" onclick="event.stopPropagation(); openProjectMenu('automation')">
+                                ⋮
+                            </button>
+                        </div>
+                        <h3 class="project-card__title">업무 자동화</h3>
+                        <p class="project-card__description">
+                            반복 업무 자동화를 위한 스크립트 개발 프로젝트
+                        </p>
+                        <div class="project-card__meta">
+                            <span class="project-meta-item">
+                                <span>🙋</span>
+                                <span>개인</span>
+                            </span>
+                            <span class="project-meta-item">
+                                <span>💬</span>
+                                <span>12개 대화</span>
+                            </span>
+                        </div>
+                        <div class="project-tags">
+                            <span class="project-tag">자동화</span>
+                            <span class="project-tag">생산성</span>
+                        </div>
+                        <div class="project-card__stats">
+                            <div class="project-stat">
+                                <div class="project-stat__value">4.2h</div>
+                                <div class="project-stat__label">실습 시간</div>
+                            </div>
+                            <div class="project-stat">
+                                <div class="project-stat__value">20%</div>
+                                <div class="project-stat__label">진행률</div>
+                            </div>
+                            <div class="project-stat">
+                                <div class="project-stat__value">2개</div>
+                                <div class="project-stat__label">모델 사용</div>
+                            </div>
+                        </div>
+                        <div class="project-card__footer">
+                            <div class="project-members">
+                                <div class="project-avatar" style="background: linear-gradient(135deg, #10b981, #06b6d4);">김</div>
+                            </div>
+                            <div class="project-card__date">5일 전</div>
+                        </div>
+                    </div>
+
+                    <!-- 새 프로젝트 만들기 카드 -->
+                    <div class="project-card project-card--empty" onclick="createNewProject()">
+                        <div class="project-card--empty__icon">➕</div>
+                        <div class="project-card--empty__text">새 프로젝트 만들기</div>
+                        <div class="project-card--empty__desc">AI 실습을 시작하세요</div>
+                    </div>
+                </div>
+
+                <!-- 리스트 뷰 (숨김) -->
+                <div id="projectsList" class="projects-list" style="display: none;">
+                    <!-- 리스트 아이템은 JavaScript로 동적 생성 -->
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- 공통 스크립트 -->
+    <script src="../common/layout.js"></script>
+    <script src="../common/utils.js"></script>
+
+    <!-- 페이지 전용 스크립트 -->
+    <script>
+        // ========== Projects 전용 로직 ==========
+
+        // 전역 변수
+        let currentTab = 'all';
+        let currentView = 'grid';
+        let projects = []; // 실제로는 API에서 가져옴
+
+        // 프로젝트 데이터 (시뮬레이션)
+        const projectsData = [
+            {
+                id: 'python-learning',
+                name: 'Python 기초 학습',
+                description: 'Python 프로그래밍의 기초부터 고급 개념까지 체계적으로 학습하는 프로젝트',
+                type: 'personal',
+                icon: '🐍',
+                tags: ['프로그래밍', 'Python', '기초'],
+                conversations: 45,
+                hours: 12.5,
+                progress: 85,
+                models: 3,
+                members: [{ name: '김직원', color: '#10b981' }],
+                lastUpdated: '2시간 전',
+                created: '2025-09-01'
+            },
+            {
+                id: 'data-analysis',
+                name: '데이터 분석 실습',
+                description: 'Pandas와 NumPy를 활용한 데이터 분석 및 시각화 프로젝트',
+                type: 'personal',
+                icon: '📊',
+                tags: ['데이터', '분석', 'Pandas'],
+                conversations: 23,
+                hours: 8.2,
+                progress: 60,
+                models: 2,
+                members: [{ name: '김직원', color: '#10b981' }],
+                lastUpdated: '어제',
+                created: '2025-09-15'
+            },
+            {
+                id: 'marketing-content',
+                name: '마케팅 콘텐츠 생성',
+                description: 'AI를 활용한 소셜미디어 콘텐츠 및 마케팅 카피 작성 프로젝트',
+                type: 'team',
+                icon: '📝',
+                tags: ['마케팅', '콘텐츠', '카피라이팅'],
+                conversations: 156,
+                hours: 34.5,
+                progress: 92,
+                models: 3,
+                members: [
+                    { name: '김직원', color: '#10b981' },
+                    { name: '이직원', color: '#06b6d4' },
+                    { name: '박직원', color: '#f59e0b' },
+                    { name: '최직원', color: '#8b5cf6' },
+                    { name: '정직원', color: '#ec4899' }
+                ],
+                lastUpdated: '1시간 전',
+                created: '2025-08-20'
+            }
+            // ... 더 많은 프로젝트
+        ];
+
+        // ========== 초기화 ==========
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Projects 페이지 초기화');
+            
+            initializeProjects();
+            loadProjects();
+        });
+
+        function initializeProjects() {
+            projects = projectsData;
+            console.log(`${projects.length}개 프로젝트 로드됨`);
+        }
+
+        function loadProjects() {
+            // 실제로는 API 호출
+            console.log('프로젝트 로드 중...');
+            
+            // 애니메이션
+            animateProjectCards();
+        }
+
+        function animateProjectCards() {
+            const cards = document.querySelectorAll('.project-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                
+                setTimeout(() => {
+                    card.style.transition = 'all 0.3s ease-out';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 50);
+            });
+        }
+
+        // ========== 탭 전환 ==========
+        function switchTab(tab) {
+            currentTab = tab;
+
+            // 탭 버튼 상태 업데이트
+            document.querySelectorAll('.project-tab').forEach(btn => {
+                btn.classList.remove('project-tab--active');
+            });
+            document.querySelector(`[data-tab="${tab}"]`).classList.add('project-tab--active');
+
+            // 프로젝트 필터링
+            filterProjects();
+
+            window.GrowFitUtils.showToast(
+                `${tab === 'all' ? '전체' : tab === 'personal' ? '개인' : tab === 'team' ? '팀' : '보관'} 프로젝트를 표시합니다`,
+                'info'
+            );
+        }
+
+        function filterProjects() {
+            const cards = document.querySelectorAll('.project-card:not(.project-card--empty)');
+            
+            cards.forEach(card => {
+                const isPersonal = card.classList.contains('project-card--personal');
+                const isTeam = card.classList.contains('project-card--team');
+
+                let show = false;
+                if (currentTab === 'all') {
+                    show = true;
+                } else if (currentTab === 'personal' && isPersonal) {
+                    show = true;
+                } else if (currentTab === 'team' && isTeam) {
+                    show = true;
+                } else if (currentTab === 'archived') {
+                    show = false; // 보관된 프로젝트는 별도 로직
+                }
+
+                card.style.display = show ? 'block' : 'none';
+            });
+
+            // 빈 카드는 항상 표시
+            const emptyCard = document.querySelector('.project-card--empty');
+            if (emptyCard) {
+                emptyCard.style.display = 'flex';
+            }
+        }
+
+        // ========== 뷰 전환 ==========
+        function switchView(view) {
+            currentView = view;
+
+            const gridView = document.getElementById('projectsGrid');
+            const listView = document.getElementById('projectsList');
+            const viewBtns = document.querySelectorAll('.view-btn');
+
+            viewBtns.forEach(btn => btn.classList.remove('view-btn--active'));
+            event.target.classList.add('view-btn--active');
+
+            if (view === 'grid') {
+                gridView.style.display = 'grid';
+                listView.style.display = 'none';
+            } else {
+                gridView.style.display = 'none';
+                listView.style.display = 'flex';
+                renderListView();
+            }
+
+            window.GrowFitUtils.showToast(
+                `${view === 'grid' ? '그리드' : '리스트'} 뷰로 전환했습니다`,
+                'info'
+            );
+        }
+
+        function renderListView() {
+            const listView = document.getElementById('projectsList');
+            
+            // 리스트 아이템 생성 (간단한 버전)
+            listView.innerHTML = projects.map(project => `
+                <div class="project-list-item" onclick="openProject('${project.id}')">
+                    <div style="font-size: 32px;">${project.icon}</div>
+                    <div>
+                        <h3 style="font-size: var(--text-lg); font-weight: var(--font-bold); margin-bottom: var(--space-1);">
+                            ${project.name}
+                        </h3>
+                        <p style="font-size: var(--text-sm); color: var(--text-secondary);">
+                            ${project.description}
+                        </p>
+                        <div style="display: flex; gap: var(--space-2); margin-top: var(--space-2); font-size: var(--text-xs); color: var(--text-secondary);">
+                            <span>${project.conversations}개 대화</span>
+                            <span>•</span>
+                            <span>${project.hours}시간</span>
+                            <span>•</span>
+                            <span>${project.progress}% 진행</span>
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: var(--text-sm); color: var(--text-secondary);">
+                            ${project.lastUpdated}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ========== 정렬 ==========
+        function sortProjects(sortBy) {
+            console.log('정렬 기준:', sortBy);
+
+            const grid = document.getElementById('projectsGrid');
+            const cards = Array.from(grid.querySelectorAll('.project-card:not(.project-card--empty)'));
+            const emptyCard = grid.querySelector('.project-card--empty');
+
+            // 정렬 로직 (실제로는 데이터 기반)
+            // 여기서는 간단히 순서만 변경
+            
+            window.GrowFitUtils.showToast(`${sortBy} 기준으로 정렬했습니다`, 'info');
+        }
+
+        // ========== 모델별 필터 ==========
+        function filterByModel(model) {
+            console.log('모델 필터:', model);
+            
+            if (model === 'all') {
+                window.GrowFitUtils.showToast('모든 모델의 프로젝트를 표시합니다', 'info');
+            } else {
+                window.GrowFitUtils.showToast(`${model.toUpperCase()} 모델 사용 프로젝트만 표시합니다`, 'info');
+            }
+
+            // 실제로는 필터링 로직 구현
+        }
+
+        // ========== 검색 ==========
+        function searchProjects(query) {
+            const cards = document.querySelectorAll('.project-card:not(.project-card--empty)');
+            const lowerQuery = query.toLowerCase();
+
+            cards.forEach(card => {
+                const title = card.querySelector('.project-card__title').textContent.toLowerCase();
+                const description = card.querySelector('.project-card__description').textContent.toLowerCase();
+                const tags = Array.from(card.querySelectorAll('.project-tag')).map(tag => tag.textContent.toLowerCase());
+
+                const matches = title.includes(lowerQuery) || 
+                               description.includes(lowerQuery) || 
+                               tags.some(tag => tag.includes(lowerQuery));
+
+                card.style.display = matches ? 'block' : 'none';
+            });
+
+            if (query) {
+                console.log(`"${query}" 검색 결과`);
+            }
+        }
+
+        // ========== 프로젝트 열기 ==========
+        function openProject(projectId) {
+            console.log('프로젝트 열기:', projectId);
+            
+            // 프로젝트 상세 페이지로 이동
+            // 실제로는 project-detail.html?id=projectId
+            
+            window.GrowFitUtils.showToast('프로젝트를 여는 중...', 'info');
+            
+            setTimeout(() => {
+                // 시뮬레이션: practice.html로 이동하되 프로젝트 컨텍스트 유지
+                location.href = `practice.html?project=${projectId}`;
+            }, 500);
+        }
+
+        // ========== 프로젝트 메뉴 ==========
+        function openProjectMenu(projectId) {
+            const actions = [
+                '1. 📝 프로젝트 편집',
+                '2. 👥 멤버 관리',
+                '3. 🏷️ 태그 편집',
+                '4. 📊 통계 보기',
+                '5. 📤 내보내기',
+                '6. 🗑️ 삭제',
+                '',
+                '번호를 입력하세요:'
+            ].join('\n');
+
+            const choice = prompt(actions);
+
+            if (choice) {
+                switch(choice) {
+                    case '1':
+                        editProject(projectId);
+                        break;
+                    case '2':
+                        manageMembers(projectId);
+                        break;
+                    case '3':
+                        editTags(projectId);
+                        break;
+                    case '4':
+                        viewStats(projectId);
+                        break;
+                    case '5':
+                        exportProject(projectId);
+                        break;
+                    case '6':
+                        deleteProject(projectId);
+                        break;
+                }
+            }
+        }
+
+        // ========== 새 프로젝트 만들기 ==========
+        function createNewProject() {
+            const name = prompt('프로젝트 이름을 입력하세요:');
+            
+            if (name && name.trim()) {
+                const type = confirm('팀 프로젝트로 생성하시겠습니까?\n(취소 = 개인 프로젝트)') ? 'team' : 'personal';
+                
+                // 실제로는 API 호출
+                const newProject = {
+                    id: `project-${Date.now()}`,
+                    name: name.trim(),
+                    description: '',
+                    type: type,
+                    icon: '📁',
+                    tags: [],
+                    conversations: 0,
+                    hours: 0,
+                    progress: 0,
+                    models: 0,
+                    members: [{ name: '김직원', color: '#10b981' }],
+                    lastUpdated: '방금',
+                    created: new Date().toISOString()
+                };
+
+                console.log('새 프로젝트 생성:', newProject);
+                
+                window.GrowFitUtils.showToast(
+                    `"${name}" 프로젝트가 생성되었습니다`,
+                    'success'
+                );
+
+                // 프로젝트로 바로 이동
+                setTimeout(() => {
+                    openProject(newProject.id);
+                }, 1000);
+            }
+        }
+
+        // ========== 프로젝트 편집 ==========
+        function editProject(projectId) {
+            const project = projects.find(p => p.id === projectId);
+            if (!project) return;
+
+            const newName = prompt('프로젝트 이름:', project.name);
+            
+            if (newName && newName.trim()) {
+                project.name = newName.trim();
+                window.GrowFitUtils.showToast('프로젝트가 수정되었습니다', 'success');
+                // UI 업데이트 필요
+            }
+        }
+
+        // ========== 멤버 관리 ==========
+        function manageMembers(projectId) {
+            const project = projects.find(p => p.id === projectId);
+            if (!project) return;
+
+            if (project.type === 'personal') {
+                window.GrowFitUtils.showToast('개인 프로젝트는 멤버를 추가할 수 없습니다', 'warning');
+                return;
+            }
+
+            const email = prompt('추가할 팀원의 이메일을 입력하세요:');
+            
+            if (email && email.trim()) {
+                // 실제로는 API 호출하여 멤버 추가
+                window.GrowFitUtils.showToast(`${email}님을 프로젝트에 초대했습니다`, 'success');
+            }
+        }
+
+        // ========== 태그 편집 ==========
+        function editTags(projectId) {
+            const project = projects.find(p => p.id === projectId);
+            if (!project) return;
+
+            const currentTags = project.tags.join(', ');
+            const newTags = prompt('태그를 입력하세요 (쉼표로 구분):', currentTags);
+            
+            if (newTags !== null) {
+                project.tags = newTags.split(',').map(tag => tag.trim()).filter(tag => tag);
+                window.GrowFitUtils.showToast('태그가 업데이트되었습니다', 'success');
+                // UI 업데이트 필요
+            }
+        }
+
+        // ========== 통계 보기 ==========
+        function viewStats(projectId) {
+            const project = projects.find(p => p.id === projectId);
+            if (!project) return;
+
+            const stats = `
+프로젝트 통계: ${project.name}
+
+📊 기본 정보
+- 대화 수: ${project.conversations}개
+- 실습 시간: ${project.hours}시간
+- 진행률: ${project.progress}%
+- 사용 모델: ${project.models}개
+
+👥 팀 정보
+- 멤버 수: ${project.members.length}명
+
+📅 날짜
+- 생성일: ${project.created}
+- 최근 활동: ${project.lastUpdated}
+            `.trim();
+
+            alert(stats);
+        }
+
+        // ========== 프로젝트 내보내기 ==========
+        function exportProject(projectId) {
+            const project = projects.find(p => p.id === projectId);
+            if (!project) return;
+
+            if (confirm(`"${project.name}" 프로젝트를 내보내시겠습니까?\n\n모든 대화 내역과 설정이 JSON 파일로 저장됩니다.`)) {
+                // JSON 다운로드
+                const exportData = {
+                    ...project,
+                    exportedAt: new Date().toISOString(),
+                    version: '1.0'
+                };
+
+                const dataStr = JSON.stringify(exportData, null, 2);
+                const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(dataBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `${project.id}_${Date.now()}.json`;
+                link.click();
+                URL.revokeObjectURL(url);
+
+                window.GrowFitUtils.showToast('프로젝트가 내보내졌습니다', 'success');
+            }
+        }
+
+        // ========== 프로젝트 가져오기 ==========
+        function importProject() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        try {
+                            const projectData = JSON.parse(event.target.result);
+                            console.log('프로젝트 가져오기:', projectData);
+                            
+                            window.GrowFitUtils.showToast(
+                                `"${projectData.name}" 프로젝트를 가져왔습니다`,
+                                'success'
+                            );
+
+                            // 프로젝트 추가 및 UI 업데이트
+                            // location.reload();
+                        } catch (error) {
+                            console.error('파일 파싱 오류:', error);
+                            window.GrowFitUtils.showToast('잘못된 파일 형식입니다', 'error');
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+
+            input.click();
+        }
+
+        // ========== 프로젝트 삭제 ==========
+        function deleteProject(projectId) {
+            const project = projects.find(p => p.id === projectId);
+            if (!project) return;
+
+            const confirmText = `정말로 "${project.name}" 프로젝트를 삭제하시겠습니까?\n\n모든 대화 내역이 영구적으로 삭제됩니다.\n이 작업은 되돌릴 수 없습니다.`;
+            
+            if (confirm(confirmText)) {
+                const finalConfirm = prompt('삭제하려면 "삭제"를 입력하세요:');
+                
+                if (finalConfirm === '삭제') {
+                    // 실제로는 API 호출
+                    projects = projects.filter(p => p.id !== projectId);
+                    
+                    window.GrowFitUtils.showToast('프로젝트가 삭제되었습니다', 'success');
+                    
+                    // UI에서 제거
+                    const card = document.querySelector(`[onclick*="${projectId}"]`);
+                    if (card) {
+                        card.style.transition = 'all 0.3s';
+                        card.style.opacity = '0';
+                        card.style.transform = 'scale(0.9)';
+                        setTimeout(() => card.remove(), 300);
+                    }
+                } else {
+                    window.GrowFitUtils.showToast('삭제가 취소되었습니다', 'info');
+                }
+            }
+        }
+
+        // ========== 프로젝트 복제 ==========
+        function duplicateProject(projectId) {
+            const project = projects.find(p => p.id === projectId);
+            if (!project) return;
+
+            const newName = prompt('복제할 프로젝트 이름:', `${project.name} (복사본)`);
+            
+            if (newName && newName.trim()) {
+                const duplicated = {
+                    ...project,
+                    id: `project-${Date.now()}`,
+                    name: newName.trim(),
+                    conversations: 0,
+                    hours: 0,
+                    progress: 0,
+                    lastUpdated: '방금',
+                    created: new Date().toISOString()
+                };
+
+                projects.push(duplicated);
+                window.GrowFitUtils.showToast('프로젝트가 복제되었습니다', 'success');
+                // UI 업데이트 필요
+            }
+        }
+
+        // ========== 프로젝트 보관 ==========
+        function archiveProject(projectId) {
+            const project = projects.find(p => p.id === projectId);
+            if (!project) return;
+
+            if (confirm(`"${project.name}" 프로젝트를 보관하시겠습니까?\n\n보관된 프로젝트는 "보관됨" 탭에서 확인할 수 있습니다.`)) {
+                project.archived = true;
+                window.GrowFitUtils.showToast('프로젝트가 보관되었습니다', 'success');
+                filterProjects();
+            }
+        }
+
+        // ========== 프로젝트 공유 ==========
+        function shareProject(projectId) {
+            const project = projects.find(p => p.id === projectId);
+            if (!project) return;
+
+            if (project.type === 'personal') {
+                if (confirm('개인 프로젝트를 팀 프로젝트로 전환하시겠습니까?')) {
+                    project.type = 'team';
+                    window.GrowFitUtils.showToast('팀 프로젝트로 전환되었습니다', 'success');
+                    // 멤버 추가 UI 표시
+                    manageMembers(projectId);
+                }
+            } else {
+                // 공유 링크 생성
+                const shareUrl = `${window.location.origin}/project/${projectId}`;
+                
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(shareUrl).then(() => {
+                        window.GrowFitUtils.showToast('공유 링크가 복사되었습니다', 'success');
+                    });
+                } else {
+                    prompt('공유 링크:', shareUrl);
+                }
+            }
+        }
+
+        // ========== 프로젝트 템플릿 저장 ==========
+        function saveAsTemplate(projectId) {
+            const project = projects.find(p => p.id === projectId);
+            if (!project) return;
+
+            const templateName = prompt('템플릿 이름:', `${project.name} 템플릿`);
+            
+            if (templateName && templateName.trim()) {
+                const template = {
+                    name: templateName.trim(),
+                    description: project.description,
+                    tags: project.tags,
+                    icon: project.icon,
+                    // 대화 내역은 제외하고 구조만 저장
+                };
+
+                console.log('템플릿 저장:', template);
+                window.GrowFitUtils.showToast('프로젝트 템플릿이 저장되었습니다', 'success');
+            }
+        }
+
+        // ========== 키보드 단축키 ==========
+        document.addEventListener('keydown', function(e) {
+            // Ctrl/Cmd + N: 새 프로젝트
+            if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+                e.preventDefault();
+                createNewProject();
+            }
+
+            // Ctrl/Cmd + F: 검색 포커스
+            if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                e.preventDefault();
+                document.getElementById('searchInput').focus();
+            }
+
+            // Ctrl/Cmd + 1~4: 탭 전환
+            if ((e.ctrlKey || e.metaKey) && ['1', '2', '3', '4'].includes(e.key)) {
+                e.preventDefault();
+                const tabs = ['all', 'personal', 'team', 'archived'];
+                switchTab(tabs[parseInt(e.key) - 1]);
+            }
+        });
+
+        // ========== 드래그 앤 드롭으로 프로젝트 정렬 ==========
+        function enableDragAndDrop() {
+            const cards = document.querySelectorAll('.project-card:not(.project-card--empty)');
+            
+            cards.forEach(card => {
+                card.draggable = true;
+                
+                card.addEventListener('dragstart', function(e) {
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/html', this.innerHTML);
+                    this.style.opacity = '0.5';
+                });
+
+                card.addEventListener('dragend', function() {
+                    this.style.opacity = '1';
+                });
+
+                card.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                    return false;
+                });
+
+                card.addEventListener('drop', function(e) {
+                    e.stopPropagation();
+                    // 드롭 처리
+                    window.GrowFitUtils.showToast('프로젝트 순서가 변경되었습니다', 'info');
+                    return false;
+                });
+            });
+        }
+
+        // ========== 통계 대시보드 ==========
+        function showProjectsOverview() {
+            const totalProjects = projects.length;
+            const personalProjects = projects.filter(p => p.type === 'personal').length;
+            const teamProjects = projects.filter(p => p.type === 'team').length;
+            const totalHours = projects.reduce((sum, p) => sum + p.hours, 0);
+            const totalConversations = projects.reduce((sum, p) => sum + p.conversations, 0);
+
+            const overview = `
+📊 프로젝트 현황
+
+전체 프로젝트: ${totalProjects}개
+└─ 개인: ${personalProjects}개
+└─ 팀: ${teamProjects}개
+
+총 실습 시간: ${totalHours.toFixed(1)}시간
+총 대화 수: ${totalConversations}개
+
+평균 실습 시간: ${(totalHours / totalProjects).toFixed(1)}시간/프로젝트
+            `.trim();
+
+            alert(overview);
+        }
+
+        // ========== 반응형 처리 ==========
+        function handleResize() {
+            const width = window.innerWidth;
+            
+            if (width <= 768) {
+                console.log('모바일 레이아웃');
+                // 자동으로 리스트 뷰로 전환
+                if (currentView === 'grid') {
+                    // switchView('list');
+                }
+            }
+        }
+
+        window.addEventListener('resize', handleResize);
+        handleResize();
+
+        // ========== 자동 저장 (정렬 순서 등) ==========
+        function autoSave() {
+            const state = {
+                currentTab: currentTab,
+                currentView: currentView,
+                sortBy: document.getElementById('sortBy').value,
+                filterModel: document.getElementById('filterModel').value
+            };
+
+            localStorage.setItem('projects_state', JSON.stringify(state));
+        }
+
+        // 페이지 나가기 전 자동 저장
+        window.addEventListener('beforeunload', autoSave);
+
+        // 페이지 로드 시 상태 복원
+        window.addEventListener('load', function() {
+            const savedState = localStorage.getItem('projects_state');
+            if (savedState) {
+                try {
+                    const state = JSON.parse(savedState);
+                    // 상태 복원
+                    if (state.currentTab !== 'all') {
+                        switchTab(state.currentTab);
+                    }
+                } catch (e) {
+                    console.error('상태 복원 오류:', e);
+                }
+            }
+        });
+
+        console.log('Projects 페이지 스크립트 로드 완료');
+    </script>
+</body>
+</html>

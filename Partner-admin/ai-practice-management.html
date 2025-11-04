@@ -1,0 +1,2407 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 실습 관리 - GrowFit Corporate Admin</title>
+
+    <!-- 공통 CSS -->
+    <link rel="stylesheet" href="../common/variables.css">
+    <link rel="stylesheet" href="../common/layout.css">
+    <link rel="stylesheet" href="../common/components.css">
+
+    <style>
+        /* ========== AI Practice Management 전용 스타일 ========== */
+        :root {
+            --admin-primary: #6366f1;
+            --admin-primary-light: #818cf8;
+            --admin-primary-dark: #4f46e5;
+            --admin-secondary: #8b5cf6;
+            --admin-success: #10b981;
+            --admin-warning: #f59e0b;
+            --admin-error: #ef4444;
+        }
+
+        /* 페이지 헤더 */
+        .page-header {
+            margin-bottom: var(--space-6);
+        }
+
+        .page-title {
+            font-size: var(--text-3xl);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-2);
+        }
+
+        .page-subtitle {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+        }
+
+        /* 통계 카드 그리드 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--space-4);
+            margin-bottom: var(--space-6);
+        }
+
+        .stat-card {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            transition: all 0.2s;
+        }
+
+        .stat-card:hover {
+            border-color: var(--admin-primary);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .stat-card__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: var(--space-3);
+        }
+
+        .stat-card__icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .stat-card__icon--primary {
+            background: linear-gradient(135deg, var(--admin-primary-light), var(--admin-primary));
+            color: white;
+        }
+
+        .stat-card__icon--success {
+            background: linear-gradient(135deg, #34d399, var(--admin-success));
+            color: white;
+        }
+
+        .stat-card__icon--warning {
+            background: linear-gradient(135deg, #fbbf24, var(--admin-warning));
+            color: white;
+        }
+
+        .stat-card__icon--secondary {
+            background: linear-gradient(135deg, #a78bfa, var(--admin-secondary));
+            color: white;
+        }
+
+        .stat-card__trend {
+            display: flex;
+            align-items: center;
+            gap: var(--space-1);
+            padding: 4px 8px;
+            background: var(--success-light);
+            border-radius: var(--radius-sm);
+            font-size: var(--text-xs);
+            font-weight: var(--font-bold);
+            color: var(--success-dark);
+        }
+
+        .stat-card__trend--down {
+            background: var(--error-light);
+            color: var(--error-dark);
+        }
+
+        .stat-card__label {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-1);
+        }
+
+        .stat-card__value {
+            font-size: var(--text-3xl);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-2);
+        }
+
+        .stat-card__footer {
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+        }
+
+        /* 탭 네비게이션 */
+        .tabs {
+            display: flex;
+            gap: var(--space-2);
+            margin-bottom: var(--space-6);
+            border-bottom: 2px solid var(--border);
+        }
+
+        .tab {
+            padding: var(--space-3) var(--space-5);
+            border: none;
+            background: none;
+            font-size: var(--text-base);
+            font-weight: var(--font-semibold);
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .tab:hover {
+            color: var(--admin-primary);
+        }
+
+        .tab--active {
+            color: var(--admin-primary);
+            border-bottom-color: var(--admin-primary);
+        }
+
+        /* LLM 설정 섹션 */
+        .llm-section {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+            margin-bottom: var(--space-6);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-4);
+        }
+
+        .section-title {
+            font-size: var(--text-xl);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+        }
+
+        .llm-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-4);
+        }
+
+        .llm-card {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            transition: all 0.2s;
+        }
+
+        .llm-card:hover {
+            border-color: var(--admin-primary);
+        }
+
+        .llm-card--active {
+            border-color: var(--admin-success);
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(16, 185, 129, 0.02));
+        }
+
+        .llm-card__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: var(--space-3);
+        }
+
+        .llm-card__logo {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            background: var(--gray-100);
+        }
+
+        .llm-card__name {
+            font-size: var(--text-lg);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-1);
+        }
+
+        .llm-card__provider {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+        }
+
+        .llm-card__status {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-3);
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-3);
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .status-indicator--active {
+            background: var(--admin-success);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+        }
+
+        .status-indicator--inactive {
+            background: var(--gray-400);
+        }
+
+        .llm-card__metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-2);
+            margin-bottom: var(--space-3);
+        }
+
+        .metric-item {
+            text-align: center;
+            padding: var(--space-2);
+            background: white;
+            border-radius: var(--radius-sm);
+        }
+
+        .metric-item__value {
+            font-size: var(--text-lg);
+            font-weight: var(--font-bold);
+            color: var(--admin-primary);
+        }
+
+        .metric-item__label {
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+        }
+
+        /* API 키 입력 */
+        .api-key-input {
+            display: flex;
+            gap: var(--space-2);
+            margin-bottom: var(--space-3);
+        }
+
+        .api-key-field {
+            flex: 1;
+            padding: var(--space-2) var(--space-3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+
+        .api-key-field:focus {
+            outline: none;
+            border-color: var(--admin-primary);
+        }
+
+        /* 실시간 세션 모니터링 */
+        .sessions-table {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+
+        .table-header {
+            background: var(--surface);
+            padding: var(--space-4);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .table-title {
+            font-size: var(--text-lg);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+        }
+
+        .table-filters {
+            display: flex;
+            gap: var(--space-2);
+        }
+
+        .filter-select {
+            padding: var(--space-2) var(--space-3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+            background: white;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table thead {
+            background: var(--surface);
+        }
+
+        .data-table th {
+            padding: var(--space-3);
+            text-align: left;
+            font-size: var(--text-sm);
+            font-weight: var(--font-semibold);
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .data-table td {
+            padding: var(--space-3);
+            font-size: var(--text-sm);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .data-table tbody tr:hover {
+            background: var(--surface);
+        }
+
+        .user-cell {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: var(--text-xs);
+            font-weight: var(--font-bold);
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .session-badge {
+            padding: 4px 8px;
+            border-radius: var(--radius-sm);
+            font-size: var(--text-xs);
+            font-weight: var(--font-semibold);
+        }
+
+        .session-badge--active {
+            background: var(--success-light);
+            color: var(--success-dark);
+        }
+
+        .session-badge--parallel {
+            background: var(--admin-primary);
+            color: white;
+        }
+
+        /* 차트 영역 */
+        .chart-container {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+            margin-bottom: var(--space-6);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-4);
+        }
+
+        .chart-title {
+            font-size: var(--text-xl);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+        }
+
+        .chart-legend {
+            display: flex;
+            gap: var(--space-3);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-1);
+            font-size: var(--text-sm);
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: var(--radius-sm);
+        }
+
+        /* 반응형 */
+        @media (max-width: 1400px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .llm-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+
+            .stats-grid,
+            .llm-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .data-table {
+                font-size: var(--text-xs);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header__left">
+                <button id="menuToggle" class="header__icon-button hidden-desktop">
+                    <span>☰</span>
+                </button>
+                <a href="dashboard.html" class="header__logo">
+                    <span class="header__logo-icon">🌱</span>
+                    <span>GrowFit Admin</span>
+                </a>
+            </div>
+
+            <div class="header__right">
+                <button id="notificationBtn" class="header__icon-button">
+                    <span>🔔</span>
+                    <span class="header__badge">5</span>
+                </button>
+
+                <div id="profileBtn" class="header__profile">
+                    <div class="header__avatar" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">관</div>
+                    <span class="hidden-mobile">관리자</span>
+                    <span class="hidden-mobile">▼</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="container">
+            <!-- Sidebar -->
+            <aside class="sidebar sidebar--open">
+                <div class="sidebar__user">
+                    <div class="sidebar__user-info">
+                        <div class="sidebar__user-avatar"
+                            style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">관</div>
+                        <div class="sidebar__user-details">
+                            <div class="sidebar__user-name">관리자</div>
+                            <div class="sidebar__user-role">Organization Admin</div>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="sidebar__nav">
+                    <ul class="sidebar__menu">
+                        <li class="sidebar__menu-item">
+                            <a href="dashboard.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">🏠</span>
+                                <span>대시보드</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="employee-management.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">👥</span>
+                                <span>직원 관리</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="ai-practice-management.html" class="sidebar__menu-link sidebar__menu-link--active">
+                                <span class="sidebar__menu-icon">🤖</span>
+                                <span>AI 실습 관리</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="budget-management.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">💰</span>
+                                <span>예산/비용 관리</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="settings.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">⚙️</span>
+                                <span>설정</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <div class="sidebar__footer">
+                    <div
+                        style="padding: var(--space-3); background: var(--surface); border-radius: var(--radius-md); font-size: var(--text-xs);">
+                        <div style="color: var(--text-secondary); margin-bottom: var(--space-1);">이번 달 사용량</div>
+                        <div style="font-weight: var(--font-bold); color: var(--admin-primary);">287.5 시간</div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main">
+                <!-- 페이지 헤더 -->
+                <div class="page-header">
+                    <h1 class="page-title">🤖 AI 실습 관리</h1>
+                    <p class="page-subtitle">통합 LLM 설정, 실시간 세션 모니터링, 사용 통계 관리</p>
+                </div>
+
+                <!-- 통계 카드 -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-card__header">
+                            <div class="stat-card__icon stat-card__icon--primary">👥</div>
+                            <div class="stat-card__trend">
+                                <span>↑</span>
+                                <span>12%</span>
+                            </div>
+                        </div>
+                        <div class="stat-card__label">실시간 활성 세션</div>
+                        <div class="stat-card__value">23</div>
+                        <div class="stat-card__footer">전체 직원 45명 중 23명 활동 중</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-card__header">
+                            <div class="stat-card__icon stat-card__icon--success">⏱️</div>
+                            <div class="stat-card__trend">
+                                <span>↑</span>
+                                <span>8%</span>
+                            </div>
+                        </div>
+                        <div class="stat-card__label">이번 주 실습 시간</div>
+                        <div class="stat-card__value">287.5h</div>
+                        <div class="stat-card__footer">전주 대비 +21.2시간</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-card__header">
+                            <div class="stat-card__icon stat-card__icon--warning">💬</div>
+                            <div class="stat-card__trend">
+                                <span>↑</span>
+                                <span>15%</span>
+                            </div>
+                        </div>
+                        <div class="stat-card__label">병렬 비교 사용</div>
+                        <div class="stat-card__value">1,234</div>
+                        <div class="stat-card__footer">총 대화 중 68% 활용</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-card__header">
+                            <div class="stat-card__icon stat-card__icon--secondary">💰</div>
+                            <div class="stat-card__trend stat-card__trend--down">
+                                <span>↓</span>
+                                <span>5%</span>
+                            </div>
+                        </div>
+                        <div class="stat-card__label">이번 달 비용</div>
+                        <div class="stat-card__value">$847</div>
+                        <div class="stat-card__footer">예산 $1,200 중 70% 사용</div>
+                    </div>
+                </div>
+
+                <!-- 탭 네비게이션 -->
+                <div class="tabs">
+                    <button class="tab tab--active" data-tab="llm-settings" onclick="switchTab('llm-settings')">
+                        <span>⚙️</span>
+                        <span>LLM 설정</span>
+                    </button>
+                    <button class="tab" data-tab="sessions" onclick="switchTab('sessions')">
+                        <span>📊</span>
+                        <span>실시간 세션</span>
+                    </button>
+                    <button class="tab" data-tab="statistics" onclick="switchTab('statistics')">
+                        <span>📈</span>
+                        <span>사용 통계</span>
+                    </button>
+                    <button class="tab" data-tab="templates" onclick="switchTab('templates')">
+                        <span>📝</span>
+                        <span>프롬프트 템플릿</span>
+                    </button>
+                </div>
+
+                <!-- LLM 설정 탭 -->
+                <div id="llmSettingsTab" class="tab-content">
+                    <div class="llm-section">
+                        <div class="section-header">
+                            <h2 class="section-title">통합 LLM 프로바이더 설정</h2>
+                            <button class="btn btn--primary" style="background: var(--admin-primary);" onclick="testAllConnections()">
+                                🔄 전체 연결 테스트
+                            </button>
+                        </div>
+
+                        <div class="llm-grid">
+                            <!-- GPT-4 카드 -->
+                            <div class="llm-card llm-card--active">
+                                <div class="llm-card__header">
+                                    <div>
+                                        <div class="llm-card__logo" style="background: linear-gradient(135deg, #10a37f, #1a7f64);">
+                                            <span style="color: white; font-weight: bold;">AI</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="llm-card__name">GPT-4 Turbo</div>
+                                <div class="llm-card__provider">OpenAI</div>
+
+                                <div class="llm-card__status">
+                                    <div class="status-indicator status-indicator--active"></div>
+                                    <span style="font-size: var(--text-sm); color: var(--admin-success); font-weight: var(--font-semibold);">
+                                        활성화됨
+                                    </span>
+                                </div>
+
+                                <div class="api-key-input">
+                                    <input 
+                                        type="password" 
+                                        class="api-key-field" 
+                                        value="sk-proj-abc...xyz123"
+                                        readonly
+                                    >
+                                    <button class="btn btn--sm btn--outline" onclick="editApiKey('gpt')">
+                                        수정
+                                    </button>
+                                </div>
+
+                                <div class="llm-card__metrics">
+                                    <div class="metric-item">
+                                        <div class="metric-item__value">156</div>
+                                        <div class="metric-item__label">이번 주 사용</div>
+                                    </div>
+                                    <div class="metric-item">
+                                        <div class="metric-item__value">2.3s</div>
+                                        <div class="metric-item__label">평균 응답</div>
+                                    </div>
+                                    <div class="metric-item">
+                                        <div class="metric-item__value">$384</div>
+                                        <div class="metric-item__label">이번 달 비용</div>
+                                    </div>
+                                    <div class="metric-item">
+                                        <div class="metric-item__value">98.5%</div>
+                                        <div class="metric-item__label">성공률</div>
+                                    </div>
+                                </div>
+
+                                <div style="display: flex; gap: var(--space-2);">
+                                    <button class="btn btn--sm btn--outline" style="flex: 1;" onclick="testConnection('gpt')">
+                                        테스트
+                                    </button>
+                                    <button class="btn btn--sm btn--outline" style="flex: 1;" onclick="viewLogs('gpt')">
+                                        로그
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Claude 카드 -->
+                            <div class="llm-card llm-card--active">
+                                <div class="llm-card__header">
+                                    <div>
+                                        <div class="llm-card__logo" style="background: linear-gradient(135deg, #d97757, #b85c3f);">
+                                            <span style="color: white; font-weight: bold;">C</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="llm-card__name">Claude 3.7 Sonnet</div>
+                                <div class="llm-card__provider">Anthropic</div>
+
+                                <div class="llm-card__status">
+                                    <div class="status-indicator status-indicator--active"></div>
+                                    <span style="font-size: var(--text-sm); color: var(--admin-success); font-weight: var(--font-semibold);">
+                                        활성화됨
+                                    </span>
+                                </div>
+
+                                <div class="api-key-input">
+                                    <input 
+                                        type="password" 
+                                        class="api-key-field" 
+                                        value="sk-ant-api...def456"
+                                        readonly
+                                    >
+                                    <button class="btn btn--sm btn--outline" onclick="editApiKey('claude')">
+                                        수정
+                                    </button>
+                                </div>
+
+                                <div class="llm-card__metrics">
+                                    <div class="metric-item">
+                                        <div class="metric-item__value">203</div>
+                                        <div class="metric-item__label">이번 주 사용</div>
+                                    </div>
+                                    <div class="metric-item">
+                                        <div class="metric-item__value">1.8s</div>
+                                        <div class="metric-item__label">평균 응답</div>
+                                    </div>
+                                    <div class="metric-item">
+                                        <div class="metric-item__value">$298</div>
+                                        <div class="metric-item__label">이번 달 비용</div>
+                                    </div>
+                                    <div class="metric-item">
+                                        <div class="metric-item__value">99.2%</div>
+                                        <div class="metric-item__label">성공률</div>
+                                    </div>
+                                </div>
+
+                                <div style="display: flex; gap: var(--space-2);">
+                                    <button class="btn btn--sm btn--outline" style="flex: 1;" onclick="testConnection('claude')">
+                                        테스트
+                                    </button>
+                                    <button class="btn btn--sm btn--outline" style="flex: 1;" onclick="viewLogs('claude')">
+                                        로그
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Gemini 카드 -->
+                            <div class="llm-card llm-card--active">
+                                <div class="llm-card__header">
+                                    <div>
+                                        <div class="llm-card__logo" style="background: linear-gradient(135deg, #4285f4, #357ae8);">
+                                            <span style="color: white; font-weight: bold;">G</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="llm-card__name">Gemini Pro</div>
+                                <div class="llm-card__provider">Google</div>
+
+                                <div class="llm-card__status">
+                                    <div class="status-indicator status-indicator--active"></div>
+                                    <span style="font-size: var(--text-sm); color: var(--admin-success); font-weight: var(--font-semibold);">
+                                        활성화됨
+                                    </span>
+                                </div>
+
+                                <div class="api-key-input">
+                                    <input 
+                                        type="password" 
+                                        class="api-key-field" 
+                                        value="AIza...ghi789"
+                                        readonly
+                                    >
+                                    <button class="btn btn--sm btn--outline" onclick="editApiKey('gemini')">
+                                        수정
+                                    </button>
+                                </div>
+
+                                <div class="llm-card__metrics">
+                                    <div class="metric-item">
+                                        <div class="metric-item__value">89</div>
+                                        <div class="metric-item__label">이번 주 사용</div>
+                                    </div>
+                                    <div class="metric-item">
+                                        <div class="metric-item__value">3.1s</div>
+                                        <div class="metric-item__label">평균 응답</div>
+                                    </div>
+                                    <div class="metric-item">
+                                        <div class="metric-item__value">$165</div>
+                                        <div class="metric-item__label">이번 달 비용</div>
+                                    </div>
+                                    <div class="metric-item">
+                                        <div class="metric-item__value">97.8%</div>
+                                        <div class="metric-item__label">성공률</div>
+                                    </div>
+                                </div>
+
+                                <div style="display: flex; gap: var(--space-2);">
+                                    <button class="btn btn--sm btn--outline" style="flex: 1;" onclick="testConnection('gemini')">
+                                        테스트
+                                    </button>
+                                    <button class="btn btn--sm btn--outline" style="flex: 1;" onclick="viewLogs('gemini')">
+                                        로그
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 우선순위 설정 -->
+                    <div class="llm-section">
+                        <div class="section-header">
+                            <h2 class="section-title">모델 우선순위 및 라우팅 설정</h2>
+                        </div>
+
+                        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: var(--space-4);">
+                            <div style="margin-bottom: var(--space-3);">
+                                <label style="display: block; font-size: var(--text-sm); font-weight: var(--font-semibold); margin-bottom: var(--space-2);">
+                                    기본 모델 선택
+                                </label>
+                                <select class="filter-select" style="width: 100%;">
+                                    <option>Claude 3.7 Sonnet (추천)</option>
+                                    <option>GPT-4 Turbo</option>
+                                    <option>Gemini Pro</option>
+                                </select>
+                                <div style="font-size: var(--text-xs); color: var(--text-secondary); margin-top: var(--space-1);">
+                                    직원이 모델을 선택하지 않았을 때 사용되는 기본 모델
+                                </div>
+                            </div>
+
+                            <div style="margin-bottom: var(--space-3);">
+                                <label style="display: flex; align-items: center; gap: var(--space-2); cursor: pointer;">
+                                    <input type="checkbox" checked>
+                                    <span style="font-size: var(--text-sm);">병렬 비교 모드 활성화</span>
+                                </label>
+                                <div style="font-size: var(--text-xs); color: var(--text-secondary); margin-top: var(--space-1); margin-left: 24px;">
+                                    직원이 3개 모델 동시 실행 기능을 사용할 수 있습니다
+                                </div>
+                            </div>
+
+                            <div style="margin-bottom: var(--space-3);">
+                                <label style="display: flex; align-items: center; gap: var(--space-2); cursor: pointer;">
+                                    <input type="checkbox" checked>
+                                    <span style="font-size: var(--text-sm);">자동 모델 선택 (스마트 라우팅)</span>
+                                </label>
+                                <div style="font-size: var(--text-xs); color: var(--text-secondary); margin-top: var(--space-1); margin-left: 24px;">
+                                    작업 유형에 따라 AI가 최적의 모델을 자동 선택합니다
+                                </div>
+                            </div>
+
+                            <button class="btn btn--primary" style="background: var(--admin-primary);" onclick="saveSettings()">
+                                💾 설정 저장
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 실시간 세션 탭 (숨김) -->
+                <div id="sessionsTab" class="tab-content" style="display: none;">
+                    <div class="sessions-table">
+                        <div class="table-header">
+                            <h2 class="table-title">실시간 활성 세션 (23개)</h2>
+                            <div class="table-filters">
+                                <select class="filter-select">
+                                    <option>모든 모드</option>
+                                    <option>단일 모드</option>
+                                    <option>병렬 비교 모드</option>
+                                </select>
+                                <select class="filter-select">
+                                    <option>모든 모델</option>
+                                    <option>GPT-4</option>
+                                    <option>Claude</option>
+                                    <option>Gemini</option>
+                                </select>
+                                <button class="btn btn--sm btn--outline" onclick="refreshSessions()">
+                                    🔄 새로고침
+                                </button>
+                            </div>
+                        </div>
+
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>직원</th>
+                                    <th>프로젝트</th>
+                                    <th>모드</th>
+                                    <th>사용 모델</th>
+                                    <th>시작 시간</th>
+                                    <th>대화 수</th>
+                                    <th>상태</th>
+                                    <th>액션</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <div class="user-cell">
+                                            <div class="user-avatar" style="background: linear-gradient(135deg, #10b981, #06b6d4);">김</div>
+                                            <span>김직원</span>
+                                        </div>
+                                    </td>
+                                    <td>Python 학습</td>
+                                    <td><span class="session-badge session-badge--parallel">병렬 비교</span></td>
+                                    <td>GPT-4, Claude, Gemini</td>
+                                    <td>14:23</td>
+                                    <td>12</td>
+                                    <td><span class="session-badge session-badge--active">진행 중</span></td>
+                                    <td>
+                                        <button class="btn btn--sm btn--outline" onclick="viewSession('session-1')">
+                                            보기
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="user-cell">
+                                            <div class="user-avatar" style="background: linear-gradient(135deg, #f59e0b, #d97706);">이</div>
+                                            <span>이직원</span>
+                                        </div>
+                                    </td>
+                                    <td>데이터 분석</td>
+                                    <td><span class="session-badge" style="background: var(--surface); color: var(--text-secondary);">단일 모드</span></td>
+                                    <td>Claude</td>
+                                    <td>15:01</td>
+                                    <td>8</td>
+                                    <td><span class="session-badge session-badge--active">진행 중</span></td>
+                                    <td>
+                                        <button class="btn btn--sm btn--outline" onclick="viewSession('session-2')">
+                                            보기
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="user-cell">
+                                            <div class="user-avatar" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">박</div>
+                                            <span>박직원</span>
+                                        </div>
+                                    </td>
+                                    <td>마케팅 콘텐츠</td>
+                                    <td><span class="session-badge session-badge--parallel">병렬 비교</span></td>
+                                    <td>GPT-4, Claude</td>
+                                    <td>13:45</td>
+                                    <td>23</td>
+                                    <td><span class="session-badge session-badge--active">진행 중</span></td>
+                                    <td>
+                                        <button class="btn btn--sm btn--outline" onclick="viewSession('session-3')">
+                                            보기
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 사용 통계 탭 (숨김) -->
+                <div id="statisticsTab" class="tab-content" style="display: none;">
+                    <!-- 모델별 사용 차트 -->
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h2 class="chart-title">모델별 사용 현황 (최근 7일)</h2>
+                            <div class="chart-legend">
+                                <div class="legend-item">
+                                    <div class="legend-color" style="background: #10a37f;"></div>
+                                    <span>GPT-4</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color" style="background: #d97757;"></div>
+                                    <span>Claude</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color" style="background: #4285f4;"></div>
+                                    <span>Gemini</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="height: 300px; display: flex; align-items: end; justify-content: space-around; gap: var(--space-2); padding: var(--space-4); background: var(--surface); border-radius: var(--radius-md);">
+                            <!-- 간단한 막대 차트 시뮬레이션 -->
+                            <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                                <div style="width: 100%; height: 180px; background: linear-gradient(to top, #10a37f, #1a7f64); border-radius: var(--radius-sm) var(--radius-sm) 0 0;"></div>
+                                <span style="margin-top: var(--space-2); font-size: var(--text-xs); color: var(--text-secondary);">월</span>
+                            </div>
+                            <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                                <div style="width: 100%; height: 220px; background: linear-gradient(to top, #d97757, #b85c3f); border-radius: var(--radius-sm) var(--radius-sm) 0 0;"></div>
+                                <span style="margin-top: var(--space-2); font-size: var(--text-xs); color: var(--text-secondary);">화</span>
+                            </div>
+                            <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                                <div style="width: 100%; height: 260px; background: linear-gradient(to top, #4285f4, #357ae8); border-radius: var(--radius-sm) var(--radius-sm) 0 0;"></div>
+                                <span style="margin-top: var(--space-2); font-size: var(--text-xs); color: var(--text-secondary);">수</span>
+                            </div>
+                            <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                                <div style="width: 100%; height: 240px; background: linear-gradient(to top, #10a37f, #1a7f64); border-radius: var(--radius-sm) var(--radius-sm) 0 0;"></div>
+                                <span style="margin-top: var(--space-2); font-size: var(--text-xs); color: var(--text-secondary);">목</span>
+                            </div>
+                            <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                                <div style="width: 100%; height: 200px; background: linear-gradient(to top, #d97757, #b85c3f); border-radius: var(--radius-sm) var(--radius-sm) 0 0;"></div>
+                                <span style="margin-top: var(--space-2); font-size: var(--text-xs); color: var(--text-secondary);">금</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 통계 요약 -->
+                    <div class="llm-section">
+                        <h2 class="section-title">상세 통계</h2>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); margin-top: var(--space-4);">
+                            <div style="padding: var(--space-4); background: var(--surface); border-radius: var(--radius-md);">
+                                <div style="font-size: var(--text-sm); color: var(--text-secondary); margin-bottom: var(--space-2);">
+                                    총 대화 수
+                                </div>
+                                <div style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--admin-primary);">
+                                    1,847
+                                </div>
+                                <div style="font-size: var(--text-xs); color: var(--text-secondary); margin-top: var(--space-2);">
+                                    전주 대비 +15.3%
+                                </div>
+                            </div>
+                            <div style="padding: var(--space-4); background: var(--surface); border-radius: var(--radius-md);">
+                                <div style="font-size: var(--text-sm); color: var(--text-secondary); margin-bottom: var(--space-2);">
+                                    평균 응답 시간
+                                </div>
+                                <div style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--admin-primary);">
+                                    2.4초
+                                </div>
+                                <div style="font-size: var(--text-xs); color: var(--text-secondary); margin-top: var(--space-2);">
+                                    전주 대비 -0.3초
+                                </div>
+                            </div>
+                            <div style="padding: var(--space-4); background: var(--surface); border-radius: var(--radius-md);">
+                                <div style="font-size: var(--text-sm); color: var(--text-secondary); margin-bottom: var(--space-2);">
+                                    병렬 비교 활용률
+                                </div>
+                                <div style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--admin-primary);">
+                                    68%
+                                </div>
+                                <div style="font-size: var(--text-xs); color: var(--text-secondary); margin-top: var(--space-2);">
+                                    1,234회 / 1,847회
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 프롬프트 템플릿 탭 (숨김) -->
+                <div id="templatesTab" class="tab-content" style="display: none;">
+                    <div class="llm-section">
+                        <div class="section-header">
+                            <h2 class="section-title">전사 프롬프트 템플릿 관리</h2>
+                            <button class="btn btn--primary" style="background: var(--admin-primary);" onclick="createTemplate()">
+                                ➕ 새 템플릿
+                            </button>
+                        </div>
+
+                        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: var(--space-4); text-align: center; color: var(--text-secondary);">
+                            <div style="font-size: 48px; margin-bottom: var(--space-3); opacity: 0.5;">📝</div>
+                            <div style="font-size: var(--text-lg); font-weight: var(--font-semibold); margin-bottom: var(--space-2);">
+                                프롬프트 템플릿 관리
+                            </div>
+                            <div style="font-size: var(--text-sm);">
+                                전사적으로 사용할 프롬프트 템플릿을 생성하고 관리하세요
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- 공통 스크립트 -->
+    <script src="../common/layout.js"></script>
+    <script src="../common/utils.js"></script>
+    
+    <!-- 페이지 전용 스크립트 -->
+    <script>
+        // ========== AI Practice Management 전용 로직 ==========
+
+        // 전역 변수
+        let currentTab = 'llm-settings';
+        let autoRefreshInterval = null;
+
+        // LLM 설정 데이터 (시뮬레이션)
+        const llmConfigs = {
+            gpt: {
+                id: 'gpt',
+                name: 'GPT-4 Turbo',
+                provider: 'OpenAI',
+                apiKey: 'sk-proj-abc...xyz123',
+                active: true,
+                weeklyUsage: 156,
+                avgResponseTime: 2.3,
+                monthlyCost: 384,
+                successRate: 98.5
+            },
+            claude: {
+                id: 'claude',
+                name: 'Claude 3.7 Sonnet',
+                provider: 'Anthropic',
+                apiKey: 'sk-ant-api...def456',
+                active: true,
+                weeklyUsage: 203,
+                avgResponseTime: 1.8,
+                monthlyCost: 298,
+                successRate: 99.2
+            },
+            gemini: {
+                id: 'gemini',
+                name: 'Gemini Pro',
+                provider: 'Google',
+                apiKey: 'AIza...ghi789',
+                active: true,
+                weeklyUsage: 89,
+                avgResponseTime: 3.1,
+                monthlyCost: 165,
+                successRate: 97.8
+            }
+        };
+
+        // 활성 세션 데이터
+        const activeSessions = [
+            {
+                id: 'session-1',
+                user: '김직원',
+                avatar: '김',
+                project: 'Python 학습',
+                mode: 'parallel',
+                models: ['GPT-4', 'Claude', 'Gemini'],
+                startTime: '14:23',
+                conversationCount: 12,
+                status: 'active'
+            },
+            {
+                id: 'session-2',
+                user: '이직원',
+                avatar: '이',
+                project: '데이터 분석',
+                mode: 'single',
+                models: ['Claude'],
+                startTime: '15:01',
+                conversationCount: 8,
+                status: 'active'
+            },
+            {
+                id: 'session-3',
+                user: '박직원',
+                avatar: '박',
+                project: '마케팅 콘텐츠',
+                mode: 'parallel',
+                models: ['GPT-4', 'Claude'],
+                startTime: '13:45',
+                conversationCount: 23,
+                status: 'active'
+            }
+        ];
+
+        // ========== 초기화 ==========
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('AI Practice Management 페이지 초기화');
+
+            initializePage();
+            startAutoRefresh();
+            updateStatistics();
+        });
+
+        function initializePage() {
+            // 통계 애니메이션
+            animateStats();
+
+            // 차트 렌더링
+            renderCharts();
+        }
+
+        function animateStats() {
+            const statValues = document.querySelectorAll('.stat-card__value');
+            statValues.forEach(el => {
+                const finalValue = el.textContent;
+                el.style.opacity = '0';
+
+                setTimeout(() => {
+                    el.style.transition = 'opacity 0.5s';
+                    el.style.opacity = '1';
+                }, 100);
+            });
+        }
+
+        // ========== 탭 전환 ==========
+        function switchTab(tab) {
+            currentTab = tab;
+
+            // 탭 버튼 상태 업데이트
+            document.querySelectorAll('.tab').forEach(btn => {
+                btn.classList.remove('tab--active');
+            });
+            document.querySelector(`[data-tab="${tab}"]`).classList.add('tab--active');
+
+            // 탭 컨텐츠 표시/숨김
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.style.display = 'none';
+            });
+
+            const tabMap = {
+                'llm-settings': 'llmSettingsTab',
+                'sessions': 'sessionsTab',
+                'statistics': 'statisticsTab',
+                'templates': 'templatesTab'
+            };
+
+            const targetTab = document.getElementById(tabMap[tab]);
+            if (targetTab) {
+                targetTab.style.display = 'block';
+            }
+
+            // 세션 탭일 때 자동 새로고침 시작
+            if (tab === 'sessions') {
+                refreshSessions();
+            }
+
+            console.log('탭 전환:', tab);
+        }
+
+        // ========== LLM 설정 관리 ==========
+        function editApiKey(llmId) {
+            const llm = llmConfigs[llmId];
+            if (!llm) return;
+
+            const newKey = prompt(`${llm.name} API 키를 입력하세요:`, llm.apiKey);
+
+            if (newKey && newKey.trim()) {
+                llm.apiKey = newKey.trim();
+
+                // 실제로는 서버에 저장
+                console.log('API 키 업데이트:', llmId);
+
+                window.GrowFitUtils.showToast('API 키가 업데이트되었습니다', 'success');
+
+                // UI 업데이트 (마스킹된 키 표시)
+                const maskedKey = maskApiKey(newKey);
+                // DOM 업데이트 로직
+            }
+        }
+
+        function maskApiKey(key) {
+            if (key.length <= 10) return key;
+            return key.substring(0, 8) + '...' + key.substring(key.length - 6);
+        }
+
+        function testConnection(llmId) {
+            const llm = llmConfigs[llmId];
+            if (!llm) return;
+
+            window.GrowFitUtils.showToast(`${llm.name} 연결을 테스트하는 중...`, 'info');
+
+            // 실제로는 API 호출
+            setTimeout(() => {
+                const success = Math.random() > 0.1; // 90% 성공률 시뮬레이션
+
+                if (success) {
+                    window.GrowFitUtils.showToast(
+                        `✓ ${llm.name} 연결 성공 (응답 시간: ${llm.avgResponseTime}초)`,
+                        'success'
+                    );
+                } else {
+                    window.GrowFitUtils.showToast(
+                        `✗ ${llm.name} 연결 실패. API 키를 확인하세요.`,
+                        'error'
+                    );
+                }
+            }, 1500);
+        }
+
+        function testAllConnections() {
+            window.GrowFitUtils.showToast('모든 LLM 연결을 테스트하는 중...', 'info');
+
+            let completed = 0;
+            const total = Object.keys(llmConfigs).length;
+
+            Object.keys(llmConfigs).forEach((llmId, index) => {
+                setTimeout(() => {
+                    testConnection(llmId);
+                    completed++;
+
+                    if (completed === total) {
+                        setTimeout(() => {
+                            window.GrowFitUtils.showToast('모든 연결 테스트 완료', 'success');
+                        }, 500);
+                    }
+                }, index * 500);
+            });
+        }
+
+        function viewLogs(llmId) {
+            const llm = llmConfigs[llmId];
+            if (!llm) return;
+
+            // 로그 뷰어 모달 표시
+            const logs = `
+    ${llm.name} 사용 로그
+    
+    [최근 24시간]
+    - 총 요청: 87건
+    - 성공: 86건
+    - 실패: 1건
+    - 평균 응답 시간: ${llm.avgResponseTime}초
+    
+    [최근 오류]
+    2025-10-09 14:23:45 - Rate limit exceeded
+    2025-10-09 12:15:30 - Timeout (30s)
+    
+    [비용]
+    - 오늘: $23.45
+    - 이번 주: $167.20
+    - 이번 달: $${llm.monthlyCost}
+                `.trim();
+
+            alert(logs);
+        }
+
+        function saveSettings() {
+            // 설정 저장
+            const defaultModel = document.querySelector('select').value;
+            const parallelMode = document.querySelector('input[type="checkbox"]').checked;
+
+            console.log('설정 저장:', {
+                defaultModel,
+                parallelMode
+            });
+
+            window.GrowFitUtils.showToast('설정이 저장되었습니다', 'success');
+        }
+
+        // ========== 실시간 세션 관리 ==========
+        function refreshSessions() {
+            console.log('세션 새로고침...');
+
+            // 실제로는 API 호출
+            window.GrowFitUtils.showToast('세션 정보를 업데이트했습니다', 'info');
+
+            // 애니메이션 효과
+            const rows = document.querySelectorAll('.data-table tbody tr');
+            rows.forEach((row, index) => {
+                row.style.opacity = '0.5';
+                setTimeout(() => {
+                    row.style.transition = 'opacity 0.3s';
+                    row.style.opacity = '1';
+                }, index * 100);
+            });
+        }
+
+        function viewSession(sessionId) {
+            const session = activeSessions.find(s => s.id === sessionId);
+            if (!session) return;
+
+            const details = `
+    세션 상세 정보: ${sessionId}
+    
+    👤 사용자: ${session.user}
+    📁 프로젝트: ${session.project}
+    🔄 모드: ${session.mode === 'parallel' ? '병렬 비교' : '단일'}
+    🤖 사용 모델: ${session.models.join(', ')}
+    ⏱️ 시작 시간: ${session.startTime}
+    💬 대화 수: ${session.conversationCount}
+    
+    [최근 대화]
+    1. "Python 리스트 정렬 방법..."
+    2. "데이터프레임 필터링..."
+    3. "에러 해결 방법..."
+    
+    [비용]
+    - 이번 세션: $2.45
+                `.trim();
+
+            alert(details);
+        }
+
+        function startAutoRefresh() {
+            // 10초마다 자동 새로고침 (세션 탭에서만)
+            autoRefreshInterval = setInterval(() => {
+                if (currentTab === 'sessions') {
+                    console.log('자동 새로고침 실행');
+                    // refreshSessions(); // 실제 환경에서 활성화
+                }
+            }, 10000);
+        }
+
+        // ========== 통계 업데이트 ==========
+        function updateStatistics() {
+            // 실제로는 API에서 통계 데이터 가져오기
+            console.log('통계 업데이트');
+        }
+
+        function renderCharts() {
+            // 실제로는 Chart.js 등 라이브러리 사용
+            console.log('차트 렌더링');
+        }
+
+        // ========== 프롬프트 템플릿 관리 ==========
+        function createTemplate() {
+            const name = prompt('템플릿 이름을 입력하세요:');
+
+            if (name && name.trim()) {
+                console.log('새 템플릿 생성:', name);
+                window.GrowFitUtils.showToast('템플릿이 생성되었습니다', 'success');
+
+                // 템플릿 편집 화면으로 이동
+                // location.href = `template-editor.html?name=${encodeURIComponent(name)}`;
+            }
+        }
+
+        // ========== 모델별 성능 비교 ==========
+        function compareModels() {
+            const comparison = `
+    모델 성능 비교 (최근 7일)
+    
+    ┌─────────────┬──────┬──────┬──────┐
+    │             │ GPT-4│Claude│Gemini│
+    ├─────────────┼──────┼──────┼──────┤
+    │ 사용 횟수   │ 156  │ 203  │  89  │
+    │ 평균 응답   │ 2.3s │ 1.8s │ 3.1s │
+    │ 성공률      │ 98.5%│ 99.2%│ 97.8%│
+    │ 비용        │ $384 │ $298 │ $165 │
+    │ 만족도      │ 4.5  │ 4.7  │ 4.3  │
+    └─────────────┴──────┴──────┴──────┘
+    
+    📊 인사이트:
+    - Claude가 가장 빠른 응답 속도
+    - Claude가 가장 높은 성공률
+    - Gemini가 가장 저렴한 비용
+    - 병렬 비교 활용률: 68%
+    
+    💡 권장사항:
+    - 코드 작성: GPT-4
+    - 문서 작성: Claude
+    - 번역/요약: Gemini
+                `.trim();
+
+            alert(comparison);
+        }
+
+        // ========== 비용 분석 ==========
+        function analyzeCosts() {
+            const analysis = `
+    비용 분석 리포트
+    
+    📅 기간: 2025년 10월 (진행 중)
+    
+    💰 총 비용: $847
+    - GPT-4: $384 (45.3%)
+    - Claude: $298 (35.2%)
+    - Gemini: $165 (19.5%)
+    
+    📈 추세:
+    - 전월 대비: -5.2% ↓
+    - 예산 대비: 70.6% (예산: $1,200)
+    - 남은 예산: $353
+    
+    📊 부서별:
+    - 개발팀: $423 (49.9%)
+    - 마케팅팀: $256 (30.2%)
+    - 기획팀: $168 (19.9%)
+    
+    ⚠️ 알림:
+    - 예상 월말 비용: $1,120
+    - 예산 내 유지 가능
+    - 다음 달 예산 추천: $1,300
+    
+    🎯 절감 방안:
+    - 캐싱 활용도 증가
+    - 저비용 모델 우선 활용
+    - 불필요한 재시도 방지
+                `.trim();
+
+            alert(analysis);
+        }
+
+        // ========== 사용자별 통계 ==========
+        function viewUserStatistics() {
+            const stats = `
+    사용자별 AI 실습 통계
+    
+    👥 Top 5 활성 사용자:
+    
+    1. 김직원 - 87시간 (156건)
+       • 주 사용 모델: Claude
+       • 주 작업: 코딩 학습
+    
+    2. 이직원 - 72시간 (203건)
+       • 주 사용 모델: GPT-4
+       • 주 작업: 데이터 분석
+    
+    3. 박직원 - 65시간 (134건)
+       • 주 사용 모델: Claude
+       • 주 작업: 콘텐츠 작성
+    
+    4. 최직원 - 41시간 (89건)
+       • 주 사용 모델: Gemini
+       • 주 작업: 번역
+    
+    5. 정직원 - 38시간 (76건)
+       • 주 사용 모델: GPT-4
+       • 주 작업: 기획
+    
+    📊 전체 평균:
+    - 사용 시간: 48.5시간/인
+    - 대화 수: 92건/인
+    - 만족도: 4.5/5.0
+                `.trim();
+
+            alert(stats);
+        }
+
+        // ========== 실시간 알림 ==========
+        function setupNotifications() {
+            // WebSocket 연결 또는 폴링
+            console.log('실시간 알림 설정');
+
+            // 시뮬레이션: 랜덤 알림
+            setInterval(() => {
+                const notifications = [
+                    '새로운 세션이 시작되었습니다',
+                    'API 사용량이 80%를 초과했습니다',
+                    '비정상적인 에러율이 감지되었습니다',
+                    '월 예산의 70%를 사용했습니다'
+                ];
+
+                if (Math.random() > 0.95) {
+                    const msg = notifications[Math.floor(Math.random() * notifications.length)];
+                    console.log('알림:', msg);
+                    // window.GrowFitUtils.showToast(msg, 'info');
+                }
+            }, 30000); // 30초마다
+        }
+
+        // ========== 데이터 내보내기 ==========
+        function exportData(type) {
+            let data = {};
+            let filename = '';
+
+            switch (type) {
+                case 'sessions':
+                    data = {
+                        exportDate: new Date().toISOString(),
+                        sessions: activeSessions,
+                        count: activeSessions.length
+                    };
+                    filename = `sessions_${Date.now()}.json`;
+                    break;
+
+                case 'statistics':
+                    data = {
+                        exportDate: new Date().toISOString(),
+                        period: 'last_7_days',
+                        llmConfigs: llmConfigs,
+                        totalCost: 847,
+                        totalUsage: 448
+                    };
+                    filename = `statistics_${Date.now()}.json`;
+                    break;
+
+                case 'costs':
+                    data = {
+                        exportDate: new Date().toISOString(),
+                        monthlyBudget: 1200,
+                        currentSpend: 847,
+                        breakdown: {
+                            gpt4: 384,
+                            claude: 298,
+                            gemini: 165
+                        }
+                    };
+                    filename = `costs_${Date.now()}.json`;
+                    break;
+            }
+
+            // JSON 다운로드
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            link.click();
+            URL.revokeObjectURL(url);
+
+            window.GrowFitUtils.showToast('데이터가 내보내졌습니다', 'success');
+        }
+
+        // ========== 보고서 생성 ==========
+        function generateReport(period) {
+            window.GrowFitUtils.showToast('보고서를 생성하는 중...', 'info');
+
+            setTimeout(() => {
+                const report = `
+    AI 실습 ${period} 보고서
+    
+    생성일: ${new Date().toLocaleDateString('ko-KR')}
+    
+    📊 핵심 지표:
+    - 총 사용 시간: 287.5시간
+    - 활성 사용자: 45명 중 42명 (93.3%)
+    - 총 대화 수: 1,847건
+    - 병렬 비교 활용: 68%
+    
+    💰 비용:
+    - 총 지출: $847
+    - 예산 대비: 70.6%
+    - 사용자당 평균: $18.82
+    
+    🤖 모델별:
+    - GPT-4: 156건 ($384)
+    - Claude: 203건 ($298)
+    - Gemini: 89건 ($165)
+    
+    ✅ 주요 성과:
+    - 직원 AI 활용도 93.3% 달성
+    - 병렬 비교 기능 정착
+    - 예산 내 안정적 운영
+    
+    📈 개선 사항:
+    - 교육 프로그램 확대
+    - 템플릿 라이브러리 구축
+    - 비용 최적화 전략 수립
+                    `.trim();
+
+                // 실제로는 PDF 생성
+                alert(report);
+                window.GrowFitUtils.showToast('보고서가 생성되었습니다', 'success');
+            }, 1500);
+        }
+
+        // ========== 알림 규칙 설정 ==========
+        function setupAlertRules() {
+            const rules = `
+    알림 규칙 설정
+    
+    현재 활성화된 알림:
+    
+    1. ⚠️ 비용 알림
+       • 예산의 80% 사용 시
+       • 예산의 90% 사용 시
+       • 예산 초과 시
+    
+    2. 🔔 사용량 알림
+       • 일일 사용량 급증 시 (전일 대비 50%↑)
+       • 특정 사용자 과다 사용 시
+    
+    3. ❌ 오류 알림
+       • API 오류율 5% 초과 시
+       • 연결 실패 3회 이상 시
+    
+    4. 📊 리포트 알림
+       • 주간 리포트 (월요일 오전 9시)
+       • 월간 리포트 (매월 1일 오전 9시)
+    
+    알림 수신자:
+    - 관리자
+    - IT 담당자
+    - 예산 담당자
+                `.trim();
+
+            alert(rules);
+        }
+
+        // ========== 모델 추가 ==========
+        function addNewModel() {
+            const modelName = prompt('추가할 LLM 모델 이름을 입력하세요:');
+
+            if (modelName && modelName.trim()) {
+                window.GrowFitUtils.showToast(
+                    `${modelName} 모델 추가 기능은 개발 중입니다`,
+                    'info'
+                );
+            }
+        }
+
+        // ========== 벤치마크 테스트 ==========
+        function runBenchmark() {
+            if (!confirm('모든 모델에 대해 벤치마크 테스트를 실행하시겠습니까?\n\n약 5분 소요되며, 테스트 비용이 발생할 수 있습니다.')) {
+                return;
+            }
+
+            window.GrowFitUtils.showToast('벤치마크 테스트를 시작합니다...', 'info');
+
+            setTimeout(() => {
+                const results = `
+    벤치마크 테스트 결과
+    
+    테스트 시나리오:
+    - 코드 생성 (Python)
+    - 문서 작성 (마케팅)
+    - 데이터 분석
+    - 번역 (한↔영)
+    - 요약
+    
+    ┌────────┬──────┬──────┬──────┐
+    │ 항목   │ GPT-4│Claude│Gemini│
+    ├────────┼──────┼──────┼──────┤
+    │ 정확도 │ 4.7  │ 4.8  │ 4.5  │
+    │ 속도   │ 4.5  │ 4.9  │ 4.2  │
+    │ 비용   │ 3.8  │ 4.2  │ 4.7  │
+    │ 종합   │ 4.3  │ 4.6  │ 4.5  │
+    └────────┴──────┴──────┴──────┘
+    
+    💡 추천:
+    - 종합 1위: Claude (4.6점)
+    - 속도 1위: Claude (4.9점)
+    - 비용 1위: Gemini (4.7점)
+                    `.trim();
+
+                alert(results);
+                window.GrowFitUtils.showToast('벤치마크 테스트가 완료되었습니다', 'success');
+            }, 3000);
+        }
+
+        // ========== 키보드 단축키 ==========
+        document.addEventListener('keydown', function (e) {
+            // Ctrl/Cmd + R: 새로고침
+            if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+                if (currentTab === 'sessions') {
+                    e.preventDefault();
+                    refreshSessions();
+                }
+            }
+
+            // Ctrl/Cmd + E: 내보내기
+            if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+                e.preventDefault();
+                exportData(currentTab);
+            }
+
+            // Ctrl/Cmd + 1~4: 탭 전환
+            if ((e.ctrlKey || e.metaKey) && ['1', '2', '3', '4'].includes(e.key)) {
+                e.preventDefault();
+                const tabs = ['llm-settings', 'sessions', 'statistics', 'templates'];
+                switchTab(tabs[parseInt(e.key) - 1]);
+            }
+        });
+
+        // ========== 페이지 나가기 전 정리 ==========
+        window.addEventListener('beforeunload', function () {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+            }
+        });
+
+        // ========== 초기화 완료 ==========
+        console.log('AI Practice Management 스크립트 로드 완료');
+        console.log('단축키: Ctrl+R(새로고침), Ctrl+E(내보내기), Ctrl+1~4(탭 전환)');
+
+        // ========== 실시간 대시보드 업데이트 ==========
+        function updateDashboard() {
+            // 통계 카드 업데이트
+            updateStatCards();
+            
+            // 세션 테이블 업데이트
+            if (currentTab === 'sessions') {
+                updateSessionsTable();
+            }
+            
+            // 차트 업데이트
+            if (currentTab === 'statistics') {
+                updateCharts();
+            }
+        }
+
+        function updateStatCards() {
+            // 실제로는 API에서 실시간 데이터 가져오기
+            const stats = {
+                activeSessions: 23 + Math.floor(Math.random() * 3) - 1,
+                weeklyHours: 287.5,
+                parallelUsage: 1234,
+                monthlyCost: 847
+            };
+
+            console.log('통계 카드 업데이트:', stats);
+        }
+
+        function updateSessionsTable() {
+            // 실제로는 WebSocket 또는 폴링으로 실시간 데이터
+            console.log('세션 테이블 업데이트');
+        }
+
+        function updateCharts() {
+            console.log('차트 업데이트');
+        }
+
+        // ========== 사용자 활동 모니터링 ==========
+        function monitorUserActivity(userId) {
+            const activity = `
+사용자 활동 모니터링: ${userId}
+
+📊 실시간 활동:
+- 현재 상태: 활성
+- 현재 프로젝트: Python 학습
+- 사용 모델: Claude 3.7 Sonnet
+- 세션 시작: 14:23 (32분 경과)
+
+💬 최근 대화 (최근 5개):
+1. [14:52] "리스트 컴프리헨션 설명"
+2. [14:48] "데코레이터 사용법"
+3. [14:45] "클래스 상속 예제"
+4. [14:38] "파일 입출력 방법"
+5. [14:25] "Python 기초 질문"
+
+📈 오늘 활동:
+- 대화 수: 23건
+- 사용 시간: 2.5시간
+- 비용: $3.47
+
+⚡ 실시간 지표:
+- 평균 응답 시간: 1.8초
+- 만족도: 높음 (👍 15개)
+- 에러: 없음
+            `.trim();
+
+            alert(activity);
+        }
+
+        // ========== 프로젝트별 분석 ==========
+        function analyzeByProject() {
+            const analysis = `
+프로젝트별 AI 사용 분석
+
+📁 Top 5 활성 프로젝트:
+
+1. Python 학습 (23명)
+   • 사용 시간: 87.5h
+   • 대화 수: 456건
+   • 주 사용 모델: Claude
+   • 비용: $234
+
+2. 마케팅 콘텐츠 생성 (18명)
+   • 사용 시간: 72.3h
+   • 대화 수: 389건
+   • 주 사용 모델: GPT-4
+   • 비용: $198
+
+3. 데이터 분석 실습 (15명)
+   • 사용 시간: 54.2h
+   • 대화 수: 278건
+   • 주 사용 모델: Claude
+   • 비용: $167
+
+4. 번역 프로젝트 (12명)
+   • 사용 시간: 38.7h
+   • 대화 수: 201건
+   • 주 사용 모델: Gemini
+   • 비용: $89
+
+5. 코드 리뷰 자동화 (9명)
+   • 사용 시간: 34.8h
+   • 대화 수: 167건
+   • 주 사용 모델: GPT-4
+   • 비용: $159
+
+💡 인사이트:
+- 교육 프로젝트가 60% 차지
+- 병렬 비교는 주로 콘텐츠 생성에 활용
+- 비용 대비 효율은 데이터 분석이 최고
+            `.trim();
+
+            alert(analysis);
+        }
+
+        // ========== 에이전트 사용 현황 ==========
+        function viewAgentUsage() {
+            const usage = `
+커스텀 에이전트 사용 현황
+
+🤖 전사 에이전트 (5개):
+
+1. 코딩 튜터
+   • 사용 횟수: 234회
+   • 평균 만족도: 4.7/5.0
+   • 주 사용자: 개발팀
+
+2. 콘텐츠 작가
+   • 사용 횟수: 189회
+   • 평균 만족도: 4.5/5.0
+   • 주 사용자: 마케팅팀
+
+3. 데이터 분석가
+   • 사용 횟수: 156회
+   • 평균 만족도: 4.6/5.0
+   • 주 사용자: 기획팀
+
+4. 번역가
+   • 사용 횟수: 123회
+   • 평균 만족도: 4.4/5.0
+   • 주 사용자: 전사
+
+5. 회의록 작성자
+   • 사용 횟수: 98회
+   • 평균 만족도: 4.3/5.0
+   • 주 사용자: 전사
+
+📊 통계:
+- 전체 사용: 800회
+- 평균 만족도: 4.5/5.0
+- 커스텀 에이전트 비율: 43%
+            `.trim();
+
+            alert(usage);
+        }
+
+        // ========== 보안 및 컴플라이언스 ==========
+        function checkCompliance() {
+            const report = `
+보안 및 컴플라이언스 체크
+
+✅ 통과 항목:
+- API 키 암호화 저장
+- HTTPS 통신
+- 사용자 인증/권한
+- 감사 로그 기록
+- 데이터 백업 (일 1회)
+
+⚠️ 주의 항목:
+- 일부 직원 과다 사용 (일일 한도 초과)
+- API 호출 실패율 2.1% (정상: <1%)
+
+🔒 개인정보 보호:
+- 대화 내용 암호화: ✓
+- 자동 삭제 정책: 90일 후
+- 접근 로그: 모두 기록됨
+- GDPR 준수: ✓
+
+📋 권장 사항:
+- 2단계 인증 활성화
+- 정기 보안 감사 실시
+- 직원 교육 강화
+            `.trim();
+
+            alert(report);
+        }
+
+        // ========== 자동 최적화 제안 ==========
+        function suggestOptimizations() {
+            const suggestions = `
+AI 실습 최적화 제안
+
+💰 비용 절감 (예상: $127/월):
+1. 캐싱 활용도 증가
+   • 현재: 23% → 목표: 60%
+   • 예상 절감: $45/월
+
+2. 프롬프트 최적화
+   • 토큰 사용량 15% 감소 가능
+   • 예상 절감: $52/월
+
+3. 저비용 모델 우선 활용
+   • Gemini 활용도 증가
+   • 예상 절감: $30/월
+
+⚡ 성능 개선:
+1. 응답 속도 향상
+   • 병렬 처리 최적화
+   • 예상 개선: 15%
+
+2. 에러율 감소
+   • 재시도 로직 개선
+   • 예상 개선: 50%
+
+📚 교육 프로그램:
+1. 프롬프트 엔지니어링 교육
+   • 효율적인 질문 방법
+   • 토큰 절약 기법
+
+2. 에이전트 활용 교육
+   • 커스텀 에이전트 만들기
+   • 반복 작업 자동화
+
+🎯 목표:
+- 비용 15% 절감
+- 만족도 10% 향상
+- 활용도 20% 증가
+            `.trim();
+
+            alert(suggestions);
+        }
+
+        // ========== 예산 예측 ==========
+        function predictBudget() {
+            const prediction = `
+예산 예측 및 관리
+
+📊 현재 상황 (10월):
+- 사용: $847 / $1,200 (70.6%)
+- 남은 예산: $353
+- 경과 일수: 9일 / 31일 (29.0%)
+
+📈 예측 (월말):
+- 예상 총 비용: $1,120
+- 예산 내 유지: ✓
+- 여유 예산: $80
+
+📅 분기별 예측:
+- Q4 2025: $3,480
+- Q1 2026: $3,720 (+6.9%)
+- Q2 2026: $3,960 (+13.8%)
+
+💡 권장 예산:
+- 11월: $1,300
+- 12월: $1,400 (연말 증가 예상)
+- 2026년 월평균: $1,350
+
+⚠️ 주의사항:
+- 신규 프로젝트 시작 시 예산 증가
+- 직원 수 증가 시 재계산 필요
+- API 가격 인상 가능성 고려
+
+🎯 최적화 목표:
+- 효율 10% 개선 시 $120/월 절감
+- 연간 $1,440 절감 가능
+            `.trim();
+
+            alert(prediction);
+        }
+
+        // ========== 부서별 할당량 관리 ==========
+        function manageQuotas() {
+            const quotas = `
+부서별 할당량 관리
+
+💼 현재 할당:
+
+개발팀 (20명)
+- 월 예산: $500
+- 사용: $423 (84.6%)
+- 남은 예산: $77
+- 상태: ⚠️ 주의
+
+마케팅팀 (15명)
+- 월 예산: $400
+- 사용: $256 (64.0%)
+- 남은 예산: $144
+- 상태: ✅ 정상
+
+기획팀 (10명)
+- 월 예산: $300
+- 사용: $168 (56.0%)
+- 남은 예산: $132
+- 상태: ✅ 정상
+
+⚙️ 관리 옵션:
+1. 자동 알림 설정
+   • 80% 사용 시 부서장에게 알림
+   • 90% 사용 시 사용 제한 경고
+
+2. 유연한 재분배
+   • 미사용 예산 자동 재분배
+   • 부서 간 예산 공유
+
+3. 개인 한도 설정
+   • 1인당 일일 한도: $5
+   • 1인당 월 한도: $100
+
+💡 추천:
+개발팀 예산을 $550으로 증액
+            `.trim();
+
+            alert(quotas);
+        }
+
+        // ========== 품질 관리 ==========
+        function monitorQuality() {
+            const quality = `
+AI 응답 품질 모니터링
+
+📊 전체 품질 지표:
+
+만족도 평가:
+- 평균: 4.5/5.0
+- 👍 긍정: 87%
+- 👎 부정: 13%
+
+응답 품질:
+- 관련성: 4.6/5.0
+- 정확성: 4.4/5.0
+- 유용성: 4.5/5.0
+
+🤖 모델별 품질:
+
+GPT-4:
+- 만족도: 4.5/5.0
+- 강점: 코드 생성, 논리적 추론
+- 약점: 최신 정보 부족
+
+Claude:
+- 만족도: 4.7/5.0
+- 강점: 문서 작성, 분석
+- 약점: 수학적 계산
+
+Gemini:
+- 만족도: 4.3/5.0
+- 강점: 번역, 요약
+- 약점: 코드 품질
+
+⚠️ 개선 필요 영역:
+- 한국어 답변 품질
+- 전문 용어 정확도
+- 컨텍스트 이해도
+
+✅ 개선 조치:
+- 프롬프트 템플릿 개선
+- Few-shot 예시 추가
+- 도메인별 파인튜닝 검토
+            `.trim();
+
+            alert(quality);
+        }
+
+        // ========== 사용 패턴 분석 ==========
+        function analyzeUsagePatterns() {
+            const patterns = `
+사용 패턴 분석
+
+⏰ 시간대별 사용:
+- 오전 (09-12): 35% ████████░░
+- 오후 (13-18): 48% ██████████
+- 저녁 (19-22): 15% ████░░░░░░
+- 야간 (23-08): 2%  █░░░░░░░░░
+
+📅 요일별 사용:
+- 월: 18% ████░░░░░░
+- 화: 22% █████░░░░░
+- 수: 21% █████░░░░░
+- 목: 20% ████░░░░░░
+- 금: 19% ████░░░░░░
+- 토: 0%  ░░░░░░░░░░
+- 일: 0%  ░░░░░░░░░░
+
+🎯 작업 유형:
+- 코드 작성: 35%
+- 문서 작성: 28%
+- 데이터 분석: 18%
+- 번역: 12%
+- 기타: 7%
+
+💡 인사이트:
+- 오후 2-4시가 피크 타임
+- 주중 집중, 주말 사용 없음
+- 코드 작성이 가장 많은 용도
+- 병렬 비교는 주로 콘텐츠 작업에 사용
+
+📈 추세:
+- 사용량 매주 8% 증가
+- 병렬 비교 모드 채택률 증가
+- 커스텀 에이전트 사용 확대
+            `.trim();
+
+            alert(patterns);
+        }
+
+        // ========== 교육 효과 측정 ==========
+        function measureTrainingEffect() {
+            const effect = `
+AI 교육 효과 측정
+
+📚 교육 프로그램:
+- 프롬프트 엔지니어링 (9월)
+- 에이전트 빌더 워크숍 (10월)
+
+📊 Before & After:
+
+사용 효율성:
+- 교육 전: 평균 3.2회 재시도
+- 교육 후: 평균 1.8회 재시도
+- 개선: 43.8% ↑
+
+프롬프트 품질:
+- 교육 전: 평균 토큰 사용 850
+- 교육 후: 평균 토큰 사용 620
+- 개선: 27.1% ↓
+
+만족도:
+- 교육 전: 3.8/5.0
+- 교육 후: 4.5/5.0
+- 개선: 18.4% ↑
+
+비용 효율:
+- 교육 전: $1,120/월
+- 교육 후: $847/월
+- 절감: 24.4% ↓
+
+✅ 주요 성과:
+- 토큰 사용량 27% 감소
+- 재시도 횟수 44% 감소
+- 만족도 18% 증가
+- 비용 24% 절감
+
+🎯 다음 교육 계획:
+- 고급 프롬프트 기법
+- RAG 시스템 활용법
+- 팀 협업 워크플로우
+            `.trim();
+
+            alert(effect);
+        }
+
+        // ========== 문제 해결 가이드 ==========
+        function showTroubleshooting() {
+            const guide = `
+문제 해결 가이드
+
+❌ 자주 발생하는 문제:
+
+1. API 키 오류
+   증상: "Invalid API key" 에러
+   해결: LLM 설정에서 API 키 재입력
+
+2. 응답 지연
+   증상: 10초 이상 응답 없음
+   해결: 
+   • 네트워크 연결 확인
+   • 다른 모델로 전환
+   • 관리자에게 문의
+
+3. 비용 초과
+   증상: 예산 초과 알림
+   해결:
+   • 부서별 사용량 확인
+   • 불필요한 재시도 줄이기
+   • 저비용 모델 활용
+
+4. 품질 저하
+   증상: 답변 품질 낮음
+   해결:
+   • 프롬프트 개선
+   • Few-shot 예시 추가
+   • 다른 모델 시도
+
+5. 연결 실패
+   증상: 모델 연결 안 됨
+   해결:
+   • 전체 연결 테스트 실행
+   • 로그 확인
+   • 긴급: 070-1234-5678
+
+📞 지원:
+- 이메일: support@growfit.com
+- 전화: 070-1234-5678
+- 챗봇: 24/7 운영
+            `.trim();
+
+            alert(guide);
+        }
+
+        // ========== 백업 및 복구 ==========
+        function backupSettings() {
+            const backup = {
+                timestamp: new Date().toISOString(),
+                llmConfigs: llmConfigs,
+                settings: {
+                    defaultModel: 'Claude',
+                    parallelMode: true,
+                    autoRouting: true
+                },
+                quotas: {
+                    development: 500,
+                    marketing: 400,
+                    planning: 300
+                }
+            };
+
+            const dataStr = JSON.stringify(backup, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `ai-practice-backup_${Date.now()}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+
+            window.GrowFitUtils.showToast('설정이 백업되었습니다', 'success');
+        }
+
+        function restoreSettings() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        try {
+                            const backup = JSON.parse(event.target.result);
+                            
+                            if (confirm('백업 파일로 설정을 복원하시겠습니까?\n\n현재 설정은 덮어씌워집니다.')) {
+                                // 설정 복원
+                                console.log('설정 복원:', backup);
+                                window.GrowFitUtils.showToast('설정이 복원되었습니다', 'success');
+                                location.reload();
+                            }
+                        } catch (error) {
+                            console.error('백업 파일 오류:', error);
+                            window.GrowFitUtils.showToast('잘못된 백업 파일입니다', 'error');
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+
+            input.click();
+        }
+
+        // ========== 도움말 ==========
+        function showHelp() {
+            const help = `
+AI 실습 관리 도움말
+
+📖 주요 기능:
+
+1. LLM 설정
+   • API 키 관리
+   • 모델 연결 테스트
+   • 우선순위 설정
+
+2. 실시간 세션
+   • 활성 사용자 모니터링
+   • 세션 상세 정보
+   • 자동 새로고침
+
+3. 사용 통계
+   • 모델별 사용 현황
+   • 비용 분석
+   • 트렌드 차트
+
+4. 프롬프트 템플릿
+   • 전사 템플릿 관리
+   • 공유 및 배포
+
+⌨️ 키보드 단축키:
+- Ctrl+R: 새로고침
+- Ctrl+E: 데이터 내보내기
+- Ctrl+1~4: 탭 전환
+
+💡 팁:
+- 병렬 비교 모드 활용
+- 주기적인 벤치마크 실행
+- 비용 알림 설정
+- 정기 보고서 생성
+
+📞 문의:
+support@growfit.com
+            `.trim();
+
+            alert(help);
+        }
+
+        // ========== 초기화 시 알림 설정 ==========
+        setupNotifications();
+
+        // ========== 페이지 가시성 변경 처리 ==========
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                console.log('페이지 숨김 - 자동 새로고침 일시 중지');
+            } else {
+                console.log('페이지 표시 - 데이터 업데이트');
+                updateDashboard();
+            }
+        });
+
+        console.log('🚀 AI Practice Management 완전 로드 완료');
+    </script>
+</body>
+</html>

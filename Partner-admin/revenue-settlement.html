@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>수익/정산 관리 - GrowFit Partner Admin</title>
+
+    <!-- 공통 CSS -->
+    <link rel="stylesheet" href="../common/variables.css">
+    <link rel="stylesheet" href="../common/layout.css">
+    <link rel="stylesheet" href="../common/components.css">
+
+    <style>
+        /* ========== Revenue Settlement 전용 스타일 ========== */
+        :root {
+            --partner-primary: #0ea5e9;
+            --partner-primary-light: #38bdf8;
+            --partner-primary-dark: #0284c7;
+            --partner-secondary: #8b5cf6;
+            --partner-accent: #ec4899;
+            --partner-success: #10b981;
+            --partner-warning: #f59e0b;
+            --partner-danger: #ef4444;
+        }
+
+        /* 페이지 헤더 */
+        .page-header {
+            margin-bottom: var(--space-6);
+        }
+
+        .page-title {
+            font-size: var(--text-3xl);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-2);
+        }
+
+        .page-subtitle {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+        }
+
+        /* 수익 개요 카드 */
+        .revenue-overview {
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.05), rgba(139, 92, 246, 0.05));
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
+            margin-bottom: var(--space-6);
+        }
+
+        .revenue-overview__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: var(--space-5);
+        }
+
+        .revenue-overview__title {
+            font-size: var(--text-2xl);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-1);
+        }
+
+        .revenue-overview__period {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+        }
+
+        .revenue-status {
+            padding: var(--space-2) var(--space-4);
+            border-radius: var(--radius-lg);
+            font-size: var(--text-sm);
+            font-weight: var(--font-bold);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .revenue-status--active {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--partner-success);
+        }
+
+        .revenue-status--pending {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--partner-warning);
+        }
+
+        .revenue-main {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: var(--space-5);
+            margin-bottom: var(--space-5);
+        }
+
+        .revenue-amount {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+        }
+
+        .revenue-amount__label {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            font-weight: var(--font-medium);
+        }
+
+        .revenue-amount__value {
+            font-size: var(--text-5xl);
+            font-weight: var(--font-bold);
+            color: var(--partner-primary);
+            line-height: 1;
+        }
+
+        .revenue-amount__detail {
+            font-size: var(--text-base);
+            color: var(--text-secondary);
+        }
+
+        .revenue-breakdown {
+            display: grid;
+            gap: var(--space-2);
+        }
+
+        .breakdown-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-2);
+            background: white;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            font-size: var(--text-sm);
+        }
+
+        .breakdown-label {
+            color: var(--text-secondary);
+        }
+
+        .breakdown-value {
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+        }
+
+        .breakdown-value--negative {
+            color: var(--partner-danger);
+        }
+
+        .breakdown-value--positive {
+            color: var(--partner-success);
+        }
+
+        .revenue-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-4);
+        }
+
+        .revenue-stat {
+            padding: var(--space-3);
+            background: white;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+        }
+
+        .revenue-stat__label {
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-1);
+        }
+
+        .revenue-stat__value {
+            font-size: var(--text-xl);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+        }
+
+        /* 메트릭 카드 */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--space-4);
+            margin-bottom: var(--space-6);
+        }
+
+        .metric-card {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            transition: all 0.2s;
+        }
+
+        .metric-card:hover {
+            border-color: var(--partner-primary);
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .metric-card__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: var(--space-3);
+        }
+
+        .metric-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .metric-icon--primary {
+            background: linear-gradient(135deg, var(--partner-primary-light), var(--partner-primary));
+            color: white;
+        }
+
+        .metric-icon--success {
+            background: linear-gradient(135deg, #34d399, var(--partner-success));
+            color: white;
+        }
+
+        .metric-icon--warning {
+            background: linear-gradient(135deg, #fbbf24, var(--partner-warning));
+            color: white;
+        }
+
+        .metric-icon--secondary {
+            background: linear-gradient(135deg, #a78bfa, var(--partner-secondary));
+            color: white;
+        }
+
+        .metric-trend {
+            padding: 4px 8px;
+            border-radius: var(--radius-sm);
+            font-size: var(--text-xs);
+            font-weight: var(--font-bold);
+        }
+
+        .metric-trend--up {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--partner-success);
+        }
+
+        .metric-trend--down {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--partner-danger);
+        }
+
+        .metric-card__label {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-1);
+        }
+
+        .metric-card__value {
+            font-size: var(--text-2xl);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-2);
+        }
+
+        .metric-card__detail {
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+        }
+
+        /* 탭 네비게이션 */
+        .tabs {
+            display: flex;
+            gap: var(--space-2);
+            margin-bottom: var(--space-6);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tab {
+            padding: var(--space-3) var(--space-5);
+            border: none;
+            background: none;
+            font-size: var(--text-base);
+            font-weight: var(--font-semibold);
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .tab:hover {
+            color: var(--partner-primary);
+        }
+
+        .tab--active {
+            color: var(--partner-primary);
+            border-bottom-color: var(--partner-primary);
+        }
+
+        .tab-count {
+            background: var(--surface);
+            padding: 2px 8px;
+            border-radius: var(--radius-sm);
+            font-size: var(--text-xs);
+        }
+
+        .tab--active .tab-count {
+            background: rgba(14, 165, 233, 0.1);
+            color: var(--partner-primary);
+        }
+
+        /* 정산 테이블 */
+        .settlement-table-container {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            margin-bottom: var(--space-6);
+        }
+
+        .settlement-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .settlement-table thead {
+            background: var(--surface);
+        }
+
+        .settlement-table th {
+            padding: var(--space-4);
+            text-align: left;
+            font-size: var(--text-sm);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .settlement-table td {
+            padding: var(--space-4);
+            border-bottom: 1px solid var(--border);
+            font-size: var(--text-sm);
+        }
+
+        .settlement-table tbody tr:hover {
+            background: var(--surface);
+        }
+
+        .settlement-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .project-name {
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+        }
+
+        .project-period {
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            font-size: var(--text-xs);
+            font-weight: var(--font-bold);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .status-badge--active {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--partner-success);
+        }
+
+        .status-badge--pending {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--partner-warning);
+        }
+
+        .status-badge--completed {
+            background: rgba(139, 92, 246, 0.1);
+            color: var(--partner-secondary);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .amount-positive {
+            color: var(--partner-success);
+            font-weight: var(--font-semibold);
+        }
+
+        .amount-negative {
+            color: var(--partner-danger);
+            font-weight: var(--font-semibold);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: var(--space-2);
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            background: white;
+            font-size: var(--text-xs);
+            font-weight: var(--font-semibold);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            border-color: var(--partner-primary);
+            color: var(--partner-primary);
+        }
+
+        .action-btn--primary {
+            background: var(--partner-primary);
+            color: white;
+            border-color: var(--partner-primary);
+        }
+
+        .action-btn--primary:hover {
+            background: var(--partner-primary-dark);
+        }
+
+        /* 차트 섹션 */
+        .chart-section {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+            margin-bottom: var(--space-6);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-4);
+        }
+
+        .chart-title {
+            font-size: var(--text-xl);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+        }
+
+        .chart-legend {
+            display: flex;
+            gap: var(--space-3);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-1);
+            font-size: var(--text-sm);
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: var(--radius-sm);
+        }
+
+        .chart-placeholder {
+            height: 300px;
+            background: linear-gradient(135deg, var(--surface), white);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            font-size: var(--text-sm);
+        }
+
+        /* 알림 카드 */
+        .alert-cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-4);
+            margin-bottom: var(--space-6);
+        }
+
+        .alert-card {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+        }
+
+        .alert-card--success {
+            background: rgba(16, 185, 129, 0.05);
+            border-color: var(--partner-success);
+        }
+
+        .alert-card--warning {
+            background: rgba(245, 158, 11, 0.05);
+            border-color: var(--partner-warning);
+        }
+
+        .alert-card__header {
+            display: flex;
+            gap: var(--space-3);
+            margin-bottom: var(--space-3);
+        }
+
+        .alert-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .alert-icon--success {
+            background: var(--partner-success);
+            color: white;
+        }
+
+        .alert-icon--warning {
+            background: var(--partner-warning);
+            color: white;
+        }
+
+        .alert-card__title {
+            font-size: var(--text-base);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-1);
+        }
+
+        .alert-card__message {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: var(--space-3);
+        }
+
+        .alert-card__actions {
+            display: flex;
+            gap: var(--space-2);
+        }
+
+        /* 반응형 */
+        @media (max-width: 1400px) {
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .alert-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .revenue-main {
+                grid-template-columns: 1fr;
+            }
+
+            .revenue-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .settlement-table {
+                font-size: var(--text-xs);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header__left">
+                <button id="menuToggle" class="header__icon-button hidden-desktop">
+                    <span>☰</span>
+                </button>
+                <a href="dashboard.html" class="header__logo">
+                    <span class="header__logo-icon">🌱</span>
+                    <span>GrowFit Partner</span>
+                </a>
+            </div>
+
+            <div class="header__right">
+                <button id="notificationBtn" class="header__icon-button">
+                    <span>🔔</span>
+                    <span class="header__badge">2</span>
+                </button>
+
+                <div id="profileBtn" class="header__profile">
+                    <div class="header__avatar"
+                        style="background: linear-gradient(135deg, #0ea5e9, #38bdf8);">박</div>
+                    <span class="hidden-mobile">박강사</span>
+                    <span class="hidden-mobile">▼</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="container">
+            <!-- Sidebar -->
+            <aside class="sidebar sidebar--open">
+                <div class="sidebar__user">
+                    <div class="sidebar__user-info">
+                        <div class="sidebar__user-avatar"
+                            style="background: linear-gradient(135deg, #0ea5e9, #38bdf8);">박</div>
+                        <div class="sidebar__user-details">
+                            <div class="sidebar__user-name">박강사</div>
+                            <div class="sidebar__user-role">교육 파트너</div>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="sidebar__nav">
+                    <ul class="sidebar__menu">
+                        <li class="sidebar__menu-item">
+                            <a href="dashboard.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">🏠</span>
+                                <span>대시보드</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="project-management.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">📁</span>
+                                <span>프로젝트 관리</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="student-management.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">👥</span>
+                                <span>학생 관리</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="ai-practice-management.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">🤖</span>
+                                <span>AI 실습 관리</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="revenue-settlement.html" class="sidebar__menu-link sidebar__menu-link--active">
+                                <span class="sidebar__menu-icon">💰</span>
+                                <span>수익/정산 관리</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="settings.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">⚙️</span>
+                                <span>설정</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <div class="sidebar__footer">
+                    <div style="padding: var(--space-3); background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(139, 92, 246, 0.1)); border-radius: var(--radius-md); font-size: var(--text-xs);">
+                        <div style="color: var(--text-secondary); margin-bottom: var(--space-1);">이번 달 수익</div>
+                        <div style="font-weight: var(--font-bold); color: var(--partner-primary);">48,200,000원</div>
+                        <div style="height: 4px; background: var(--gray-200); border-radius: 2px; margin-top: var(--space-2); overflow: hidden;">
+                            <div style="height: 100%; width: 75%; background: linear-gradient(to right, var(--partner-primary), var(--partner-secondary));"></div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main">
+                <!-- 페이지 헤더 -->
+                <div class="page-header">
+                    <h1 class="page-title">💰 수익/정산 관리</h1>
+                    <p class="page-subtitle">프로젝트별 수익 현황 및 정산 내역 관리</p>
+                </div>
+
+                <!-- 상단 액션 버튼 -->
+                <div style="display: flex; justify-content: flex-end; gap: var(--space-2); margin-bottom: var(--space-6);">
+                    <button class="btn btn--outline" onclick="exportRevenue()">
+                        📥 보고서 내보내기
+                    </button>
+                    <button class="btn btn--outline" onclick="showTaxInfo()">
+                        📄 세금계산서
+                    </button>
+                </div>
+
+                <!-- 수익 개요 -->
+                <div class="revenue-overview">
+                    <div class="revenue-overview__header">
+                        <div>
+                            <h2 class="revenue-overview__title">이번 달 수익 현황</h2>
+                            <p class="revenue-overview__period">2025년 1월 1일 - 1월 31일</p>
+                        </div>
+                        <div class="revenue-status revenue-status--active">
+                            <span>✓</span>
+                            <span>정산 정상</span>
+                        </div>
+                    </div>
+
+                    <div class="revenue-main">
+                        <div class="revenue-amount">
+                            <span class="revenue-amount__label">예상 실수령액</span>
+                            <div style="display: flex; align-items: baseline; gap: var(--space-2);">
+                                <span class="revenue-amount__value">48,200,000원</span>
+                            </div>
+                            <span class="revenue-amount__detail">진행 중 프로젝트 3개 기준</span>
+                        </div>
+
+                        <div class="revenue-breakdown">
+                            <div class="breakdown-row">
+                                <span class="breakdown-label">총 계약금</span>
+                                <span class="breakdown-value">60,000,000원</span>
+                            </div>
+                            <div class="breakdown-row">
+                                <span class="breakdown-label">플랫폼 수수료 (15%)</span>
+                                <span class="breakdown-value breakdown-value--negative">-9,000,000원</span>
+                            </div>
+                            <div class="breakdown-row">
+                                <span class="breakdown-label">API 비용 (현재)</span>
+                                <span class="breakdown-value breakdown-value--negative">-2,800,000원</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="revenue-stats">
+                        <div class="revenue-stat">
+                            <div class="revenue-stat__label">프로젝트당 평균</div>
+                            <div class="revenue-stat__value">16,067,000원</div>
+                        </div>
+                        <div class="revenue-stat">
+                            <div class="revenue-stat__label">순이익률</div>
+                            <div class="revenue-stat__value">80.3%</div>
+                        </div>
+                        <div class="revenue-stat">
+                            <div class="revenue-stat__label">월 성장률</div>
+                            <div class="revenue-stat__value">+24%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 메트릭 카드 -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-card__header">
+                            <div class="metric-icon metric-icon--primary">💰</div>
+                            <span class="metric-trend metric-trend--up">+24% ↑</span>
+                        </div>
+                        <div class="metric-card__label">이번 달 총 수익</div>
+                        <div class="metric-card__value">48,200,000원</div>
+                        <div class="metric-card__detail">지난 달 대비 +9,200,000원</div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-card__header">
+                            <div class="metric-icon metric-icon--success">📊</div>
+                            <span class="metric-trend metric-trend--up">+18% ↑</span>
+                        </div>
+                        <div class="metric-card__label">총 계약금</div>
+                        <div class="metric-card__value">60,000,000원</div>
+                        <div class="metric-card__detail">프로젝트 3개</div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-card__header">
+                            <div class="metric-icon metric-icon--warning">💸</div>
+                            <span class="metric-trend metric-trend--down">-5% ↓</span>
+                        </div>
+                        <div class="metric-card__label">API 비용</div>
+                        <div class="metric-card__value">2,800,000원</div>
+                        <div class="metric-card__detail">학생 65명 기준</div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-card__header">
+                            <div class="metric-icon metric-icon--secondary">🎯</div>
+                        </div>
+                        <div class="metric-card__label">순이익률</div>
+                        <div class="metric-card__value">80.3%</div>
+                        <div class="metric-card__detail">업계 평균 대비 +15%</div>
+                    </div>
+                </div>
+
+                <!-- 알림 카드 -->
+                <div class="alert-cards">
+                    <div class="alert-card alert-card--success">
+                        <div class="alert-card__header">
+                            <div class="alert-icon alert-icon--success">✓</div>
+                            <div>
+                                <h3 class="alert-card__title">정산 완료</h3>
+                            </div>
+                        </div>
+                        <p class="alert-card__message">
+                            지난 달 정산 금액 39,000,000원이 1월 5일에 입금 완료되었습니다.
+                        </p>
+                        <div class="alert-card__actions">
+                            <button class="btn btn--sm btn--outline" onclick="viewSettlementDetail()">
+                                상세 내역
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="alert-card alert-card--warning">
+                        <div class="alert-card__header">
+                            <div class="alert-icon alert-icon--warning">⚠️</div>
+                            <div>
+                                <h3 class="alert-card__title">API 비용 증가 추세</h3>
+                            </div>
+                        </div>
+                        <p class="alert-card__message">
+                            학생당 평균 API 비용이 43,000원으로 지난 달 대비 12% 증가했습니다. 프롬프트 최적화를 권장합니다.
+                        </p>
+                        <div class="alert-card__actions">
+                            <button class="btn btn--sm btn--outline" onclick="optimizeAPI()">
+                                최적화 가이드
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 탭 네비게이션 -->
+                <div class="tabs">
+                    <button class="tab tab--active" data-tab="active" onclick="switchTab('active')">
+                        <span>진행 중</span>
+                        <span class="tab-count">3</span>
+                    </button>
+                    <button class="tab" data-tab="pending" onclick="switchTab('pending')">
+                        <span>정산 대기</span>
+                        <span class="tab-count">2</span>
+                    </button>
+                    <button class="tab" data-tab="completed" onclick="switchTab('completed')">
+                        <span>정산 완료</span>
+                        <span class="tab-count">5</span>
+                    </button>
+                </div>
+
+                <!-- 정산 테이블 -->
+                <div id="settlementTableContainer">
+                    <div class="settlement-table-container">
+                        <table class="settlement-table">
+                            <thead>
+                                <tr>
+                                    <th>프로젝트</th>
+                                    <th>계약금</th>
+                                    <th>플랫폼 수수료</th>
+                                    <th>API 비용</th>
+                                    <th>실수령액</th>
+                                    <th>상태</th>
+                                    <th>작업</th>
+                                </tr>
+                            </thead>
+                            <tbody id="settlementTableBody">
+                                <!-- 프로젝트 1 -->
+                                <tr data-status="active">
+                                    <td>
+                                        <div class="project-name">Samsung 마케팅팀 AI 교육</div>
+                                        <div class="project-period">2025-01-01 ~ 2025-02-28</div>
+                                    </td>
+                                    <td>20,000,000원</td>
+                                    <td class="amount-negative">-3,000,000원</td>
+                                    <td class="amount-negative">-1,200,000원</td>
+                                    <td class="amount-positive">15,800,000원</td>
+                                    <td>
+                                        <span class="status-badge status-badge--active">
+                                            <span class="status-dot"></span>
+                                            진행 중
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="action-btn action-btn--primary" onclick="viewDetail('proj-1')">
+                                                상세보기
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- 프로젝트 2 -->
+                                <tr data-status="active">
+                                    <td>
+                                        <div class="project-name">LG 개발팀 AI 코딩 실습</div>
+                                        <div class="project-period">2025-01-15 ~ 2025-03-15</div>
+                                    </td>
+                                    <td>15,000,000원</td>
+                                    <td class="amount-negative">-2,250,000원</td>
+                                    <td class="amount-negative">-850,000원</td>
+                                    <td class="amount-positive">11,900,000원</td>
+                                    <td>
+                                        <span class="status-badge status-badge--active">
+                                            <span class="status-dot"></span>
+                                            진행 중
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="action-btn action-btn--primary" onclick="viewDetail('proj-2')">
+                                                상세보기
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- 프로젝트 3 -->
+                                <tr data-status="active">
+                                    <td>
+                                        <div class="project-name">현대자동차 AI 활용 교육</div>
+                                        <div class="project-period">2025-02-01 ~ 2025-04-30</div>
+                                    </td>
+                                    <td>25,000,000원</td>
+                                    <td class="amount-negative">-3,750,000원</td>
+                                    <td class="amount-negative">-750,000원</td>
+                                    <td class="amount-positive">20,500,000원</td>
+                                    <td>
+                                        <span class="status-badge status-badge--active">
+                                            <span class="status-dot"></span>
+                                            진행 중
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="action-btn action-btn--primary" onclick="viewDetail('proj-3')">
+                                                상세보기
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 차트 섹션 -->
+                <div class="chart-section">
+                    <div class="chart-header">
+                        <h3 class="chart-title">월별 수익 추이</h3>
+                        <div class="chart-legend">
+                            <div class="legend-item">
+                                <div class="legend-color" style="background: var(--partner-primary);"></div>
+                                <span>총 수익</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color" style="background: var(--partner-warning);"></div>
+                                <span>API 비용</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color" style="background: var(--partner-success);"></div>
+                                <span>순수익</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chart-placeholder">
+                        📊 차트 영역 (실제 구현 시 Chart.js 사용)
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- 공통 스크립트 -->
+    <script src="../common/layout.js"></script>
+    <script src="../common/utils.js"></script>
+
+    <!-- 페이지 전용 스크립트 -->
+    <script>
+        // ========== 탭 전환 ==========
+        function switchTab(tabName) {
+            // 탭 버튼 활성화
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('tab--active');
+            });
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('tab--active');
+
+            // 테이블 행 필터링
+            const rows = document.querySelectorAll('#settlementTableBody tr');
+            rows.forEach(row => {
+                const status = row.getAttribute('data-status');
+                if (tabName === 'active' && status === 'active') {
+                    row.style.display = 'table-row';
+                } else if (tabName === 'pending' && status === 'pending') {
+                    row.style.display = 'table-row';
+                } else if (tabName === 'completed' && status === 'completed') {
+                    row.style.display = 'table-row';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // 탭 전환 시 카운트도 업데이트 (실제로는 서버에서 가져옴)
+            console.log('탭 전환:', tabName);
+        }
+
+        // ========== 액션 함수들 ==========
+        function exportRevenue() {
+            console.log('보고서 내보내기');
+            window.GrowFitUtils.showToast('수익 보고서를 다운로드합니다', 'success');
+        }
+
+        function showTaxInfo() {
+            console.log('세금계산서 보기');
+            window.GrowFitUtils.showToast('세금계산서 페이지로 이동합니다', 'info');
+        }
+
+        function viewSettlementDetail() {
+            console.log('정산 상세 내역');
+            window.GrowFitUtils.showToast('정산 상세 페이지로 이동합니다', 'info');
+        }
+
+        function optimizeAPI() {
+            console.log('API 최적화 가이드');
+            window.GrowFitUtils.showToast('최적화 가이드를 확인하세요', 'info');
+        }
+
+        function viewDetail(projectId) {
+            console.log('프로젝트 상세:', projectId);
+            window.GrowFitUtils.showToast('프로젝트 정산 상세 페이지로 이동합니다', 'info');
+        }
+
+        console.log('✅ Revenue Settlement 로드 완료');
+    </script>
+</body>
+
+</html>

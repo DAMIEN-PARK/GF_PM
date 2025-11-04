@@ -1,0 +1,2144 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>내 문서 - GrowFit Employee</title>
+
+    <!-- 공통 CSS -->
+    <link rel="stylesheet" href="../common/variables.css">
+    <link rel="stylesheet" href="../common/layout.css">
+    <link rel="stylesheet" href="../common/components.css">
+
+    <style>
+        /* ========== Documents 전용 스타일 ========== */
+        :root {
+            --employee-primary: #10b981;
+            --employee-primary-light: #34d399;
+            --employee-primary-dark: #059669;
+            --employee-secondary: #06b6d4;
+            --employee-accent: #f59e0b;
+        }
+
+        /* 레이아웃 */
+        .documents-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: var(--space-6);
+            height: calc(100vh - var(--header-height) - 100px);
+        }
+
+        /* 왼쪽: 폴더 트리 */
+        .folders-sidebar {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            overflow-y: auto;
+        }
+
+        .folders-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-4);
+        }
+
+        .folders-title {
+            font-size: var(--text-lg);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+        }
+
+        .folder-tree {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-1);
+        }
+
+        .folder-item {
+            padding: var(--space-2) var(--space-3);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            font-size: var(--text-sm);
+            color: var(--text-primary);
+            transition: all 0.2s;
+        }
+
+        .folder-item:hover {
+            background: var(--surface);
+        }
+
+        .folder-item--active {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
+            color: var(--employee-primary);
+            font-weight: var(--font-semibold);
+        }
+
+        .folder-icon {
+            font-size: 18px;
+        }
+
+        .folder-count {
+            margin-left: auto;
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+            background: var(--surface);
+            padding: 2px 6px;
+            border-radius: var(--radius-sm);
+        }
+
+        /* 오른쪽: 문서 관리 영역 */
+        .documents-main {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .documents-header {
+            padding: var(--space-5);
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(6, 182, 212, 0.05));
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-3);
+        }
+
+        .header-title {
+            font-size: var(--text-2xl);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: var(--space-2);
+        }
+
+        .search-bar {
+            display: flex;
+            gap: var(--space-2);
+        }
+
+        .search-input {
+            flex: 1;
+            padding: var(--space-2) var(--space-3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+        }
+
+        /* 업로드 드롭존 */
+        .upload-dropzone {
+            margin: var(--space-5);
+            padding: var(--space-8);
+            border: 3px dashed var(--border);
+            border-radius: var(--radius-lg);
+            text-align: center;
+            background: var(--surface);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .upload-dropzone:hover {
+            border-color: var(--employee-primary);
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(6, 182, 212, 0.02));
+        }
+
+        .upload-dropzone--active {
+            border-color: var(--employee-primary);
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(6, 182, 212, 0.05));
+            border-style: solid;
+        }
+
+        .upload-icon {
+            font-size: 64px;
+            margin-bottom: var(--space-3);
+            opacity: 0.5;
+        }
+
+        .upload-text {
+            font-size: var(--text-lg);
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-2);
+        }
+
+        .upload-hint {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-3);
+        }
+
+        .upload-formats {
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+        }
+
+        /* 문서 그리드 */
+        .documents-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--space-5);
+        }
+
+        .view-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-4);
+        }
+
+        .view-tabs {
+            display: flex;
+            gap: var(--space-2);
+        }
+
+        .view-tab {
+            padding: var(--space-2) var(--space-4);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            background: white;
+            font-size: var(--text-sm);
+            font-weight: var(--font-semibold);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .view-tab:hover {
+            border-color: var(--employee-primary);
+            color: var(--employee-primary);
+        }
+
+        .view-tab--active {
+            background: var(--employee-primary);
+            border-color: var(--employee-primary);
+            color: white;
+        }
+
+        .sort-select {
+            padding: var(--space-2) var(--space-3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+            background: white;
+        }
+
+        .documents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: var(--space-4);
+        }
+
+        .document-card {
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .document-card:hover {
+            border-color: var(--employee-primary);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .document-card__header {
+            display: flex;
+            align-items: start;
+            gap: var(--space-3);
+            margin-bottom: var(--space-3);
+        }
+
+        .document-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .document-icon--pdf {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+
+        .document-icon--doc {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+        }
+
+        .document-icon--excel {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .document-icon--image {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: white;
+        }
+
+        .document-icon--txt {
+            background: linear-gradient(135deg, #6b7280, #4b5563);
+            color: white;
+        }
+
+        .document-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .document-name {
+            font-size: var(--text-sm);
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-1);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .document-meta {
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+        }
+
+        .document-card__menu {
+            position: absolute;
+            top: var(--space-2);
+            right: var(--space-2);
+            width: 28px;
+            height: 28px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.2s;
+        }
+
+        .document-card:hover .document-card__menu {
+            opacity: 1;
+        }
+
+        .document-card__menu:hover {
+            border-color: var(--employee-primary);
+            background: var(--surface);
+        }
+
+        .document-status {
+            margin-bottom: var(--space-3);
+        }
+
+        .status-bar {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2);
+            background: var(--surface);
+            border-radius: var(--radius-sm);
+            font-size: var(--text-xs);
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status-indicator--ready {
+            background: var(--employee-primary);
+        }
+
+        .status-indicator--processing {
+            background: var(--warning);
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator--error {
+            background: var(--error);
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .document-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-1);
+            margin-bottom: var(--space-3);
+        }
+
+        .doc-tag {
+            padding: 2px 8px;
+            background: var(--surface);
+            border-radius: var(--radius-sm);
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+        }
+
+        .document-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-2);
+            padding-top: var(--space-3);
+            border-top: 1px solid var(--border);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: var(--text-sm);
+            font-weight: var(--font-bold);
+            color: var(--employee-primary);
+        }
+
+        .stat-label {
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+        }
+
+        /* 리스트 뷰 */
+        .documents-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+        }
+
+        .document-list-item {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: var(--space-3);
+            display: grid;
+            grid-template-columns: auto 1fr auto auto auto;
+            gap: var(--space-3);
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .document-list-item:hover {
+            border-color: var(--employee-primary);
+            background: var(--surface);
+        }
+
+        /* 빈 상태 */
+        .empty-state {
+            text-align: center;
+            padding: var(--space-8);
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: var(--space-3);
+            opacity: 0.5;
+        }
+
+        .empty-title {
+            font-size: var(--text-xl);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-2);
+        }
+
+        .empty-desc {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-4);
+        }
+
+        /* 반응형 */
+        @media (max-width: 1024px) {
+            .documents-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .folders-sidebar {
+                display: none;
+            }
+
+            .documents-grid {
+                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .documents-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header-actions {
+                flex-direction: column;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header__left">
+                <button id="menuToggle" class="header__icon-button hidden-desktop">
+                    <span>☰</span>
+                </button>
+                <a href="dashboard.html" class="header__logo">
+                    <span class="header__logo-icon">🌱</span>
+                    <span>GrowFit</span>
+                </a>
+            </div>
+
+            <div class="header__right">
+                <button id="notificationBtn" class="header__icon-button">
+                    <span>🔔</span>
+                    <span class="header__badge">3</span>
+                </button>
+
+                <div id="profileBtn" class="header__profile">
+                    <div class="header__avatar" style="background: linear-gradient(135deg, #10b981, #06b6d4);">김</div>
+                    <span class="hidden-mobile">김직원</span>
+                    <span class="hidden-mobile">▼</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="container">
+            <!-- Sidebar -->
+            <aside class="sidebar sidebar--open">
+                <div class="sidebar__user">
+                    <div class="sidebar__user-info">
+                        <div class="sidebar__user-avatar"
+                            style="background: linear-gradient(135deg, #10b981, #06b6d4);">김</div>
+                        <div class="sidebar__user-details">
+                            <div class="sidebar__user-name">김직원</div>
+                            <div class="sidebar__user-role">AI 실습생</div>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="sidebar__nav">
+                    <ul class="sidebar__menu">
+                        <li class="sidebar__menu-item">
+                            <a href="dashboard.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">🏠</span>
+                                <span>대시보드</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="practice.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">💬</span>
+                                <span>AI 실습</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="my-projects.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">📁</span>
+                                <span>내 프로젝트</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="my-agents.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">🤖</span>
+                                <span>내 에이전트</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="my-documents.html" class="sidebar__menu-link sidebar__menu-link--active">
+                                <span class="sidebar__menu-icon">📚</span>
+                                <span>내 문서</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="history.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">📊</span>
+                                <span>내 기록</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="profile.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">⚙️</span>
+                                <span>설정</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <div class="sidebar__footer">
+                    <div
+                        style="padding: var(--space-3); background: var(--surface); border-radius: var(--radius-md); font-size: var(--text-xs);">
+                        <div style="color: var(--text-secondary); margin-bottom: var(--space-1);">저장 공간</div>
+                        <div style="font-weight: var(--font-bold); color: var(--employee-primary);">2.3 GB / 10 GB</div>
+                        <div
+                            style="height: 4px; background: var(--gray-200); border-radius: 2px; margin-top: var(--space-2); overflow: hidden;">
+                            <div style="height: 100%; width: 23%; background: var(--employee-primary);"></div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main">
+                <div class="documents-layout">
+                    <!-- 왼쪽: 폴더 트리 -->
+                    <div class="folders-sidebar">
+                        <div class="folders-header">
+                            <h2 class="folders-title">📂 폴더</h2>
+                            <button class="btn btn--sm btn--outline" onclick="createFolder()">
+                                ➕
+                            </button>
+                        </div>
+
+                        <div class="folder-tree">
+                            <div class="folder-item folder-item--active" onclick="selectFolder('all')">
+                                <span class="folder-icon">📁</span>
+                                <span>모든 문서</span>
+                                <span class="folder-count">24</span>
+                            </div>
+
+                            <div class="folder-item" onclick="selectFolder('recent')">
+                                <span class="folder-icon">🕒</span>
+                                <span>최근 문서</span>
+                                <span class="folder-count">8</span>
+                            </div>
+
+                            <div class="folder-item" onclick="selectFolder('favorites')">
+                                <span class="folder-icon">⭐</span>
+                                <span>�즐겨찾기</span>
+                                <span class="folder-count">5</span>
+                            </div>
+
+                            <div style="height: 1px; background: var(--border); margin: var(--space-3) 0;"></div>
+
+                            <div class="folder-item" onclick="selectFolder('python')">
+                                <span class="folder-icon">🐍</span>
+                                <span>Python 학습</span>
+                                <span class="folder-count">12</span>
+                            </div>
+
+                            <div class="folder-item" onclick="selectFolder('marketing')">
+                                <span class="folder-icon">📝</span>
+                                <span>마케팅 자료</span>
+                                <span class="folder-count">8</span>
+                            </div>
+
+                            <div class="folder-item" onclick="selectFolder('data')">
+                                <span class="folder-icon">📊</span>
+                                <span>데이터 분석</span>
+                                <span class="folder-count">4</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 오른쪽: 문서 관리 -->
+                    <div class="documents-main">
+                        <div class="documents-header">
+                            <div class="header-top">
+                                <h1 class="header-title">📚 내 문서</h1>
+                                <div class="header-actions">
+                                    <button class="btn btn--outline" onclick="openUploadModal()">
+                                        📤 업로드
+                                    </button>
+                                    <button class="btn btn--primary" style="background: var(--employee-primary);" onclick="triggerFileUpload()">
+                                        ➕ 문서 추가
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="search-bar">
+                                <input 
+                                    type="text" 
+                                    class="search-input" 
+                                    placeholder="🔍 문서 검색..."
+                                    id="searchInput"
+                                    onkeyup="searchDocuments(this.value)"
+                                >
+                                <select class="sort-select" onchange="sortDocuments(this.value)">
+                                    <option value="recent">최근 수정순</option>
+                                    <option value="name">이름순</option>
+                                    <option value="size">크기순</option>
+                                    <option value="type">유형순</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- 업로드 드롭존 -->
+                        <div 
+                            id="uploadDropzone" 
+                            class="upload-dropzone" 
+                            onclick="triggerFileUpload()"
+                            ondragover="handleDragOver(event)"
+                            ondragleave="handleDragLeave(event)"
+                            ondrop="handleDrop(event)"
+                        >
+                            <div class="upload-icon">📄</div>
+                            <div class="upload-text">파일을 드래그하거나 클릭하여 업로드</div>
+                            <div class="upload-hint">AI가 문서를 분석하여 대화에 활용할 수 있습니다</div>
+                            <div class="upload-formats">
+                                지원 형식: PDF, DOCX, TXT, XLSX, PPT, 이미지 (최대 50MB)
+                            </div>
+                            <input 
+                                type="file" 
+                                id="fileInput" 
+                                style="display: none;" 
+                                multiple
+                                accept=".pdf,.doc,.docx,.txt,.xlsx,.xls,.ppt,.pptx,.jpg,.jpeg,.png,.gif"
+                                onchange="handleFileSelect(event)"
+                            >
+                        </div>
+
+                        <div class="documents-content">
+                            <!-- 뷰 컨트롤 -->
+                            <div class="view-controls">
+                                <div class="view-tabs">
+                                    <button class="view-tab view-tab--active" onclick="switchView('grid')">
+                                        ⊞ 그리드
+                                    </button>
+                                    <button class="view-tab" onclick="switchView('list')">
+                                        ☰ 리스트
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- 그리드 뷰 -->
+                            <div id="documentsGrid" class="documents-grid">
+                                <!-- PDF 문서 -->
+                                <div class="document-card" onclick="viewDocument('doc-1')">
+                                    <button class="document-card__menu" onclick="event.stopPropagation(); openDocMenu('doc-1')">
+                                        ⋮
+                                    </button>
+                                    
+                                    <div class="document-card__header">
+                                        <div class="document-icon document-icon--pdf">📄</div>
+                                        <div class="document-info">
+                                            <div class="document-name">Python 기초 가이드.pdf</div>
+                                            <div class="document-meta">2.3 MB • 2시간 전</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="document-status">
+                                        <div class="status-bar">
+                                            <div class="status-indicator status-indicator--ready"></div>
+                                            <span style="color: var(--employee-primary); font-weight: var(--font-semibold);">
+                                                RAG 준비 완료
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="document-tags">
+                                        <span class="doc-tag">Python</span>
+                                        <span class="doc-tag">교육</span>
+                                        <span class="doc-tag">프로그래밍</span>
+                                    </div>
+
+                                    <div class="document-stats">
+                                        <div class="stat-item">
+                                            <div class="stat-value">156</div>
+                                            <div class="stat-label">청크</div>
+                                        </div>
+                                        <div class="stat-item">
+                                            <div class="stat-value">23</div>
+                                            <div class="stat-label">활용 횟수</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Word 문서 -->
+                                <div class="document-card" onclick="viewDocument('doc-2')">
+                                    <button class="document-card__menu" onclick="event.stopPropagation(); openDocMenu('doc-2')">
+                                        ⋮
+                                    </button>
+                                    
+                                    <div class="document-card__header">
+                                        <div class="document-icon document-icon--doc">📝</div>
+                                        <div class="document-info">
+                                            <div class="document-name">마케팅 전략 보고서.docx</div>
+                                            <div class="document-meta">1.8 MB • 어제</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="document-status">
+                                        <div class="status-bar">
+                                            <div class="status-indicator status-indicator--ready"></div>
+                                            <span style="color: var(--employee-primary); font-weight: var(--font-semibold);">
+                                                RAG 준비 완료
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="document-tags">
+                                        <span class="doc-tag">마케팅</span>
+                                        <span class="doc-tag">전략</span>
+                                    </div>
+
+                                    <div class="document-stats">
+                                        <div class="stat-item">
+                                            <div class="stat-value">89</div>
+                                            <div class="stat-label">청크</div>
+                                        </div>
+                                        <div class="stat-item">
+                                            <div class="stat-value">12</div>
+                                            <div class="stat-label">활용 횟수</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Excel 문서 -->
+                                <div class="document-card" onclick="viewDocument('doc-3')">
+                                    <button class="document-card__menu" onclick="event.stopPropagation(); openDocMenu('doc-3')">
+                                        ⋮
+                                    </button>
+                                    
+                                    <div class="document-card__header">
+                                        <div class="document-icon document-icon--excel">📊</div>
+                                        <div class="document-info">
+                                            <div class="document-name">2024 판매 데이터.xlsx</div>
+                                            <div class="document-meta">856 KB • 3일 전</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="document-status">
+                                        <div class="status-bar">
+                                            <div class="status-indicator status-indicator--processing"></div>
+                                            <span style="color: var(--warning); font-weight: var(--font-semibold);">
+                                                처리 중...
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="document-tags">
+                                        <span class="doc-tag">데이터</span>
+                                        <span class="doc-tag">판매</span>
+                                    </div>
+
+                                    <div class="document-stats">
+                                        <div class="stat-item">
+                                            <div class="stat-value">-</div>
+                                            <div class="stat-label">청크</div>
+                                        </div>
+                                        <div class="stat-item">
+                                            <div class="stat-value">0</div>
+                                            <div class="stat-label">활용 횟수</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 이미지 -->
+                                <div class="document-card" onclick="viewDocument('doc-4')">
+                                    <button class="document-card__menu" onclick="event.stopPropagation(); openDocMenu('doc-4')">
+                                        ⋮
+                                    </button>
+                                    
+                                    <div class="document-card__header">
+                                        <div class="document-icon document-icon--image">🖼️</div>
+                                        <div class="document-info">
+                                            <div class="document-name">프로젝트 다이어그램.png</div>
+                                            <div class="document-meta">1.2 MB • 1주일 전</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="document-status">
+                                        <div class="status-bar">
+                                            <div class="status-indicator status-indicator--ready"></div>
+                                            <span style="color: var(--employee-primary); font-weight: var(--font-semibold);">
+                                                RAG 준비 완료
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="document-tags">
+                                        <span class="doc-tag">이미지</span>
+                                        <span class="doc-tag">다이어그램</span>
+                                    </div>
+
+                                    <div class="document-stats">
+                                        <div class="stat-item">
+                                            <div class="stat-value">1</div>
+                                            <div class="stat-label">이미지</div>
+                                        </div>
+                                        <div class="stat-item">
+                                            <div class="stat-value">8</div>
+                                            <div class="stat-label">활용 횟수</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- TXT 문서 -->
+                                <div class="document-card" onclick="viewDocument('doc-5')">
+                                    <button class="document-card__menu" onclick="event.stopPropagation(); openDocMenu('doc-5')">
+                                        ⋮
+                                    </button>
+                                    
+                                    <div class="document-card__header">
+                                        <div class="document-icon document-icon--txt">📃</div>
+                                        <div class="document-info">
+                                            <div class="document-name">회의록_2024-10-09.txt</div>
+                                            <div class="document-meta">45 KB • 오늘</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="document-status">
+                                        <div class="status-bar">
+                                            <div class="status-indicator status-indicator--ready"></div>
+                                            <span style="color: var(--employee-primary); font-weight: var(--font-semibold);">
+                                                RAG 준비 완료
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="document-tags">
+                                        <span class="doc-tag">회의록</span>
+                                        <span class="doc-tag">텍스트</span>
+                                    </div>
+
+                                    <div class="document-stats">
+                                        <div class="stat-item">
+                                            <div class="stat-value">12</div>
+                                            <div class="stat-label">청크</div>
+                                        </div>
+                                        <div class="stat-item">
+                                            <div class="stat-value">3</div>
+                                            <div class="stat-label">활용 횟수</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- PDF 문서 2 -->
+                                <div class="document-card" onclick="viewDocument('doc-6')">
+                                    <button class="document-card__menu" onclick="event.stopPropagation(); openDocMenu('doc-6')">
+                                        ⋮
+                                    </button>
+                                    
+                                    <div class="document-card__header">
+                                        <div class="document-icon document-icon--pdf">📄</div>
+                                        <div class="document-info">
+                                            <div class="document-name">데이터 분석 가이드.pdf</div>
+                                            <div class="document-meta">3.5 MB • 2일 전</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="document-status">
+                                        <div class="status-bar">
+                                            <div class="status-indicator status-indicator--ready"></div>
+                                            <span style="color: var(--employee-primary); font-weight: var(--font-semibold);">
+                                                RAG 준비 완료
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="document-tags">
+                                        <span class="doc-tag">데이터</span>
+                                        <span class="doc-tag">분석</span>
+                                        <span class="doc-tag">가이드</span>
+                                    </div>
+
+                                    <div class="document-stats">
+                                        <div class="stat-item">
+                                            <div class="stat-value">234</div>
+                                            <div class="stat-label">청크</div>
+                                        </div>
+                                        <div class="stat-item">
+                                            <div class="stat-value">15</div>
+                                            <div class="stat-label">활용 횟수</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 리스트 뷰 (숨김) -->
+                            <div id="documentsList" class="documents-list" style="display: none;">
+                                <!-- JavaScript로 동적 생성 -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- 공통 스크립트 -->
+    <script src="../common/layout.js"></script>
+    <script src="../common/utils.js"></script>
+
+    <!-- 페이지 전용 스크립트 -->
+    <script>
+        // ========== Documents 전용 로직 ==========
+
+        // 전역 변수
+        let currentFolder = 'all';
+        let currentView = 'grid';
+        let uploadQueue = [];
+
+        // 문서 데이터 (시뮬레이션)
+        const documentsData = [
+            {
+                id: 'doc-1',
+                name: 'Python 기초 가이드.pdf',
+                type: 'pdf',
+                size: 2.3 * 1024 * 1024, // bytes
+                uploadedAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2시간 전
+                folder: 'python',
+                status: 'ready',
+                chunks: 156,
+                usageCount: 23,
+                tags: ['Python', '교육', '프로그래밍']
+            },
+            {
+                id: 'doc-2',
+                name: '마케팅 전략 보고서.docx',
+                type: 'doc',
+                size: 1.8 * 1024 * 1024,
+                uploadedAt: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1일 전
+                folder: 'marketing',
+                status: 'ready',
+                chunks: 89,
+                usageCount: 12,
+                tags: ['마케팅', '전략']
+            },
+            {
+                id: 'doc-3',
+                name: '2024 판매 데이터.xlsx',
+                type: 'excel',
+                size: 856 * 1024,
+                uploadedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3일 전
+                folder: 'data',
+                status: 'processing',
+                chunks: 0,
+                usageCount: 0,
+                tags: ['데이터', '판매']
+            },
+            {
+                id: 'doc-4',
+                name: '프로젝트 다이어그램.png',
+                type: 'image',
+                size: 1.2 * 1024 * 1024,
+                uploadedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 1주일 전
+                folder: 'python',
+                status: 'ready',
+                chunks: 1,
+                usageCount: 8,
+                tags: ['이미지', '다이어그램']
+            },
+            {
+                id: 'doc-5',
+                name: '회의록_2024-10-09.txt',
+                type: 'txt',
+                size: 45 * 1024,
+                uploadedAt: new Date(),
+                folder: 'all',
+                status: 'ready',
+                chunks: 12,
+                usageCount: 3,
+                tags: ['회의록', '텍스트']
+            },
+            {
+                id: 'doc-6',
+                name: '데이터 분석 가이드.pdf',
+                type: 'pdf',
+                size: 3.5 * 1024 * 1024,
+                uploadedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2일 전
+                folder: 'data',
+                status: 'ready',
+                chunks: 234,
+                usageCount: 15,
+                tags: ['데이터', '분석', '가이드']
+            }
+        ];
+
+        // ========== 초기화 ==========
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Documents 페이지 초기화');
+            
+            initializeDocuments();
+            setupEventListeners();
+        });
+
+        function initializeDocuments() {
+            // 드래그 앤 드롭 설정
+            setupDragAndDrop();
+            
+            // 카드 애니메이션
+            animateCards();
+        }
+
+        function setupEventListeners() {
+            // 파일 입력 변경 감지
+            const fileInput = document.getElementById('fileInput');
+            if (fileInput) {
+                fileInput.addEventListener('change', handleFileSelect);
+            }
+        }
+
+        function animateCards() {
+            const cards = document.querySelectorAll('.document-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                
+                setTimeout(() => {
+                    card.style.transition = 'all 0.3s ease-out';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 50);
+            });
+        }
+
+        // ========== 폴더 선택 ==========
+        function selectFolder(folderId) {
+            currentFolder = folderId;
+
+            // 폴더 아이템 활성화 상태 업데이트
+            document.querySelectorAll('.folder-item').forEach(item => {
+                item.classList.remove('folder-item--active');
+            });
+            event.target.closest('.folder-item').classList.add('folder-item--active');
+
+            // 문서 필터링
+            filterDocuments();
+
+            console.log('폴더 선택:', folderId);
+        }
+
+        function filterDocuments() {
+            const cards = document.querySelectorAll('.document-card');
+            
+            cards.forEach(card => {
+                const docId = card.getAttribute('onclick').match(/'([^']+)'/)[1];
+                const doc = documentsData.find(d => d.id === docId);
+                
+                if (!doc) return;
+
+                let show = false;
+                if (currentFolder === 'all') {
+                    show = true;
+                } else if (currentFolder === 'recent') {
+                    const daysSinceUpload = (Date.now() - doc.uploadedAt) / (1000 * 60 * 60 * 24);
+                    show = daysSinceUpload <= 7;
+                } else if (currentFolder === 'favorites') {
+                    // 즐겨찾기 로직 (시뮬레이션)
+                    show = doc.usageCount > 10;
+                } else {
+                    show = doc.folder === currentFolder;
+                }
+
+                card.style.display = show ? 'block' : 'none';
+            });
+        }
+
+        // ========== 뷰 전환 ==========
+        function switchView(view) {
+            currentView = view;
+
+            const gridView = document.getElementById('documentsGrid');
+            const listView = document.getElementById('documentsList');
+            const viewTabs = document.querySelectorAll('.view-tab');
+
+            viewTabs.forEach(tab => tab.classList.remove('view-tab--active'));
+            event.target.classList.add('view-tab--active');
+
+            if (view === 'grid') {
+                gridView.style.display = 'grid';
+                listView.style.display = 'none';
+            } else {
+                gridView.style.display = 'none';
+                listView.style.display = 'flex';
+                renderListView();
+            }
+
+            window.GrowFitUtils.showToast(
+                `${view === 'grid' ? '그리드' : '리스트'} 뷰로 전환했습니다`,
+                'info'
+            );
+        }
+
+        function renderListView() {
+            const listView = document.getElementById('documentsList');
+            
+            listView.innerHTML = documentsData.map(doc => `
+                <div class="document-list-item" onclick="viewDocument('${doc.id}')">
+                    <div class="document-icon document-icon--${doc.type}" style="width: 40px; height: 40px; font-size: 20px;">
+                        ${getDocumentIcon(doc.type)}
+                    </div>
+                    <div>
+                        <div style="font-weight: var(--font-semibold); margin-bottom: 4px;">${doc.name}</div>
+                        <div style="font-size: var(--text-xs); color: var(--text-secondary);">
+                            ${formatFileSize(doc.size)} • ${formatDate(doc.uploadedAt)}
+                        </div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-weight: var(--font-bold); color: var(--employee-primary);">${doc.chunks}</div>
+                        <div style="font-size: var(--text-xs); color: var(--text-secondary);">청크</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-weight: var(--font-bold); color: var(--employee-primary);">${doc.usageCount}</div>
+                        <div style="font-size: var(--text-xs); color: var(--text-secondary);">활용</div>
+                    </div>
+                    <div>
+                        <span class="session-badge ${doc.status === 'ready' ? 'session-badge--active' : ''}" style="font-size: var(--text-xs);">
+                            ${doc.status === 'ready' ? '준비됨' : '처리 중'}
+                        </span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ========== 파일 업로드 ==========
+        function triggerFileUpload() {
+            document.getElementById('fileInput').click();
+        }
+
+        function handleFileSelect(event) {
+            const files = event.target.files;
+            if (files.length === 0) return;
+
+            Array.from(files).forEach(file => {
+                uploadFile(file);
+            });
+
+            // 입력 초기화
+            event.target.value = '';
+        }
+
+        function uploadFile(file) {
+            // 파일 크기 검증 (50MB)
+            const maxSize = 50 * 1024 * 1024;
+            if (file.size > maxSize) {
+                window.GrowFitUtils.showToast(
+                    `파일이 너무 큽니다 (최대 50MB): ${file.name}`,
+                    'error'
+                );
+                return;
+            }
+
+            // 파일 유형 검증
+            const allowedTypes = ['pdf', 'doc', 'docx', 'txt', 'xlsx', 'xls', 'ppt', 'pptx', 'jpg', 'jpeg', 'png', 'gif'];
+            const extension = file.name.split('.').pop().toLowerCase();
+            
+            if (!allowedTypes.includes(extension)) {
+                window.GrowFitUtils.showToast(
+                    `지원하지 않는 파일 형식입니다: ${file.name}`,
+                    'error'
+                );
+                return;
+            }
+
+            // 업로드 시뮬레이션
+            const fileId = `doc-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            
+            window.GrowFitUtils.showToast(
+                `"${file.name}" 업로드 중...`,
+                'info'
+            );
+
+            // 프로그레스 표시 (실제로는 XMLHttpRequest 또는 FormData 사용)
+            simulateUpload(file, fileId);
+        }
+
+        function simulateUpload(file, fileId) {
+            // 실제로는 서버로 파일 전송
+            setTimeout(() => {
+                // 업로드 완료
+                window.GrowFitUtils.showToast(
+                    `"${file.name}" 업로드 완료`,
+                    'success'
+                );
+
+                // 임베딩 처리 시작
+                setTimeout(() => {
+                    window.GrowFitUtils.showToast(
+                        `"${file.name}" RAG 처리 중...`,
+                        'info'
+                    );
+
+                    // 임베딩 완료
+                    setTimeout(() => {
+                        window.GrowFitUtils.showToast(
+                            `"${file.name}" RAG 준비 완료! AI 대화에 활용할 수 있습니다.`,
+                            'success'
+                        );
+
+                        // 문서 목록에 추가
+                        addDocumentToList(file, fileId);
+                    }, 3000);
+                }, 1000);
+            }, 2000);
+        }
+
+        function addDocumentToList(file, fileId) {
+            const newDoc = {
+                id: fileId,
+                name: file.name,
+                type: getFileType(file.name),
+                size: file.size,
+                uploadedAt: new Date(),
+                folder: currentFolder === 'all' ? 'python' : currentFolder,
+                status: 'ready',
+                chunks: Math.floor(Math.random() * 200) + 50,
+                usageCount: 0,
+                tags: []
+            };
+
+            documentsData.unshift(newDoc);
+
+            // UI 업데이트 (실제로는 동적으로 카드 추가)
+            console.log('새 문서 추가:', newDoc);
+        }
+
+        // ========== 드래그 앤 드롭 ==========
+        function setupDragAndDrop() {
+            const dropzone = document.getElementById('uploadDropzone');
+            
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropzone.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        }
+
+        function handleDragOver(event) {
+            event.preventDefault();
+            event.currentTarget.classList.add('upload-dropzone--active');
+        }
+
+        function handleDragLeave(event) {
+            event.preventDefault();
+            event.currentTarget.classList.remove('upload-dropzone--active');
+        }
+
+        function handleDrop(event) {
+            event.preventDefault();
+            event.currentTarget.classList.remove('upload-dropzone--active');
+
+            const files = event.dataTransfer.files;
+            Array.from(files).forEach(file => {
+                uploadFile(file);
+            });
+        }
+
+        // ========== 문서 보기 ==========
+        function viewDocument(docId) {
+            const doc = documentsData.find(d => d.id === docId);
+            if (!doc) return;
+
+            const info = `
+문서 상세 정보
+
+📄 파일명: ${doc.name}
+📏 크기: ${formatFileSize(doc.size)}
+📅 업로드: ${formatDate(doc.uploadedAt)}
+📁 폴더: ${doc.folder}
+
+🤖 RAG 정보:
+- 상태: ${doc.status === 'ready' ? '✓ 준비 완료' : '⏳ 처리 중'}
+- 청크 수: ${doc.chunks}개
+- 활용 횟수: ${doc.usageCount}회
+
+🏷️ 태그:
+${doc.tags.join(', ')}
+
+💡 이 문서는 AI 대화에서 자동으로 참조됩니다.
+            `.trim();
+
+            alert(info);
+        }
+
+        // ========== 문서 메뉴 ==========
+        function openDocMenu(docId) {
+            const actions = [
+                '1. 👁️ 미리보기',
+                '2. 💬 AI와 대화하기',
+                '3. ✏️ 이름 변경',
+                '4. 🏷️ 태그 편집',
+                '5. 📁 폴더 이동',
+                '6. 📥 다운로드',
+                '7. 🔄 재처리',
+                '8. 🗑️ 삭제',
+                '',
+                '번호를 입력하세요:'
+            ].join('\n');
+
+            const choice = prompt(actions);
+
+            if (choice) {
+                switch(choice) {
+                    case '1':
+                        previewDocument(docId);
+                        break;
+                    case '2':
+                        chatWithDocument(docId);
+                        break;
+                    case '3':
+                        renameDocument(docId);
+                        break;
+                    case '4':
+                        editTags(docId);
+                        break;
+                    case '5':
+                        moveDocument(docId);
+                        break;
+                    case '6':
+                        downloadDocument(docId);
+                        break;
+                    case '7':
+                        reprocessDocument(docId);
+                        break;
+                    case '8':
+                        deleteDocument(docId);
+                        break;
+                }
+            }
+        }
+
+        function previewDocument(docId) {
+            const doc = documentsData.find(d => d.id === docId);
+            if (!doc) return;
+
+            window.GrowFitUtils.showToast('문서 미리보기를 여는 중...', 'info');
+            
+            // 실제로는 문서 뷰어 모달 표시
+            setTimeout(() => {
+                alert(`${doc.name}\n\n미리보기 기능은 개발 중입니다.`);
+            }, 500);
+        }
+
+        function chatWithDocument(docId) {
+            const doc = documentsData.find(d => d.id === docId);
+            if (!doc) return;
+
+            if (doc.status !== 'ready') {
+                window.GrowFitUtils.showToast('문서가 아직 처리 중입니다', 'warning');
+                return;
+            }
+
+            // AI 실습 페이지로 이동하며 문서 컨텍스트 전달
+            window.GrowFitUtils.showToast('AI 대화 시작...', 'info');
+            
+            setTimeout(() => {
+                location.href = `practice.html?doc=${docId}`;
+            }, 500);
+        }
+
+        function renameDocument(docId) {
+            const doc = documentsData.find(d => d.id === docId);
+            if (!doc) return;
+
+            const newName = prompt('새 파일명을 입력하세요:', doc.name);
+            
+            if (newName && newName.trim() && newName !== doc.name) {
+                doc.name = newName.trim();
+                window.GrowFitUtils.showToast('파일명이 변경되었습니다', 'success');
+                // UI 업데이트
+            }
+        }
+
+        function editTags(docId) {
+            const doc = documentsData.find(d => d.id === docId);
+            if (!doc) return;
+
+            const currentTags = doc.tags.join(', ');
+            const newTags = prompt('태그를 입력하세요 (쉼표로 구분):', currentTags);
+            
+            if (newTags !== null) {
+                doc.tags = newTags.split(',').map(tag => tag.trim()).filter(tag => tag);
+                window.GrowFitUtils.showToast('태그가 업데이트되었습니다', 'success');
+                // UI 업데이트
+            }
+        }
+
+        function moveDocument(docId) {
+            const doc = documentsData.find(d => d.id === docId);
+            if (!doc) return;
+
+            const folders = ['python', 'marketing', 'data'];
+            const choice = prompt(`폴더 선택:\n1. Python 학습\n2. 마케팅 자료\n3. 데이터 분석\n\n번호 입력:`);
+            
+            if (choice && ['1', '2', '3'].includes(choice)) {
+                const folderMap = { '1': 'python', '2': 'marketing', '3': 'data' };
+                doc.folder = folderMap[choice];
+                window.GrowFitUtils.showToast('문서가 이동되었습니다', 'success');
+                filterDocuments();
+            }
+        }
+
+        function downloadDocument(docId) {
+            const doc = documentsData.find(d => d.id === docId);
+            if (!doc) return;
+
+            window.GrowFitUtils.showToast(`"${doc.name}" 다운로드 중...`, 'info');
+            
+            // 실제로는 파일 다운로드 처리
+            console.log('문서 다운로드:', docId);
+        }
+
+        function reprocessDocument(docId) {
+            const doc = documentsData.find(d => d.id === docId);
+            if (!doc) return;
+
+            if (confirm(`"${doc.name}"을(를) 다시 처리하시겠습니까?\n\nRAG 임베딩이 재생성됩니다.`)) {
+                doc.status = 'processing';
+                window.GrowFitUtils.showToast('문서 재처리 중...', 'info');
+                
+                // 처리 시뮬레이션
+                setTimeout(() => {
+                    doc.status = 'ready';
+                    window.GrowFitUtils.showToast('재처리가 완료되었습니다', 'success');
+                    // UI 업데이트
+                }, 3000);
+            }
+        }
+
+        function deleteDocument(docId) {
+            const doc = documentsData.find(d => d.id === docId);
+            if (!doc) return;
+
+            if (confirm(`"${doc.name}"을(를) 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`)) {
+                const index = documentsData.findIndex(d => d.id === docId);
+                if (index > -1) {
+                    documentsData.splice(index, 1);
+                    window.GrowFitUtils.showToast('문서가 삭제되었습니다', 'success');
+                    
+                    // UI에서 제거
+                    const card = document.querySelector(`[onclick*="${docId}"]`);
+                    if (card) {
+                        card.style.transition = 'all 0.3s';
+                        card.style.opacity = '0';
+                        card.style.transform = 'scale(0.9)';
+                        setTimeout(() => card.remove(), 300);
+                    }
+                }
+            }
+        }
+
+        // ========== 검색 ==========
+        function searchDocuments(query) {
+            const cards = document.querySelectorAll('.document-card');
+            const lowerQuery = query.toLowerCase();
+
+            cards.forEach(card => {
+                const nameEl = card.querySelector('.document-name');
+                if (!nameEl) return;
+
+                const name = nameEl.textContent.toLowerCase();
+                const tagsEls = card.querySelectorAll('.doc-tag');
+                const tags = Array.from(tagsEls).map(el => el.textContent.toLowerCase());
+
+                const matches = name.includes(lowerQuery) || 
+                               tags.some(tag => tag.includes(lowerQuery));
+
+                card.style.display = matches ? 'block' : 'none';
+            });
+
+            if (query) {
+                console.log(`"${query}" 검색 결과`);
+            } else {
+                // 검색어 없으면 현재 폴더 필터 적용
+                filterDocuments();
+            }
+        }
+
+        // ========== 정렬 ==========
+        function sortDocuments(sortBy) {
+            console.log('정렬 기준:', sortBy);
+
+            // 실제로는 데이터 정렬 후 UI 재렌더링
+            window.GrowFitUtils.showToast(`${sortBy} 기준으로 정렬했습니다`, 'info');
+        }
+
+        // ========== 폴더 생성 ==========
+        function createFolder() {
+            const folderName = prompt('새 폴더 이름을 입력하세요:');
+            
+            if (folderName && folderName.trim()) {
+                console.log('새 폴더 생성:', folderName);
+                window.GrowFitUtils.showToast(`"${folderName}" 폴더가 생성되었습니다`, 'success');
+                
+                // 실제로는 폴더 목록에 추가
+            }
+        }
+
+        // ========== 업로드 모달 ==========
+        function openUploadModal() {
+            // 고급 업로드 옵션 모달
+            const options = `
+고급 업로드 옵션
+
+1. 📁 폴더 선택
+2. 🏷️ 태그 자동 추가
+3. 🤖 RAG 설정
+4. 📊 처리 우선순위
+
+현재는 기본 업로드만 지원됩니다.
+            `.trim();
+
+            alert(options);
+            triggerFileUpload();
+        }
+
+        // ========== 유틸리티 함수 ==========
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        function formatDate(date) {
+            const now = new Date();
+            const diff = now - date;
+            const seconds = Math.floor(diff / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+
+            if (seconds < 60) return '방금';
+            if (minutes < 60) return `${minutes}분 전`;
+            if (hours < 24) return `${hours}시간 전`;
+            if (days === 1) return '어제';
+            if (days < 7) return `${days}일 전`;
+            if (days < 30) return `${Math.floor(days / 7)}주일 전`;
+            
+            return date.toLocaleDateString('ko-KR');
+        }
+
+        function getFileType(filename) {
+            const extension = filename.split('.').pop().toLowerCase();
+            
+            if (['pdf'].includes(extension)) return 'pdf';
+            if (['doc', 'docx'].includes(extension)) return 'doc';
+            if (['xls', 'xlsx'].includes(extension)) return 'excel';
+            if (['ppt', 'pptx'].includes(extension)) return 'ppt';
+            if (['jpg', 'jpeg', 'png', 'gif'].includes(extension)) return 'image';
+            if (['txt'].includes(extension)) return 'txt';
+            
+            return 'file';
+        }
+
+        function getDocumentIcon(type) {
+            const icons = {
+                'pdf': '📄',
+                'doc': '📝',
+                'excel': '📊',
+                'ppt': '📊',
+                'image': '🖼️',
+                'txt': '📃',
+                'file': '📄'
+            };
+            
+            return icons[type] || '📄';
+        }
+
+        // ========== 일괄 작업 ==========
+        function selectAllDocuments() {
+            console.log('모든 문서 선택');
+            window.GrowFitUtils.showToast('모든 문서가 선택되었습니다', 'info');
+        }
+
+        function bulkDelete() {
+            if (confirm('선택한 문서를 모두 삭제하시겠습니까?')) {
+                window.GrowFitUtils.showToast('문서가 삭제되었습니다', 'success');
+            }
+        }
+
+        function bulkMove() {
+            const choice = prompt('이동할 폴더:\n1. Python 학습\n2. 마케팅 자료\n3. 데이터 분석');
+            
+            if (choice) {
+                window.GrowFitUtils.showToast('문서가 이동되었습니다', 'success');
+            }
+        }
+
+        function bulkTag() {
+            const tags = prompt('추가할 태그 (쉼표로 구분):');
+            
+            if (tags && tags.trim()) {
+                window.GrowFitUtils.showToast('태그가 추가되었습니다', 'success');
+            }
+        }
+
+        // ========== RAG 설정 ==========
+        function configureRAG(docId) {
+            const doc = documentsData.find(d => d.id === docId);
+            if (!doc) return;
+
+            const config = `
+RAG 설정: ${doc.name}
+
+현재 설정:
+- 청크 크기: 512 토큰
+- 오버랩: 50 토큰
+- 임베딩 모델: text-embedding-3-small
+- 검색 방식: 의미적 유사도
+
+고급 설정:
+1. 청크 크기 조정
+2. 임베딩 모델 변경
+3. 검색 알고리즘 설정
+4. 메타데이터 추가
+
+설정을 변경하시겠습니까?
+            `.trim();
+
+            if (confirm(config)) {
+                window.GrowFitUtils.showToast('RAG 설정이 업데이트되었습니다', 'success');
+            }
+        }
+
+        // ========== 문서 통계 ==========
+        function showDocumentStats() {
+            const totalDocs = documentsData.length;
+            const totalSize = documentsData.reduce((sum, doc) => sum + doc.size, 0);
+            const readyDocs = documentsData.filter(d => d.status === 'ready').length;
+            const totalChunks = documentsData.reduce((sum, doc) => sum + doc.chunks, 0);
+            const totalUsage = documentsData.reduce((sum, doc) => sum + doc.usageCount, 0);
+
+            const stats = `
+📊 문서 통계
+
+📄 문서 현황:
+- 전체 문서: ${totalDocs}개
+- RAG 준비: ${readyDocs}개
+- 처리 중: ${totalDocs - readyDocs}개
+
+💾 저장 공간:
+- 사용 중: ${formatFileSize(totalSize)}
+- 전체: 10 GB
+- 사용률: ${Math.round(totalSize / (10 * 1024 * 1024 * 1024) * 100)}%
+
+🤖 RAG 정보:
+- 총 청크: ${totalChunks}개
+- 총 활용: ${totalUsage}회
+- 평균 활용: ${Math.round(totalUsage / totalDocs)}회/문서
+
+📈 유형별:
+- PDF: ${documentsData.filter(d => d.type === 'pdf').length}개
+- Word: ${documentsData.filter(d => d.type === 'doc').length}개
+- Excel: ${documentsData.filter(d => d.type === 'excel').length}개
+- 이미지: ${documentsData.filter(d => d.type === 'image').length}개
+- 기타: ${documentsData.filter(d => !['pdf', 'doc', 'excel', 'image'].includes(d.type)).length}개
+            `.trim();
+
+            alert(stats);
+        }
+
+        // ========== 문서 내보내기 ==========
+        function exportDocumentList() {
+            const exportData = {
+                exportDate: new Date().toISOString(),
+                totalDocuments: documentsData.length,
+                documents: documentsData.map(doc => ({
+                    name: doc.name,
+                    type: doc.type,
+                    size: doc.size,
+                    uploadedAt: doc.uploadedAt.toISOString(),
+                    folder: doc.folder,
+                    status: doc.status,
+                    chunks: doc.chunks,
+                    usageCount: doc.usageCount,
+                    tags: doc.tags
+                }))
+            };
+
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `documents_${Date.now()}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+
+            window.GrowFitUtils.showToast('문서 목록이 내보내졌습니다', 'success');
+        }
+
+        // ========== 문서 가져오기 ==========
+        function importDocumentList() {
+            window.GrowFitUtils.showToast('문서 가져오기 기능은 개발 중입니다', 'info');
+        }
+
+        // ========== 자동 태그 생성 ==========
+        function autoTagDocument(docId) {
+            const doc = documentsData.find(d => d.id === docId);
+            if (!doc) return;
+
+            window.GrowFitUtils.showToast('AI가 태그를 생성하는 중...', 'info');
+
+            // AI 분석 시뮬레이션
+            setTimeout(() => {
+                const suggestedTags = [
+                    'AI 생성',
+                    '자동 분류',
+                    doc.name.includes('Python') ? 'Python' : null,
+                    doc.name.includes('마케팅') ? '마케팅' : null,
+                    doc.name.includes('데이터') ? '데이터' : null
+                ].filter(tag => tag);
+
+                doc.tags = [...new Set([...doc.tags, ...suggestedTags])];
+
+                window.GrowFitUtils.showToast(
+                    `${suggestedTags.length}개 태그가 자동 생성되었습니다`,
+                    'success'
+                );
+                // UI 업데이트
+            }, 2000);
+        }
+
+        // ========== 문서 공유 ==========
+        function shareDocument(docId) {
+            const doc = documentsData.find(d => d.id === docId);
+            if (!doc) return;
+
+            const shareUrl = `${window.location.origin}/share/doc/${docId}`;
+            
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(shareUrl).then(() => {
+                    window.GrowFitUtils.showToast('공유 링크가 복사되었습니다', 'success');
+                });
+            } else {
+                prompt('공유 링크:', shareUrl);
+            }
+        }
+
+        // ========== 문서 버전 관리 ==========
+        function showVersionHistory(docId) {
+            const doc = documentsData.find(d => d.id === docId);
+            if (!doc) return;
+
+            const history = `
+버전 히스토리: ${doc.name}
+
+📜 버전 목록:
+
+v3 (현재) - ${formatDate(doc.uploadedAt)}
+- RAG 재처리 완료
+- 태그 업데이트
+
+v2 - 2일 전
+- 파일명 변경
+- 폴더 이동
+
+v1 - 1주일 전
+- 최초 업로드
+
+[복원] [비교] [다운로드]
+            `.trim();
+
+            alert(history);
+        }
+
+        // ========== 문서 분석 ==========
+        function analyzeDocument(docId) {
+            const doc = documentsData.find(d => d.id === docId);
+            if (!doc) return;
+
+            window.GrowFitUtils.showToast('문서를 분석하는 중...', 'info');
+
+            setTimeout(() => {
+                const analysis = `
+문서 분석 결과: ${doc.name}
+
+📊 기본 정보:
+- 파일 크기: ${formatFileSize(doc.size)}
+- 업로드: ${formatDate(doc.uploadedAt)}
+- 유형: ${doc.type.toUpperCase()}
+
+🤖 RAG 분석:
+- 청크 수: ${doc.chunks}개
+- 평균 청크 크기: ${Math.round(doc.size / doc.chunks / 1024)}KB
+- 임베딩 완료: ✓
+
+📈 활용 분석:
+- 총 활용: ${doc.usageCount}회
+- 최근 활용: ${Math.floor(Math.random() * 3) + 1}일 전
+- 주 활용 프로젝트: Python 학습
+
+💡 추천:
+- 관련 문서 추가 권장
+- 태그 최적화 필요
+- 정기적 업데이트 권장
+                `.trim();
+
+                alert(analysis);
+            }, 1500);
+        }
+
+        // ========== 중복 문서 감지 ==========
+        function findDuplicates() {
+            window.GrowFitUtils.showToast('중복 문서를 검색하는 중...', 'info');
+
+            setTimeout(() => {
+                const duplicates = `
+중복 문서 검색 결과
+
+🔍 검색 완료:
+- 스캔한 문서: ${documentsData.length}개
+- 발견된 중복: 0개
+
+✅ 중복 문서가 없습니다!
+
+중복 감지 기준:
+- 파일명 유사도
+- 파일 크기
+- 컨텐츠 해시
+                `.trim();
+
+                alert(duplicates);
+            }, 1500);
+        }
+
+        // ========== 저장 공간 정리 ==========
+        function cleanupStorage() {
+            if (confirm('저장 공간 정리를 시작하시겠습니까?\n\n다음 항목이 삭제됩니다:\n• 90일 이상 미사용 문서\n• 임시 파일\n• 캐시 데이터')) {
+                window.GrowFitUtils.showToast('저장 공간을 정리하는 중...', 'info');
+
+                setTimeout(() => {
+                    window.GrowFitUtils.showToast('234 MB의 공간이 확보되었습니다', 'success');
+                }, 2000);
+            }
+        }
+
+        // ========== 문서 백업 ==========
+        function backupDocuments() {
+            if (confirm('모든 문서를 백업하시겠습니까?\n\n예상 시간: 약 5분\n백업 크기: 약 2.3 GB')) {
+                window.GrowFitUtils.showToast('백업을 시작합니다...', 'info');
+
+                setTimeout(() => {
+                    window.GrowFitUtils.showToast('백업이 완료되었습니다', 'success');
+                }, 3000);
+            }
+        }
+
+        // ========== 문서 복원 ==========
+        function restoreDocuments() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.zip,.json';
+            
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    window.GrowFitUtils.showToast('백업을 복원하는 중...', 'info');
+
+                    setTimeout(() => {
+                        window.GrowFitUtils.showToast('복원이 완료되었습니다', 'success');
+                        location.reload();
+                    }, 2000);
+                }
+            };
+
+            input.click();
+        }
+
+        // ========== AI 요약 생성 ==========
+        function generateSummary(docId) {
+            const doc = documentsData.find(d => d.id === docId);
+            if (!doc) return;
+
+            if (doc.status !== 'ready') {
+                window.GrowFitUtils.showToast('문서가 아직 처리 중입니다', 'warning');
+                return;
+            }
+
+            window.GrowFitUtils.showToast('AI가 문서를 요약하는 중...', 'info');
+
+            setTimeout(() => {
+                const summary = `
+AI 문서 요약: ${doc.name}
+
+📝 핵심 내용:
+이 문서는 ${doc.name}에 대한 종합적인 가이드입니다. 
+주요 주제와 개념을 다루며, 실용적인 예제를 포함하고 있습니다.
+
+🎯 주요 포인트:
+- 기초 개념 소개
+- 실습 예제 제공
+- 베스트 프랙티스 설명
+- 고급 기법 안내
+
+💡 활용 방안:
+이 문서는 학습 자료로 활용하기에 적합하며,
+AI 대화에서 참고 자료로 사용할 수 있습니다.
+
+⏱️ 예상 학습 시간: ${Math.floor(Math.random() * 3) + 2}시간
+                `.trim();
+
+                alert(summary);
+            }, 2000);
+        }
+
+        // ========== 키워드 추출 ==========
+        function extractKeywords(docId) {
+            const doc = documentsData.find(d => d.id === docId);
+            if (!doc) return;
+
+            window.GrowFitUtils.showToast('키워드를 추출하는 중...', 'info');
+
+            setTimeout(() => {
+                const keywords = [
+                    'Python', '프로그래밍', '함수', '클래스',
+                    '데이터 구조', '알고리즘', '예제', '실습'
+                ];
+
+                const result = `
+키워드 추출 결과: ${doc.name}
+
+🔑 주요 키워드:
+${keywords.map(kw => `• ${kw}`).join('\n')}
+
+💡 이 키워드들을 태그로 추가하시겠습니까?
+                `.trim();
+
+                if (confirm(result)) {
+                    doc.tags = [...new Set([...doc.tags, ...keywords])];
+                    window.GrowFitUtils.showToast('키워드가 태그로 추가되었습니다', 'success');
+                }
+            }, 1500);
+        }
+
+        // ========== 키보드 단축키 ==========
+        document.addEventListener('keydown', function(e) {
+            // Ctrl/Cmd + U: 업로드
+            if ((e.ctrlKey || e.metaKey) && e.key === 'u') {
+                e.preventDefault();
+                triggerFileUpload();
+            }
+
+            // Ctrl/Cmd + F: 검색 포커스
+            if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                e.preventDefault();
+                document.getElementById('searchInput').focus();
+            }
+
+            // Ctrl/Cmd + A: 전체 선택
+            if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+                if (event.target.tagName !== 'INPUT') {
+                    e.preventDefault();
+                    selectAllDocuments();
+                }
+            }
+
+            // Delete: 선택 항목 삭제
+            if (e.key === 'Delete') {
+                // 선택된 문서가 있다면 삭제
+                console.log('Delete 키 감지');
+            }
+        });
+
+        // ========== 컨텍스트 메뉴 (우클릭) ==========
+        document.addEventListener('contextmenu', function(e) {
+            const card = e.target.closest('.document-card');
+            if (card) {
+                e.preventDefault();
+                
+                const docId = card.getAttribute('onclick').match(/'([^']+)'/)[1];
+                openDocMenu(docId);
+            }
+        });
+
+        // ========== 자동 저장 공간 체크 ==========
+        function checkStorageSpace() {
+            const totalSize = documentsData.reduce((sum, doc) => sum + doc.size, 0);
+            const maxSize = 10 * 1024 * 1024 * 1024; // 10GB
+            const usagePercent = (totalSize / maxSize) * 100;
+
+            if (usagePercent > 90) {
+                window.GrowFitUtils.showToast(
+                    '⚠️ 저장 공간이 90%를 초과했습니다. 정리를 권장합니다.',
+                    'warning'
+                );
+            }
+        }
+
+        // 페이지 로드 시 체크
+        window.addEventListener('load', function() {
+            checkStorageSpace();
+        });
+
+        // ========== 도움말 ==========
+        function showHelp() {
+            const help = `
+📚 내 문서 도움말
+
+📤 업로드:
+- 드래그 앤 드롭 또는 클릭으로 업로드
+- 최대 파일 크기: 50MB
+- 지원 형식: PDF, Word, Excel, 이미지 등
+
+🤖 RAG (검색 증강 생성):
+- 업로드된 문서는 자동으로 처리됩니다
+- AI 대화에서 자동으로 참조됩니다
+- 청크로 분할되어 효율적으로 검색됩니다
+
+📁 폴더:
+- 문서를 폴더별로 정리하세요
+- 프로젝트별 분류 가능
+- 폴더 간 이동 가능
+
+🏷️ 태그:
+- 문서에 태그를 추가하여 검색 개선
+- AI 자동 태그 생성 기능
+- 여러 태그 동시 적용 가능
+
+💬 AI 대화:
+- "AI와 대화하기"로 문서 기반 대화 시작
+- 문서 내용을 기반으로 질문 가능
+- 여러 문서 동시 참조 가능
+
+⌨️ 단축키:
+- Ctrl+U: 업로드
+- Ctrl+F: 검색
+- Ctrl+A: 전체 선택
+
+💡 팁:
+- 관련 문서를 같은 폴더에 보관
+- 정기적으로 태그 정리
+- 사용하지 않는 문서는 삭제
+            `.trim();
+
+            alert(help);
+        }
+
+        // ========== 초기화 완료 ==========
+        console.log('Documents 페이지 스크립트 로드 완료');
+        console.log('단축키: Ctrl+U(업로드), Ctrl+F(검색), Ctrl+A(전체선택)');
+    </script>
+</body>
+</html>

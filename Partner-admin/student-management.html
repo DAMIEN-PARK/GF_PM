@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>학생 관리 - GrowFit Partner Admin</title>
+
+    <!-- 공통 CSS -->
+    <link rel="stylesheet" href="../common/variables.css">
+    <link rel="stylesheet" href="../common/layout.css">
+    <link rel="stylesheet" href="../common/components.css">
+
+    <style>
+        /* ========== Student Management 전용 스타일 ========== */
+        :root {
+            --partner-primary: #0ea5e9;
+            --partner-primary-light: #38bdf8;
+            --partner-primary-dark: #0284c7;
+            --partner-secondary: #8b5cf6;
+            --partner-accent: #ec4899;
+            --partner-success: #10b981;
+            --partner-warning: #f59e0b;
+            --partner-danger: #ef4444;
+        }
+
+        /* 페이지 헤더 */
+        .page-header {
+            margin-bottom: var(--space-6);
+        }
+
+        .page-title {
+            font-size: var(--text-3xl);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-2);
+        }
+
+        .page-subtitle {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+        }
+
+        /* 통계 카드 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--space-4);
+            margin-bottom: var(--space-6);
+        }
+
+        .stat-card {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            transition: all 0.2s;
+        }
+
+        .stat-card:hover {
+            border-color: var(--partner-primary);
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .stat-card__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: var(--space-3);
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .stat-icon--primary {
+            background: linear-gradient(135deg, var(--partner-primary), var(--partner-primary-light));
+            color: white;
+        }
+
+        .stat-icon--success {
+            background: linear-gradient(135deg, var(--partner-success), #34d399);
+            color: white;
+        }
+
+        .stat-icon--warning {
+            background: linear-gradient(135deg, var(--partner-warning), #fbbf24);
+            color: white;
+        }
+
+        .stat-icon--secondary {
+            background: linear-gradient(135deg, var(--partner-secondary), #a78bfa);
+            color: white;
+        }
+
+        .stat-badge {
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            font-size: var(--text-xs);
+            font-weight: var(--font-bold);
+        }
+
+        .stat-badge--success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--partner-success);
+        }
+
+        .stat-badge--warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--partner-warning);
+        }
+
+        .stat-card__label {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-2);
+        }
+
+        .stat-card__value {
+            font-size: var(--text-3xl);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+        }
+
+        /* 탭 네비게이션 */
+        .tabs {
+            display: flex;
+            gap: var(--space-2);
+            margin-bottom: var(--space-6);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tab {
+            padding: var(--space-3) var(--space-5);
+            border: none;
+            background: none;
+            font-size: var(--text-base);
+            font-weight: var(--font-semibold);
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .tab:hover {
+            color: var(--partner-primary);
+        }
+
+        .tab--active {
+            color: var(--partner-primary);
+            border-bottom-color: var(--partner-primary);
+        }
+
+        /* 필터 섹션 */
+        .filter-section {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            margin-bottom: var(--space-5);
+        }
+
+        .filter-section__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-4);
+        }
+
+        .filter-section__title {
+            font-size: var(--text-lg);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+        }
+
+        .filter-controls {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--space-3);
+        }
+
+        .filter-control {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+        }
+
+        .filter-control label {
+            font-size: var(--text-sm);
+            font-weight: var(--font-medium);
+            color: var(--text-secondary);
+        }
+
+        .filter-control select,
+        .filter-control input {
+            padding: var(--space-2) var(--space-3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+        }
+
+        /* 학생 테이블 */
+        .students-table-container {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+
+        .students-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .students-table thead {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .students-table th {
+            padding: var(--space-4);
+            text-align: left;
+            font-size: var(--text-sm);
+            font-weight: var(--font-semibold);
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        .students-table td {
+            padding: var(--space-4);
+            border-bottom: 1px solid var(--border);
+            font-size: var(--text-sm);
+        }
+
+        .students-table tbody tr {
+            transition: all 0.2s;
+        }
+
+        .students-table tbody tr:hover {
+            background: var(--surface);
+        }
+
+        .student-cell {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+        }
+
+        .student-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: var(--font-bold);
+            color: white;
+            font-size: var(--text-sm);
+            flex-shrink: 0;
+        }
+
+        .student-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .student-name {
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+        }
+
+        .student-email {
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: var(--radius-full);
+            font-size: var(--text-xs);
+            font-weight: var(--font-semibold);
+        }
+
+        .status-badge--active {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--partner-success);
+        }
+
+        .status-badge--inactive {
+            background: rgba(107, 114, 128, 0.1);
+            color: var(--gray-600);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .project-badge {
+            padding: 4px 10px;
+            border-radius: var(--radius-md);
+            font-size: var(--text-xs);
+            font-weight: var(--font-medium);
+            background: var(--surface);
+            color: var(--text-secondary);
+        }
+
+        .actions-cell {
+            display: flex;
+            gap: var(--space-2);
+        }
+
+        .action-btn {
+            padding: var(--space-1) var(--space-2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            background: white;
+            font-size: var(--text-xs);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            border-color: var(--partner-primary);
+            color: var(--partner-primary);
+        }
+
+        /* 페이지네이션 */
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-4);
+            background: var(--surface);
+        }
+
+        .pagination-info {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: var(--space-2);
+        }
+
+        .pagination-btn {
+            padding: var(--space-2) var(--space-3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            background: white;
+            font-size: var(--text-sm);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            border-color: var(--partner-primary);
+            color: var(--partner-primary);
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination-btn--active {
+            background: var(--partner-primary);
+            border-color: var(--partner-primary);
+            color: white;
+        }
+
+        /* 반응형 */
+        @media (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .filter-controls {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-controls {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .students-table {
+                font-size: var(--text-xs);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header__left">
+                <button id="menuToggle" class="header__icon-button hidden-desktop">
+                    <span>☰</span>
+                </button>
+                <a href="dashboard.html" class="header__logo">
+                    <span class="header__logo-icon">🌱</span>
+                    <span>GrowFit Partner</span>
+                </a>
+            </div>
+
+            <div class="header__right">
+                <button id="notificationBtn" class="header__icon-button">
+                    <span>🔔</span>
+                    <span class="header__badge">2</span>
+                </button>
+
+                <div id="profileBtn" class="header__profile">
+                    <div class="header__avatar"
+                        style="background: linear-gradient(135deg, #0ea5e9, #38bdf8);">박</div>
+                    <span class="hidden-mobile">박강사</span>
+                    <span class="hidden-mobile">▼</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="container">
+            <!-- Sidebar -->
+            <aside class="sidebar sidebar--open">
+                <div class="sidebar__user">
+                    <div class="sidebar__user-info">
+                        <div class="sidebar__user-avatar"
+                            style="background: linear-gradient(135deg, #0ea5e9, #38bdf8);">박</div>
+                        <div class="sidebar__user-details">
+                            <div class="sidebar__user-name">박강사</div>
+                            <div class="sidebar__user-role">교육 파트너</div>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="sidebar__nav">
+                    <ul class="sidebar__menu">
+                        <li class="sidebar__menu-item">
+                            <a href="dashboard.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">🏠</span>
+                                <span>대시보드</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="project-management.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">📁</span>
+                                <span>프로젝트 관리</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="student-management.html" class="sidebar__menu-link sidebar__menu-link--active">
+                                <span class="sidebar__menu-icon">👥</span>
+                                <span>학생 관리</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="ai-practice-management.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">🤖</span>
+                                <span>AI 실습 관리</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="revenue-settlement.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">💰</span>
+                                <span>수익/정산 관리</span>
+                            </a>
+                        </li>
+                        <li class="sidebar__menu-item">
+                            <a href="settings.html" class="sidebar__menu-link">
+                                <span class="sidebar__menu-icon">⚙️</span>
+                                <span>설정</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <div class="sidebar__footer">
+                    <div style="padding: var(--space-3); background: var(--surface); border-radius: var(--radius-md); font-size: var(--text-xs);">
+                        <div style="color: var(--text-secondary); margin-bottom: var(--space-1);">총 학생 수</div>
+                        <div style="font-weight: var(--font-bold); color: var(--partner-primary);">127명</div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main">
+                <!-- 페이지 헤더 -->
+                <div class="page-header">
+                    <h1 class="page-title">👥 학생 관리</h1>
+                    <p class="page-subtitle">프로젝트별 학생 현황 및 실습 활동 관리</p>
+                </div>
+
+                <!-- 상단 액션 버튼 -->
+                <div style="display: flex; justify-content: flex-end; gap: var(--space-2); margin-bottom: var(--space-6);">
+                    <button class="btn btn--outline" onclick="importStudents()">
+                        📥 CSV 일괄 등록
+                    </button>
+                    <button class="btn btn--primary" onclick="addNewStudent()">
+                        <span>➕</span>
+                        <span>학생 추가</span>
+                    </button>
+                </div>
+
+                <!-- 통계 카드 -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-card__header">
+                            <div class="stat-icon stat-icon--primary">👥</div>
+                            <div class="stat-badge stat-badge--success">+12%</div>
+                        </div>
+                        <div class="stat-card__label">전체 학생</div>
+                        <div class="stat-card__value">127</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-card__header">
+                            <div class="stat-icon stat-icon--success">✅</div>
+                            <div class="stat-badge stat-badge--success">97%</div>
+                        </div>
+                        <div class="stat-card__label">활성 학생</div>
+                        <div class="stat-card__value">123</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-card__header">
+                            <div class="stat-icon stat-icon--warning">📊</div>
+                        </div>
+                        <div class="stat-card__label">평균 실습 시간</div>
+                        <div class="stat-card__value">18.5h</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-card__header">
+                            <div class="stat-icon stat-icon--secondary">💬</div>
+                        </div>
+                        <div class="stat-card__label">평균 대화 수</div>
+                        <div class="stat-card__value">245</div>
+                    </div>
+                </div>
+
+                <!-- 탭 네비게이션 -->
+                <div class="tabs">
+                    <button class="tab tab--active" data-tab="all" onclick="switchTab('all')">
+                        <span>전체</span>
+                        <span style="background: var(--surface); padding: 2px 8px; border-radius: var(--radius-sm); font-size: var(--text-xs);">127</span>
+                    </button>
+                    <button class="tab" data-tab="active" onclick="switchTab('active')">
+                        <span>활성</span>
+                        <span style="background: var(--surface); padding: 2px 8px; border-radius: var(--radius-sm); font-size: var(--text-xs);">123</span>
+                    </button>
+                    <button class="tab" data-tab="inactive" onclick="switchTab('inactive')">
+                        <span>비활성</span>
+                        <span style="background: var(--surface); padding: 2px 8px; border-radius: var(--radius-sm); font-size: var(--text-xs);">4</span>
+                    </button>
+                </div>
+
+                <!-- 필터 섹션 -->
+                <div class="filter-section">
+                    <div class="filter-section__header">
+                        <h3 class="filter-section__title">🔍 필터</h3>
+                        <button class="btn btn--sm btn--outline" onclick="resetFilters()">
+                            초기화
+                        </button>
+                    </div>
+                    <div class="filter-controls">
+                        <div class="filter-control">
+                            <label for="projectFilter">프로젝트</label>
+                            <select id="projectFilter" onchange="applyFilters()">
+                                <option value="">전체 프로젝트</option>
+                                <option value="samsung">Samsung 마케팅팀</option>
+                                <option value="lg">LG 개발팀</option>
+                                <option value="hyundai">현대자동차</option>
+                            </select>
+                        </div>
+                        <div class="filter-control">
+                            <label for="activityFilter">활동 수준</label>
+                            <select id="activityFilter" onchange="applyFilters()">
+                                <option value="">전체</option>
+                                <option value="high">높음 (100+)</option>
+                                <option value="medium">보통 (50-99)</option>
+                                <option value="low">낮음 (1-49)</option>
+                                <option value="none">미사용</option>
+                            </select>
+                        </div>
+                        <div class="filter-control">
+                            <label for="statusFilter">상태</label>
+                            <select id="statusFilter" onchange="applyFilters()">
+                                <option value="">전체 상태</option>
+                                <option value="active">활성</option>
+                                <option value="inactive">비활성</option>
+                            </select>
+                        </div>
+                        <div class="filter-control">
+                            <label for="searchInput">검색</label>
+                            <input 
+                                type="text" 
+                                id="searchInput" 
+                                placeholder="이름, 이메일 검색..."
+                                onkeyup="searchStudents(this.value)"
+                            >
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 학생 테이블 -->
+                <div class="students-table-container">
+                    <table class="students-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;">
+                                    <input type="checkbox" onchange="toggleSelectAll(this)">
+                                </th>
+                                <th>학생</th>
+                                <th>프로젝트</th>
+                                <th>상태</th>
+                                <th>대화 수</th>
+                                <th>사용 시간</th>
+                                <th>가입일</th>
+                                <th>작업</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentsTableBody">
+                            <!-- 학생 1 -->
+                            <tr data-student-id="std-1" class="student-row" data-project="samsung" data-status="active">
+                                <td>
+                                    <input type="checkbox" class="student-checkbox">
+                                </td>
+                                <td>
+                                    <div class="student-cell">
+                                        <div class="student-avatar" style="background: linear-gradient(135deg, #10b981, #34d399);">김</div>
+                                        <div class="student-info">
+                                            <span class="student-name">김학생</span>
+                                            <span class="student-email">kim@samsung.com</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="project-badge">Samsung 마케팅팀</span>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-badge--active">
+                                        <span class="status-dot"></span>
+                                        활성
+                                    </span>
+                                </td>
+                                <td>347</td>
+                                <td>28.5h</td>
+                                <td>2025-01-05</td>
+                                <td>
+                                    <div class="actions-cell">
+                                        <button class="action-btn" onclick="viewStudentDetail('std-1')" title="상세보기">
+                                            👁️
+                                        </button>
+                                        <button class="action-btn" onclick="editStudent('std-1')" title="편집">
+                                            ✏️
+                                        </button>
+                                        <button class="action-btn" onclick="openStudentMenu('std-1')" title="더보기">
+                                            ⋮
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- 학생 2 -->
+                            <tr data-student-id="std-2" class="student-row" data-project="samsung" data-status="active">
+                                <td>
+                                    <input type="checkbox" class="student-checkbox">
+                                </td>
+                                <td>
+                                    <div class="student-cell">
+                                        <div class="student-avatar" style="background: linear-gradient(135deg, #3b82f6, #60a5fa);">이</div>
+                                        <div class="student-info">
+                                            <span class="student-name">이사원</span>
+                                            <span class="student-email">lee@samsung.com</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="project-badge">Samsung 마케팅팀</span>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-badge--active">
+                                        <span class="status-dot"></span>
+                                        활성
+                                    </span>
+                                </td>
+                                <td>289</td>
+                                <td>23.2h</td>
+                                <td>2025-01-05</td>
+                                <td>
+                                    <div class="actions-cell">
+                                        <button class="action-btn" onclick="viewStudentDetail('std-2')">👁️</button>
+                                        <button class="action-btn" onclick="editStudent('std-2')">✏️</button>
+                                        <button class="action-btn" onclick="openStudentMenu('std-2')">⋮</button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- 학생 3 -->
+                            <tr data-student-id="std-3" class="student-row" data-project="lg" data-status="active">
+                                <td>
+                                    <input type="checkbox" class="student-checkbox">
+                                </td>
+                                <td>
+                                    <div class="student-cell">
+                                        <div class="student-avatar" style="background: linear-gradient(135deg, #8b5cf6, #a78bfa);">박</div>
+                                        <div class="student-info">
+                                            <span class="student-name">박개발</span>
+                                            <span class="student-email">park@lg.com</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="project-badge">LG 개발팀</span>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-badge--active">
+                                        <span class="status-dot"></span>
+                                        활성
+                                    </span>
+                                </td>
+                                <td>412</td>
+                                <td>31.7h</td>
+                                <td>2025-01-18</td>
+                                <td>
+                                    <div class="actions-cell">
+                                        <button class="action-btn" onclick="viewStudentDetail('std-3')">👁️</button>
+                                        <button class="action-btn" onclick="editStudent('std-3')">✏️</button>
+                                        <button class="action-btn" onclick="openStudentMenu('std-3')">⋮</button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- 학생 4 -->
+                            <tr data-student-id="std-4" class="student-row" data-project="hyundai" data-status="active">
+                                <td>
+                                    <input type="checkbox" class="student-checkbox">
+                                </td>
+                                <td>
+                                    <div class="student-cell">
+                                        <div class="student-avatar" style="background: linear-gradient(135deg, #f59e0b, #fbbf24);">최</div>
+                                        <div class="student-info">
+                                            <span class="student-name">최직원</span>
+                                            <span class="student-email">choi@hyundai.com</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="project-badge">현대자동차</span>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-badge--active">
+                                        <span class="status-dot"></span>
+                                        활성
+                                    </span>
+                                </td>
+                                <td>156</td>
+                                <td>12.8h</td>
+                                <td>2025-02-03</td>
+                                <td>
+                                    <div class="actions-cell">
+                                        <button class="action-btn" onclick="viewStudentDetail('std-4')">👁️</button>
+                                        <button class="action-btn" onclick="editStudent('std-4')">✏️</button>
+                                        <button class="action-btn" onclick="openStudentMenu('std-4')">⋮</button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- 학생 5 -->
+                            <tr data-student-id="std-5" class="student-row" data-project="lg" data-status="active">
+                                <td>
+                                    <input type="checkbox" class="student-checkbox">
+                                </td>
+                                <td>
+                                    <div class="student-cell">
+                                        <div class="student-avatar" style="background: linear-gradient(135deg, #ec4899, #f472b6);">정</div>
+                                        <div class="student-info">
+                                            <span class="student-name">정코더</span>
+                                            <span class="student-email">jung@lg.com</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="project-badge">LG 개발팀</span>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-badge--active">
+                                        <span class="status-dot"></span>
+                                        활성
+                                    </span>
+                                </td>
+                                <td>378</td>
+                                <td>29.4h</td>
+                                <td>2025-01-18</td>
+                                <td>
+                                    <div class="actions-cell">
+                                        <button class="action-btn" onclick="viewStudentDetail('std-5')">👁️</button>
+                                        <button class="action-btn" onclick="editStudent('std-5')">✏️</button>
+                                        <button class="action-btn" onclick="openStudentMenu('std-5')">⋮</button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- 학생 6 - 비활성 -->
+                            <tr data-student-id="std-6" class="student-row" data-project="samsung" data-status="inactive">
+                                <td>
+                                    <input type="checkbox" class="student-checkbox">
+                                </td>
+                                <td>
+                                    <div class="student-cell">
+                                        <div class="student-avatar" style="background: linear-gradient(135deg, #6b7280, #9ca3af);">강</div>
+                                        <div class="student-info">
+                                            <span class="student-name">강휴학</span>
+                                            <span class="student-email">kang@samsung.com</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="project-badge">Samsung 마케팅팀</span>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-badge--inactive">
+                                        <span class="status-dot"></span>
+                                        비활성
+                                    </span>
+                                </td>
+                                <td>8</td>
+                                <td>0.5h</td>
+                                <td>2025-01-05</td>
+                                <td>
+                                    <div class="actions-cell">
+                                        <button class="action-btn" onclick="viewStudentDetail('std-6')">👁️</button>
+                                        <button class="action-btn" onclick="editStudent('std-6')">✏️</button>
+                                        <button class="action-btn" onclick="openStudentMenu('std-6')">⋮</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- 페이지네이션 -->
+                    <div class="pagination">
+                        <div class="pagination-info">
+                            전체 <strong>127</strong>명 중 <strong>1-6</strong>명 표시
+                        </div>
+                        <div class="pagination-controls">
+                            <button class="pagination-btn" disabled>이전</button>
+                            <button class="pagination-btn pagination-btn--active">1</button>
+                            <button class="pagination-btn">2</button>
+                            <button class="pagination-btn">3</button>
+                            <button class="pagination-btn">다음</button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- 공통 스크립트 -->
+    <script src="../common/layout.js"></script>
+    <script src="../common/utils.js"></script>
+
+    <!-- 페이지 전용 스크립트 -->
+    <script>
+        let currentTab = 'all';
+        let selectedStudents = [];
+
+        // ========== 탭 전환 ==========
+        function switchTab(tab) {
+            currentTab = tab;
+
+            // 탭 버튼 상태 업데이트
+            document.querySelectorAll('.tab').forEach(btn => {
+                btn.classList.remove('tab--active');
+            });
+            document.querySelector(`[data-tab="${tab}"]`).classList.add('tab--active');
+
+            // 학생 목록 필터링
+            filterStudentsByTab(tab);
+
+            console.log('탭 전환:', tab);
+        }
+
+        function filterStudentsByTab(tab) {
+            const rows = document.querySelectorAll('.student-row');
+            
+            rows.forEach(row => {
+                const status = row.getAttribute('data-status');
+                
+                let show = false;
+                
+                switch(tab) {
+                    case 'all':
+                        show = true;
+                        break;
+                    case 'active':
+                        show = status === 'active';
+                        break;
+                    case 'inactive':
+                        show = status === 'inactive';
+                        break;
+                }
+
+                row.style.display = show ? '' : 'none';
+            });
+        }
+
+        // ========== 필터 ==========
+        function applyFilters() {
+            const project = document.getElementById('projectFilter').value;
+            const activity = document.getElementById('activityFilter').value;
+            const status = document.getElementById('statusFilter').value;
+
+            console.log('필터 적용:', { project, activity, status });
+
+            const rows = document.querySelectorAll('.student-row');
+            
+            rows.forEach(row => {
+                let show = true;
+
+                // 프로젝트 필터
+                if (project) {
+                    const rowProject = row.getAttribute('data-project');
+                    show = show && rowProject === project;
+                }
+
+                // 상태 필터
+                if (status) {
+                    const rowStatus = row.getAttribute('data-status');
+                    show = show && rowStatus === status;
+                }
+
+                // 활동 수준 필터
+                if (activity) {
+                    const conversations = parseInt(row.cells[4].textContent) || 0;
+                    
+                    switch(activity) {
+                        case 'high':
+                            show = show && conversations >= 100;
+                            break;
+                        case 'medium':
+                            show = show && conversations >= 50 && conversations < 100;
+                            break;
+                        case 'low':
+                            show = show && conversations >= 1 && conversations < 50;
+                            break;
+                        case 'none':
+                            show = show && conversations === 0;
+                            break;
+                    }
+                }
+
+                row.style.display = show ? '' : 'none';
+            });
+
+            window.GrowFitUtils.showToast('필터가 적용되었습니다', 'info');
+        }
+
+        function resetFilters() {
+            document.getElementById('projectFilter').value = '';
+            document.getElementById('activityFilter').value = '';
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('searchInput').value = '';
+
+            document.querySelectorAll('.student-row').forEach(row => {
+                row.style.display = '';
+            });
+
+            window.GrowFitUtils.showToast('필터가 초기화되었습니다', 'info');
+        }
+
+        // ========== 검색 ==========
+        function searchStudents(query) {
+            const lowerQuery = query.toLowerCase();
+            const rows = document.querySelectorAll('.student-row');
+
+            rows.forEach(row => {
+                const name = row.querySelector('.student-name').textContent.toLowerCase();
+                const email = row.querySelector('.student-email').textContent.toLowerCase();
+
+                const matches = name.includes(lowerQuery) || email.includes(lowerQuery);
+                row.style.display = matches ? '' : 'none';
+            });
+        }
+
+        // ========== 전체 선택 ==========
+        function toggleSelectAll(checkbox) {
+            const checkboxes = document.querySelectorAll('.student-checkbox');
+            checkboxes.forEach(cb => {
+                cb.checked = checkbox.checked;
+            });
+
+            updateSelectedStudents();
+        }
+
+        function updateSelectedStudents() {
+            selectedStudents = [];
+            document.querySelectorAll('.student-checkbox:checked').forEach(cb => {
+                const row = cb.closest('tr');
+                selectedStudents.push(row.dataset.studentId);
+            });
+
+            console.log('선택된 학생:', selectedStudents);
+        }
+
+        // ========== 학생 추가 ==========
+        function addNewStudent() {
+            console.log('학생 추가');
+            window.GrowFitUtils.showToast('학생 추가 모달이 열립니다', 'info');
+            // 실제로는 모달 열기
+        }
+
+        function importStudents() {
+            console.log('CSV 일괄 등록');
+            window.GrowFitUtils.showToast('CSV 파일을 선택하세요', 'info');
+            // 실제로는 파일 선택 다이얼로그
+        }
+
+        // ========== 학생 상세보기 ==========
+        function viewStudentDetail(studentId) {
+            console.log('학생 상세:', studentId);
+            window.GrowFitUtils.showToast('학생 상세 페이지로 이동합니다', 'info');
+        }
+
+        function editStudent(studentId) {
+            console.log('학생 편집:', studentId);
+            window.GrowFitUtils.showToast('학생 정보를 편집합니다', 'info');
+        }
+
+        function openStudentMenu(studentId) {
+            console.log('학생 메뉴:', studentId);
+            window.GrowFitUtils.showToast('추가 메뉴가 열립니다', 'info');
+        }
+
+        console.log('✅ Student Management 로드 완료');
+    </script>
+</body>
+
+</html>
